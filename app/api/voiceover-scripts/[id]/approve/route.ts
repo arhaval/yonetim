@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
+
+// Admin metni onaylar ve ücreti girer
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('user-id')?.value
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 401 }
+      )
+    }
+
+    // Admin kontrolü
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 403 }
+      )
+    }
+
+    const body = await request.json()
+    const { price } = body
+
+    if (!price || price <= 0) {
+      return NextResponse.json(
+        { error: 'Geçerli bir ücret girin' },
+        { status: 400 }
+      )
+    }
+
+    // Metni kontrol et
+    const script = await prisma.voiceoverScript.findUnique({
+      where: { id: params.id },
+    })
+
+    if (!script) {
+      return NextResponse.json(
+        { error: 'Metin bulunamadı' },
+        { status: 404 }
+      )
+    }
+
+    if (!script.audioFile) {
+      return NextResponse.json(
+        { error: 'Ses dosyası yüklenmemiş' },
+        { status: 400 }
+      )
+    }
+
+    // Sadece creator-approved olanları onaylayabilir
+    if (script.status !== 'creator-approved') {
+      return NextResponse.json(
+        { error: 'Bu metin içerik üreticisi tarafından henüz onaylanmamış' },
+        { status: 400 }
+      )
+    }
+
+    // Metni onayla ve ücreti güncelle
+    const updatedScript = await prisma.voiceoverScript.update({
+      where: { id: params.id },
+      data: {
+        status: 'approved',
+        price: price,
+      },
+      include: {
+        voiceActor: true,
+      },
+    })
+
+    // Finansal kayıt oluştur (gider olarak)
+    if (updatedScript.voiceActorId) {
+      try {
+        const financialRecord = await prisma.financialRecord.create({
+          data: {
+            type: 'expense',
+            category: 'voiceover',
+            amount: price,
+            description: `Seslendirme: ${updatedScript.title} - ${updatedScript.voiceActor?.name || 'Bilinmeyen'}`,
+            date: new Date(),
+          },
+        })
+        console.log('Finansal kayıt oluşturuldu:', financialRecord)
+      } catch (financialError: any) {
+        console.error('Finansal kayıt oluşturma hatası:', financialError)
+        // Finansal kayıt oluşturulamasa bile metin onaylanmış olarak kalmalı
+      }
+    }
+
+    return NextResponse.json({
+      message: 'Metin başarıyla onaylandı ve finansal kayıt oluşturuldu',
+    })
+  } catch (error: any) {
+    console.error('Error approving script:', error)
+    return NextResponse.json(
+      { error: error.message || 'Metin onaylanamadı' },
+      { status: 500 }
+    )
+  }
+}
+
+
+

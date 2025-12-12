@@ -1,0 +1,52 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
+
+// Seslendirmenin görebileceği tüm seslendirme metinlerini getir
+export async function GET(request: NextRequest) {
+  try {
+    const cookieStore = await cookies()
+    const voiceActorId = cookieStore.get('voice-actor-id')?.value
+
+    if (!voiceActorId) {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 401 }
+      )
+    }
+
+    // Tüm metinleri getir (henüz atanmamış veya bu seslendirmene atanmış)
+    const scripts = await prisma.voiceoverScript.findMany({
+      where: {
+        OR: [
+          { voiceActorId: null }, // Henüz atanmamış
+          { voiceActorId: voiceActorId }, // Bu seslendirmene atanmış
+        ],
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return NextResponse.json(scripts)
+  } catch (error) {
+    console.error('Error fetching scripts:', error)
+    return NextResponse.json(
+      { error: 'Metinler getirilemedi' },
+      { status: 500 }
+    )
+  }
+}
+

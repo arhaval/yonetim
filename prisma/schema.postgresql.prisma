@@ -1,0 +1,15 @@
+// PostgreSQL için schema örneği
+// Bu dosyayı schema.prisma olarak kopyalayın: cp schema.postgresql.prisma schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Mevcut tüm modelleriniz burada kalacak
+// Sadece datasource kısmını değiştirdik
+

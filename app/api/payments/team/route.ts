@@ -1,0 +1,81 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+// Ekip üyeleri için aylık ödeme özeti
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const month = searchParams.get('month') || new Date().toISOString().slice(0, 7) // YYYY-MM
+
+    // Ayın başlangıç ve bitiş tarihleri
+    const [year, monthNum] = month.split('-').map(Number)
+    const startDate = new Date(year, monthNum - 1, 1)
+    const endDate = new Date(year, monthNum, 0, 23, 59, 59)
+
+    // O ay için ödeme kayıtlarını getir
+    const payments = await prisma.teamPayment.findMany({
+      where: {
+        period: month,
+      },
+      include: {
+        teamMember: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    })
+
+    // Her ekip üyesi için tamamlanmış görevleri de getir
+    const result = await Promise.all(payments.map(async (payment) => {
+      // Bu ekip üyesinin o ay içinde tamamlanmış görevlerini getir
+      const completedTasks = await prisma.task.findMany({
+        where: {
+          teamMemberId: payment.teamMemberId,
+          status: 'completed',
+          completedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        orderBy: {
+          completedAt: 'asc',
+        },
+      })
+
+      return {
+        id: payment.id,
+        teamMemberId: payment.teamMemberId,
+        teamMemberName: payment.teamMember.name,
+        amount: payment.amount,
+        type: payment.type,
+        period: payment.period,
+        description: payment.description,
+        paidAt: payment.paidAt,
+        createdAt: payment.createdAt,
+        tasks: completedTasks.map(t => ({
+          id: t.id,
+          title: t.title,
+          description: t.description,
+          completedAt: t.completedAt,
+          priority: t.priority,
+        })),
+      }
+    }))
+
+    return NextResponse.json(result)
+  } catch (error: any) {
+    console.error('Error fetching team payments:', error)
+    return NextResponse.json(
+      { error: error.message || 'Ödeme bilgileri getirilemedi' },
+      { status: 500 }
+    )
+  }
+}
+
+
+

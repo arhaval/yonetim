@@ -1,0 +1,749 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Plus, LogOut, Video, Image, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark, FileText, Download, CheckCircle, Clock } from 'lucide-react'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale/tr'
+
+export default function CreatorDashboardPage() {
+  const router = useRouter()
+  const [creator, setCreator] = useState<any>(null)
+  const [contents, setContents] = useState<any[]>([])
+  const [scripts, setScripts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [showScriptForm, setShowScriptForm] = useState(false)
+  const [scriptFormData, setScriptFormData] = useState({
+    title: '',
+    text: '',
+  })
+  const [formData, setFormData] = useState({
+    title: '',
+    contentType: 'uzun', // uzun, kısa, reels
+    voiceoverText: '', // Seslendirme metni
+    publishDate: new Date().toISOString().split('T')[0],
+  })
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    checkAuth()
+  }, [])
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/creator-auth/me')
+      const data = await res.json()
+
+      if (!data.creator) {
+        router.push('/creator-login')
+        return
+      }
+
+      setCreator(data.creator)
+      loadContents(data.creator.id)
+      loadScripts() // Scripts'i de yükle
+    } catch (error) {
+      router.push('/creator-login')
+    }
+  }
+
+  const loadContents = async (creatorId: string) => {
+    try {
+      const res = await fetch('/api/creator/content')
+      const data = await res.json()
+      if (res.ok) {
+        setContents(data)
+      }
+    } catch (error) {
+      console.error('Error loading contents:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadScripts = async () => {
+    try {
+      const res = await fetch('/api/voiceover-scripts')
+      const data = await res.json()
+      if (res.ok) {
+        setScripts(data)
+      }
+    } catch (error) {
+      console.error('Error loading scripts:', error)
+    }
+  }
+
+  const handleScriptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const res = await fetch('/api/voiceover-scripts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scriptFormData),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert('Metin başarıyla oluşturuldu!')
+        setShowScriptForm(false)
+        setScriptFormData({
+          title: '',
+          text: '',
+        })
+        loadScripts()
+      } else {
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await fetch('/api/creator-auth/logout', { method: 'POST' })
+    router.push('/creator-login')
+  }
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    if (!formData.title.trim()) {
+      alert('Lütfen başlık girin')
+      setSubmitting(false)
+      return
+    }
+
+    if (!formData.voiceoverText.trim()) {
+      alert('Lütfen seslendirme metni girin')
+      setSubmitting(false)
+      return
+    }
+
+    try {
+      // Önce içeriği oluştur
+      const contentRes = await fetch('/api/creator/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          type: formData.contentType === 'reels' ? 'reel' : formData.contentType === 'kısa' ? 'shorts' : 'video',
+          platform: formData.contentType === 'reels' ? 'Instagram' : 'YouTube',
+          url: null,
+          publishDate: formData.publishDate,
+          views: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          saves: 0,
+        }),
+      })
+
+      const contentData = await contentRes.json()
+
+      if (!contentRes.ok) {
+        alert(contentData.error || 'İçerik eklenirken bir hata oluştu')
+        setSubmitting(false)
+        return
+      }
+
+      // Sonra seslendirme metnini oluştur
+      const scriptRes = await fetch('/api/voiceover-scripts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          text: formData.voiceoverText,
+          contentType: formData.contentType, // uzun, kısa, reels
+        }),
+      })
+
+      const scriptData = await scriptRes.json()
+
+      if (scriptRes.ok) {
+        alert('İçerik ve seslendirme metni başarıyla oluşturuldu!')
+        setShowForm(false)
+        setFormData({
+          title: '',
+          contentType: 'uzun',
+          voiceoverText: '',
+          publishDate: new Date().toISOString().split('T')[0],
+        })
+        if (creator) {
+          loadContents(creator.id)
+          loadScripts()
+        }
+      } else {
+        alert(scriptData.error || 'Seslendirme metni oluşturulurken bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+    return num.toString()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!creator) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {creator.profilePhoto ? (
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-2 ring-indigo-200">
+                  <img
+                    src={creator.profilePhoto}
+                    alt={creator.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg ring-2 ring-indigo-200">
+                  <span className="text-white font-bold text-2xl">
+                    {creator.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  {creator.name}
+                </h1>
+                <p className="mt-1 text-gray-600">İçeriklerinizi buradan ekleyebilirsiniz</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Çıkış Yap
+            </button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        {!showForm && !showScriptForm && (
+          <div className="mb-6 flex space-x-4">
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Yeni İçerik Ekle
+            </button>
+            <button
+              onClick={() => setShowScriptForm(true)}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Yeni Metin Oluştur
+            </button>
+          </div>
+        )}
+
+        {/* Add Content Form */}
+        {showForm && (
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Yeni İçerik ve Seslendirme Metni Ekle</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    İçerik Başlığı *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="İçerik başlığını girin"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    İçerik Tipi *
+                  </label>
+                  <select
+                    required
+                    value={formData.contentType}
+                    onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="uzun">Uzun Video</option>
+                    <option value="kısa">Kısa Video</option>
+                    <option value="reels">Reels</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Bu bilgi seslendirmen tarafından görülecektir</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Calendar className="w-4 h-4 inline mr-2" />
+                    Yayın Tarihi *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.publishDate}
+                    onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Seslendirme Metni *
+                  </label>
+                  <textarea
+                    required
+                    value={formData.voiceoverText}
+                    onChange={(e) => setFormData({ ...formData, voiceoverText: e.target.value })}
+                    placeholder="Seslendirmen için metin yazın..."
+                    rows={10}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir. İstatistikler (beğeni, görüntülenme vb.) otomatik olarak 0 olarak kaydedilecektir.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false)
+                    setFormData({
+                      title: '',
+                      contentType: 'uzun',
+                      voiceoverText: '',
+                      publishDate: new Date().toISOString().split('T')[0],
+                    })
+                  }}
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Add Script Form */}
+        {showScriptForm && (
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Yeni Seslendirme Metni Oluştur</h2>
+            <form onSubmit={handleScriptSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Başlık *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={scriptFormData.title}
+                  onChange={(e) => setScriptFormData({ ...scriptFormData, title: e.target.value })}
+                  placeholder="Metin başlığı"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Metin *
+                </label>
+                <textarea
+                  required
+                  value={scriptFormData.text}
+                  onChange={(e) => setScriptFormData({ ...scriptFormData, text: e.target.value })}
+                  rows={12}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
+                  placeholder="Seslendirme metnini buraya yazın..."
+                />
+                <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir</p>
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowScriptForm(false)
+                    setScriptFormData({
+                      title: '',
+                      text: '',
+                    })
+                  }}
+                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg hover:from-pink-700 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Kaydediliyor...' : 'Oluştur'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Scripts List */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-900">Seslendirme Metinlerim</h2>
+                {scripts.filter(s => s.audioFile && s.status === 'pending').length > 0 && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 animate-pulse">
+                    {scripts.filter(s => s.audioFile && s.status === 'pending').length} Onay Bekleyen Ses
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={loadScripts}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <span className="mr-2">🔄</span>
+                Yenile
+              </button>
+            </div>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {scripts.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Henüz metin eklenmemiş</p>
+              </div>
+            ) : (
+              // Önce onay bekleyen sesleri göster (sadece pending - creator-approved olanlar admin'e gönderilmiş)
+              <>
+                {scripts.filter(s => s.audioFile && s.status === 'pending').length > 0 && (
+                  <div className="px-6 py-4 bg-yellow-50 border-l-4 border-yellow-400">
+                    <h3 className="text-lg font-semibold text-yellow-900 mb-3">⚠️ Onay Bekleyen Sesler</h3>
+                    {scripts
+                      .filter(s => s.audioFile && s.status === 'pending')
+                      .map((script) => (
+                        <div key={script.id} className="mb-4 last:mb-0 p-4 bg-white rounded-lg border border-yellow-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <Link
+                                  href={`/voiceover-scripts/${script.id}`}
+                                  className="text-lg font-semibold text-gray-900 hover:text-indigo-600"
+                                >
+                                  {script.title}
+                                </Link>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 animate-pulse">
+                                  Onay Bekliyor
+                                </span>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Ses Yüklendi
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{script.text}</p>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>{format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
+                                {script.voiceActor && (
+                                  <>
+                                    <span>•</span>
+                                    <span>Seslendirmen: {script.voiceActor.name}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {script.audioFile && (
+                              <div className="ml-4 flex flex-col gap-2">
+                                <a
+                                  href={script.audioFile}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 transition-all duration-200"
+                                >
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Ses Dosyasını Dinle
+                                </a>
+                                {script.status === 'pending' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (!confirm('Bu sesi onaylamak istediğinize emin misiniz? Onayladıktan sonra admin onayı bekleyecektir.')) {
+                                        return
+                                      }
+                                      try {
+                                        const res = await fetch(`/api/voiceover-scripts/${script.id}/creator-approve`, {
+                                          method: 'POST',
+                                        })
+                                        const data = await res.json()
+                                        if (res.ok) {
+                                          alert('Ses onaylandı! Admin onayı bekleniyor.')
+                                          loadScripts()
+                                        } else {
+                                          alert(data.error || 'Bir hata oluştu')
+                                        }
+                                      } catch (error) {
+                                        alert('Bir hata oluştu')
+                                      }
+                                    }}
+                                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+                                  >
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    Onayla
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {/* Diğer scriptler */}
+                {scripts
+                  .filter(s => !(s.audioFile && s.status === 'pending'))
+                  .map((script) => (
+                <div key={script.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Link
+                          href={`/voiceover-scripts/${script.id}`}
+                          className="text-lg font-semibold text-gray-900 hover:text-indigo-600"
+                        >
+                          {script.title}
+                        </Link>
+                        {script.status === 'paid' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Ödendi
+                          </span>
+                        ) : script.status === 'approved' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Onaylandı
+                          </span>
+                        ) : script.status === 'creator-approved' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            Admin Onayı Bekliyor
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Beklemede
+                          </span>
+                        )}
+                        {script.audioFile && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <Download className="w-3 h-3 mr-1" />
+                            Ses Yüklendi
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{script.text}</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>{format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
+                        {script.voiceActor && (
+                          <>
+                            <span>•</span>
+                            <span>Seslendirmen: {script.voiceActor.name}</span>
+                          </>
+                        )}
+                        {script.price > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="font-semibold text-green-600">
+                              {script.price.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                              })}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {script.audioFile && (
+                      <div className="ml-4">
+                        <a
+                          href={script.audioFile}
+                          download
+                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Ses İndir
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                  ))}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Contents List */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">İçeriklerim</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {contents.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">Henüz içerik eklenmemiş</p>
+              </div>
+            ) : (
+              contents.map((content) => {
+                const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+                
+                return (
+                  <div key={content.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0">
+                          {content.url ? (
+                            <a
+                              href={content.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-lg font-bold text-gray-900 hover:text-[#08d9d6] transition-colors line-clamp-2 block"
+                            >
+                              {content.title}
+                            </a>
+                          ) : (
+                            <h3 className="text-lg font-bold text-gray-900 line-clamp-2">{content.title}</h3>
+                          )}
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.platform === 'YouTube' 
+                                ? 'bg-red-50 text-red-700 border-red-200' 
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}>
+                              {content.platform}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.type === 'shorts' || content.type === 'reel'
+                                ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {contentType}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-1">Yayın Tarihi</p>
+                        <p className="text-sm font-medium text-gray-700">
+                          {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
+                        </p>
+                      </div>
+
+                      {/* İstatistikler - Büyük ve Belirgin */}
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Eye className="w-4 h-4" style={{ color: '#08d9d6' }} />
+                            <span className="text-xs text-gray-500">Görüntülenme</span>
+                          </div>
+                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
+                            {formatNumber(content.views || 0)}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-3 border border-red-100">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Heart className="w-4 h-4" style={{ color: '#ff2e63' }} />
+                            <span className="text-xs text-gray-500">Beğeni</span>
+                          </div>
+                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
+                            {formatNumber(content.likes || 0)}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-lg p-3 border border-cyan-100">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <MessageCircle className="w-4 h-4" style={{ color: '#08d9d6' }} />
+                            <span className="text-xs text-gray-500">Yorum</span>
+                          </div>
+                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
+                            {formatNumber(content.comments || 0)}
+                          </p>
+                        </div>
+                        {content.platform === 'Instagram' ? (
+                          <>
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <Share2 className="w-4 h-4" style={{ color: '#08d9d6' }} />
+                                <span className="text-xs text-gray-500">Paylaşım</span>
+                              </div>
+                              <p className="text-lg font-bold" style={{ color: '#252a34' }}>
+                                {formatNumber(content.shares || 0)}
+                              </p>
+                            </div>
+                            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-100">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <Bookmark className="w-4 h-4" style={{ color: '#ff2e63' }} />
+                                <span className="text-xs text-gray-500">Kaydetme</span>
+                              </div>
+                              <p className="text-lg font-bold" style={{ color: '#252a34' }}>
+                                {formatNumber(content.saves || 0)}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-3 border border-gray-100">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <Clock className="w-4 h-4 text-gray-400" />
+                              <span className="text-xs text-gray-500">Son Güncelleme</span>
+                            </div>
+                            <p className="text-xs font-medium text-gray-600">
+                              {format(new Date(content.updatedAt), 'dd MMM yyyy', { locale: tr })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
