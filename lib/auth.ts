@@ -21,8 +21,11 @@ export async function createUser(email: string, password: string, name: string) 
 }
 
 export async function getUserByEmail(email: string) {
+  // Email'i normalize et (küçük harfe çevir ve trim yap)
+  const normalizedEmail = email.toLowerCase().trim()
+  
   return prisma.user.findUnique({
-    where: { email },
+    where: { email: normalizedEmail },
   })
 }
 
