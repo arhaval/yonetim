@@ -1,0 +1,13 @@
+DATABASE_URL:
+postgresql://postgres:s1e0r1t1a89c@db.kwrbcwspdjlgixjkplzq.supabase.co:5432/postgres
+
+Bu URL'yi Vercel'e ekleyin:
+1. Vercel Dashboard → Projeniz → Settings → Environment Variables
+2. "Add New"
+3. Name: DATABASE_URL
+4. Value: postgresql://postgres:s1e0r1t1a89c@db.kwrbcwspdjlgixjkplzq.supabase.co:5432/postgres
+5. Environment: Production, Preview, Development (hepsini seçin)
+6. Save
+
+
+

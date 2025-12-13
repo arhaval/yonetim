@@ -43,10 +43,7 @@ export async function POST(request: NextRequest) {
     // İçerik üreticisini bul
     const creator = await prisma.contentCreator.findFirst({
       where: {
-        email: {
-          equals: normalizedEmail,
-          mode: 'insensitive',
-        },
+        email: normalizedEmail,
       },
     })
 

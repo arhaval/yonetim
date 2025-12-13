@@ -30,6 +30,7 @@ interface PaymentDetailsModalProps {
     price: number
     status: string
     createdAt: Date
+    audioFile?: string | null
   }>
 }
 

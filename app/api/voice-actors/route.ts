@@ -8,7 +8,7 @@ export async function GET() {
       include: {
         _count: {
           select: {
-            contents: true,
+            scripts: true,
           },
         },
       },

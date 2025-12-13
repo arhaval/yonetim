@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, CheckCircle2, Clock, Calendar, DollarSign, CreditCard, AlertCircle, Task, FileText } from 'lucide-react'
+import { LogOut, CheckCircle2, Clock, Calendar, DollarSign, CreditCard, AlertCircle, ClipboardList, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import Link from 'next/link'
@@ -129,7 +129,7 @@ export default function TeamDashboardPage() {
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                  <Task className="w-6 h-6 text-white" />
+                  <ClipboardList className="w-6 h-6 text-white" />
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-1">Toplam Görev</p>
@@ -300,5 +300,7 @@ export default function TeamDashboardPage() {
     </div>
   )
 }
+
+
 
 

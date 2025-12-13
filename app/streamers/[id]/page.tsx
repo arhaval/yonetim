@@ -6,6 +6,7 @@ import { Plus, ExternalLink, CreditCard, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import StreamList from './StreamList'
+import PaymentCards from './PaymentCards'
 
 export default async function StreamerDetailPage({
   params,

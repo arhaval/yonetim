@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         email: true,
-        hasPassword: true, // SQL'de password IS NOT NULL kontrolü
+        password: true,
         isActive: true,
       },
     })
@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         name: m.name,
         email: m.email,
         isActive: m.isActive,
+        hasPassword: !!m.password,
       })),
     })
   } catch (error: any) {
@@ -69,5 +70,7 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+
 
 

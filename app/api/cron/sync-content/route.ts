@@ -6,13 +6,8 @@ import { prisma } from '@/lib/prisma'
  * 
  * Bu endpoint, sadece son 30 günlük içerikleri günceller (API rate limit'ini korumak için)
  * 
- * Vercel Cron Jobs ile kullanım için vercel.json'a ekleyin:
- * {
- *   "crons": [{
- *     "path": "/api/cron/sync-content",
- *     "schedule": "0 */3 * * *"  // Her 3 saatte bir
- *   }]
- * }
+ * Vercel Cron Jobs ile kullanım için vercel.json'a crons ekleyin
+ * Her 3 saatte bir çalışacak şekilde ayarlayın
  * 
  * Veya manuel olarak çağrılabilir veya external cron servisleri (UptimeRobot, EasyCron, vb.) ile kullanılabilir
  * 

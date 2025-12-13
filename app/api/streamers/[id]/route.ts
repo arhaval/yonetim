@@ -9,9 +9,6 @@ export async function GET(
   try {
     const streamer = await prisma.streamer.findUnique({
       where: { id: params.id },
-      include: {
-        teamRates: true,
-      },
       select: {
         id: true,
         name: true,

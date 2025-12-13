@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Creator'ı bul
     const creator = await getContentCreatorByEmail(normalizedEmail)
 
-    const result = {
+    const result: any = {
       searchedEmail: normalizedEmail,
       creatorFound: !!creator,
       allCreators: allCreators.map(c => ({

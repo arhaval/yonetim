@@ -211,7 +211,7 @@ async function fetchChannelVideos(channelId: string, apiKey: string) {
   let nextPageToken: string | undefined = undefined
 
   do {
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${cleanChannelId}&type=video&maxResults=50&order=date&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`
+    const searchUrl: string = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${cleanChannelId}&type=video&maxResults=50&order=date&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`
     
     const searchResponse = await fetch(searchUrl)
     const searchData = await searchResponse.json()
