@@ -26,8 +26,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetch('/api/auth/me')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          console.error('Failed to fetch user:', res.status)
+          return { user: null }
+        }
+        return res.json()
+      })
       .then(data => setUser(data.user))
+      .catch(error => {
+        console.error('Error fetching user:', error)
+        setUser(null)
+      })
   }, [])
 
   useEffect(() => {

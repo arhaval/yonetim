@@ -1,0 +1,290 @@
+-- ============================================
+-- SUPABASE'DE TÜM TABLOLARI OLUŞTURMA SQL'İ
+-- ============================================
+-- Supabase SQL Editor'de bu SQL'i çalıştırın
+-- Hepsini birlikte yapıştırıp "Run" butonuna tıklayın
+-- ============================================
+
+-- 1. User Tablosu
+CREATE TABLE IF NOT EXISTS "User" (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'admin',
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 2. Streamer Tablosu
+CREATE TABLE IF NOT EXISTS "Streamer" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  "profilePhoto" TEXT,
+  email TEXT UNIQUE,
+  phone TEXT,
+  iban TEXT,
+  password TEXT,
+  "loginToken" TEXT UNIQUE,
+  platform TEXT NOT NULL DEFAULT 'Twitch',
+  "channelUrl" TEXT,
+  "hourlyRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "commissionRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 3. StreamerTeamRate Tablosu
+CREATE TABLE IF NOT EXISTS "StreamerTeamRate" (
+  id TEXT PRIMARY KEY,
+  "streamerId" TEXT NOT NULL,
+  "teamName" TEXT NOT NULL,
+  "hourlyRate" DOUBLE PRECISION NOT NULL,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("streamerId") REFERENCES "Streamer"(id) ON DELETE CASCADE,
+  UNIQUE("streamerId", "teamName")
+);
+
+-- 4. Stream Tablosu
+CREATE TABLE IF NOT EXISTS "Stream" (
+  id TEXT PRIMARY KEY,
+  "streamerId" TEXT NOT NULL,
+  date TIMESTAMP NOT NULL,
+  duration INTEGER NOT NULL,
+  "matchInfo" TEXT,
+  "teamName" TEXT,
+  "totalRevenue" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "streamerEarning" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "arhavalProfit" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  teams TEXT,
+  cost DOUBLE PRECISION NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending',
+  "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("streamerId") REFERENCES "Streamer"(id) ON DELETE CASCADE
+);
+
+-- 5. ExternalStream Tablosu
+CREATE TABLE IF NOT EXISTS "ExternalStream" (
+  id TEXT PRIMARY KEY,
+  "streamerId" TEXT NOT NULL,
+  "teamName" TEXT NOT NULL,
+  date TIMESTAMP NOT NULL,
+  duration INTEGER NOT NULL,
+  payment DOUBLE PRECISION NOT NULL,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("streamerId") REFERENCES "Streamer"(id) ON DELETE CASCADE
+);
+
+-- 6. ContentCreator Tablosu
+CREATE TABLE IF NOT EXISTS "ContentCreator" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  "profilePhoto" TEXT,
+  email TEXT UNIQUE,
+  phone TEXT,
+  password TEXT,
+  "loginToken" TEXT UNIQUE,
+  platform TEXT,
+  "channelUrl" TEXT,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 7. Content Tablosu
+CREATE TABLE IF NOT EXISTS "Content" (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  type TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  url TEXT,
+  "publishDate" TIMESTAMP NOT NULL,
+  "creatorId" TEXT,
+  "creatorName" TEXT,
+  views INTEGER NOT NULL DEFAULT 0,
+  likes INTEGER NOT NULL DEFAULT 0,
+  comments INTEGER NOT NULL DEFAULT 0,
+  shares INTEGER NOT NULL DEFAULT 0,
+  saves INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("creatorId") REFERENCES "ContentCreator"(id) ON DELETE SET NULL
+);
+
+-- 8. VoiceActor Tablosu
+CREATE TABLE IF NOT EXISTS "VoiceActor" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  "profilePhoto" TEXT,
+  email TEXT UNIQUE,
+  phone TEXT,
+  password TEXT,
+  "loginToken" TEXT UNIQUE,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 9. VoiceoverScript Tablosu
+CREATE TABLE IF NOT EXISTS "VoiceoverScript" (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  text TEXT NOT NULL,
+  "creatorId" TEXT,
+  "voiceActorId" TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  "audioFile" TEXT,
+  price DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "contentType" TEXT,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("creatorId") REFERENCES "ContentCreator"(id) ON DELETE SET NULL,
+  FOREIGN KEY ("voiceActorId") REFERENCES "VoiceActor"(id) ON DELETE SET NULL
+);
+
+-- 10. FinancialRecord Tablosu
+CREATE TABLE IF NOT EXISTS "FinancialRecord" (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  category TEXT NOT NULL,
+  amount DOUBLE PRECISION NOT NULL,
+  description TEXT,
+  date TIMESTAMP NOT NULL,
+  "streamerId" TEXT,
+  "streamId" TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("streamerId") REFERENCES "Streamer"(id)
+);
+
+-- 11. Payment Tablosu
+CREATE TABLE IF NOT EXISTS "Payment" (
+  id TEXT PRIMARY KEY,
+  "streamerId" TEXT NOT NULL,
+  amount DOUBLE PRECISION NOT NULL,
+  type TEXT NOT NULL,
+  period TEXT NOT NULL,
+  description TEXT,
+  "paidAt" TIMESTAMP,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("streamerId") REFERENCES "Streamer"(id) ON DELETE CASCADE
+);
+
+-- 12. TeamMember Tablosu
+CREATE TABLE IF NOT EXISTS "TeamMember" (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE,
+  phone TEXT,
+  password TEXT,
+  iban TEXT,
+  role TEXT NOT NULL,
+  "baseSalary" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 13. Task Tablosu
+CREATE TABLE IF NOT EXISTS "Task" (
+  id TEXT PRIMARY KEY,
+  "teamMemberId" TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  priority TEXT NOT NULL DEFAULT 'medium',
+  "dueDate" TIMESTAMP,
+  "completedAt" TIMESTAMP,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("teamMemberId") REFERENCES "TeamMember"(id) ON DELETE CASCADE
+);
+
+-- 14. TeamPayment Tablosu
+CREATE TABLE IF NOT EXISTS "TeamPayment" (
+  id TEXT PRIMARY KEY,
+  "teamMemberId" TEXT NOT NULL,
+  amount DOUBLE PRECISION NOT NULL,
+  type TEXT NOT NULL,
+  period TEXT NOT NULL,
+  description TEXT,
+  "paidAt" TIMESTAMP,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("teamMemberId") REFERENCES "TeamMember"(id) ON DELETE CASCADE
+);
+
+-- 15. MonthlyPlan Tablosu
+CREATE TABLE IF NOT EXISTS "MonthlyPlan" (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  target DOUBLE PRECISION NOT NULL,
+  month TEXT NOT NULL,
+  type TEXT NOT NULL,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(type, month)
+);
+
+-- 16. YearlyGoal Tablosu
+CREATE TABLE IF NOT EXISTS "YearlyGoal" (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  target DOUBLE PRECISION NOT NULL,
+  year INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  "isCurrency" BOOLEAN NOT NULL DEFAULT false,
+  "isPercentage" BOOLEAN NOT NULL DEFAULT false,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(type, year)
+);
+
+-- 17. SocialMediaStats Tablosu
+CREATE TABLE IF NOT EXISTS "SocialMediaStats" (
+  id TEXT PRIMARY KEY,
+  month TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  "followerCount" INTEGER NOT NULL,
+  target INTEGER,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(month, platform)
+);
+
+-- ============================================
+-- ADMIN KULLANICISI OLUŞTUR
+-- ============================================
+INSERT INTO "User" (id, email, password, name, role, "createdAt", "updatedAt")
+VALUES (
+  gen_random_uuid()::text,
+  'admin@arhaval.com',
+  '$2a$10$uzOHWqiaCU9qOHq9fGYC8egjlfCK1s2E7o98x9of/ZYPwEotEcYsu',
+  'Admin',
+  'admin',
+  NOW(),
+  NOW()
+);
+
+-- ============================================
+-- KONTROL: Tabloları Listele
+-- ============================================
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+ORDER BY table_name;
+
