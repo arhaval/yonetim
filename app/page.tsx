@@ -10,117 +10,118 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 async function getStats() {
-  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-  const previousMonthStart = startOfMonth(subMonths(new Date(), 1))
-  const previousMonthEnd = endOfMonth(subMonths(new Date(), 1))
-  
-  const [
-    totalStreamers,
-    activeStreamers,
-    totalContent,
-    totalRevenue,
-    monthlyRevenue,
-    totalExpense,
-    monthlyExpense,
-    totalStreamCosts,
-    monthlyStreamCosts,
-    // Önceki ay verileri
-    previousMonthRevenue,
-    previousMonthExpense,
-    previousMonthStreamCosts,
-    previousMonthStreamCount,
-    previousMonthContentCount,
-    previousMonthActiveStreamers,
-  ] = await Promise.all([
-    prisma.streamer.count(),
-    prisma.streamer.count({ where: { isActive: true } }),
-    prisma.content.count(),
-    prisma.financialRecord.aggregate({
-      where: { type: 'income' },
-      _sum: { amount: true },
-    }),
-    prisma.financialRecord.aggregate({
-      where: {
-        type: 'income',
-        date: { gte: monthStart },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.financialRecord.aggregate({
-      where: { type: 'expense' },
-      _sum: { amount: true },
-    }),
-    prisma.financialRecord.aggregate({
-      where: {
-        type: 'expense',
-        date: { gte: monthStart },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.stream.aggregate({
-      _sum: { cost: true },
-    }),
-    prisma.stream.aggregate({
-      where: {
-        date: { gte: monthStart },
-      },
-      _sum: { cost: true },
-    }),
-    // Önceki ay verileri
-    prisma.financialRecord.aggregate({
-      where: {
-        type: 'income',
-        date: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+  try {
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    const previousMonthStart = startOfMonth(subMonths(new Date(), 1))
+    const previousMonthEnd = endOfMonth(subMonths(new Date(), 1))
+    
+    const [
+      totalStreamers,
+      activeStreamers,
+      totalContent,
+      totalRevenue,
+      monthlyRevenue,
+      totalExpense,
+      monthlyExpense,
+      totalStreamCosts,
+      monthlyStreamCosts,
+      // Önceki ay verileri
+      previousMonthRevenue,
+      previousMonthExpense,
+      previousMonthStreamCosts,
+      previousMonthStreamCount,
+      previousMonthContentCount,
+      previousMonthActiveStreamers,
+    ] = await Promise.all([
+      prisma.streamer.count().catch(() => 0),
+      prisma.streamer.count({ where: { isActive: true } }).catch(() => 0),
+      prisma.content.count().catch(() => 0),
+      prisma.financialRecord.aggregate({
+        where: { type: 'income' },
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.financialRecord.aggregate({
+        where: {
+          type: 'income',
+          date: { gte: monthStart },
         },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.financialRecord.aggregate({
-      where: {
-        type: 'expense',
-        date: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.financialRecord.aggregate({
+        where: { type: 'expense' },
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.financialRecord.aggregate({
+        where: {
+          type: 'expense',
+          date: { gte: monthStart },
         },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.stream.aggregate({
-      where: {
-        date: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.stream.aggregate({
+        _sum: { cost: true },
+      }).catch(() => ({ _sum: { cost: null } })),
+      prisma.stream.aggregate({
+        where: {
+          date: { gte: monthStart },
         },
-      },
-      _sum: { cost: true },
-    }),
-    prisma.stream.count({
-      where: {
-        date: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+        _sum: { cost: true },
+      }).catch(() => ({ _sum: { cost: null } })),
+      // Önceki ay verileri
+      prisma.financialRecord.aggregate({
+        where: {
+          type: 'income',
+          date: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
         },
-      },
-    }),
-    prisma.content.count({
-      where: {
-        publishDate: {
-          gte: previousMonthStart,
-          lte: previousMonthEnd,
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.financialRecord.aggregate({
+        where: {
+          type: 'expense',
+          date: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
         },
-      },
-    }),
-    prisma.streamer.count({
-      where: {
-        isActive: true,
-        createdAt: {
-          lte: previousMonthEnd,
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      prisma.stream.aggregate({
+        where: {
+          date: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
         },
-      },
-    }),
-  ])
+        _sum: { cost: true },
+      }).catch(() => ({ _sum: { cost: null } })),
+      prisma.stream.count({
+        where: {
+          date: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
+        },
+      }).catch(() => 0),
+      prisma.content.count({
+        where: {
+          publishDate: {
+            gte: previousMonthStart,
+            lte: previousMonthEnd,
+          },
+        },
+      }).catch(() => 0),
+      prisma.streamer.count({
+        where: {
+          isActive: true,
+          createdAt: {
+            lte: previousMonthEnd,
+          },
+        },
+      }).catch(() => 0),
+    ])
 
   // Ödeme istatistikleri - hata yönetimi ile
   let unpaidStreams = { _sum: { streamerEarning: null as number | null } }
@@ -148,43 +149,76 @@ async function getStats() {
     }
   }
 
-  const [unpaidPayments, paidPayments] = await Promise.all([
-    prisma.payment.aggregate({
-      where: { paidAt: null },
-      _sum: { amount: true },
-    }),
-    prisma.payment.aggregate({
-      where: { paidAt: { not: null } },
-      _sum: { amount: true },
-    }),
-  ])
+    let unpaidPayments = { _sum: { amount: null as number | null } }
+    let paidPayments = { _sum: { amount: null as number | null } }
+    
+    try {
+      [unpaidPayments, paidPayments] = await Promise.all([
+        prisma.payment.aggregate({
+          where: { paidAt: null },
+          _sum: { amount: true },
+        }),
+        prisma.payment.aggregate({
+          where: { paidAt: { not: null } },
+          _sum: { amount: true },
+        }),
+      ])
+    } catch (error) {
+      console.error('Error fetching payments:', error)
+      unpaidPayments = { _sum: { amount: null } }
+      paidPayments = { _sum: { amount: null } }
+    }
 
-  // Ödeme hesaplamaları
-  const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
-  const totalPaid = (paidStreams._sum.streamerEarning || 0) + (paidPayments._sum.amount || 0)
-  const totalDue = totalUnpaid + totalPaid
+    // Ödeme hesaplamaları
+    const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
+    const totalPaid = (paidStreams._sum.streamerEarning || 0) + (paidPayments._sum.amount || 0)
+    const totalDue = totalUnpaid + totalPaid
 
-  return {
-    totalStreamers,
-    activeStreamers,
-    totalContent,
-    totalRevenue: totalRevenue._sum.amount || 0,
-    monthlyRevenue: monthlyRevenue._sum.amount || 0,
-    totalExpense: (totalExpense._sum.amount || 0) + (totalStreamCosts._sum.cost || 0),
-    monthlyExpense: (monthlyExpense._sum.amount || 0) + (monthlyStreamCosts._sum.cost || 0),
-    totalStreamCosts: totalStreamCosts._sum.cost || 0,
-    monthlyStreamCosts: monthlyStreamCosts._sum.cost || 0,
-    // Önceki ay verileri
-    previousMonthRevenue: previousMonthRevenue._sum.amount || 0,
-    previousMonthExpense: previousMonthExpense._sum.amount || 0,
-    previousMonthStreamCosts: previousMonthStreamCosts._sum.cost || 0,
-    previousMonthStreamCount,
-    previousMonthContentCount,
-    previousMonthActiveStreamers,
-    // Ödeme istatistikleri
-    totalUnpaid,
-    totalPaid,
-    totalDue,
+    return {
+      totalStreamers,
+      activeStreamers,
+      totalContent,
+      totalRevenue: totalRevenue._sum.amount || 0,
+      monthlyRevenue: monthlyRevenue._sum.amount || 0,
+      totalExpense: (totalExpense._sum.amount || 0) + (totalStreamCosts._sum.cost || 0),
+      monthlyExpense: (monthlyExpense._sum.amount || 0) + (monthlyStreamCosts._sum.cost || 0),
+      totalStreamCosts: totalStreamCosts._sum.cost || 0,
+      monthlyStreamCosts: monthlyStreamCosts._sum.cost || 0,
+      // Önceki ay verileri
+      previousMonthRevenue: previousMonthRevenue._sum.amount || 0,
+      previousMonthExpense: previousMonthExpense._sum.amount || 0,
+      previousMonthStreamCosts: previousMonthStreamCosts._sum.cost || 0,
+      previousMonthStreamCount,
+      previousMonthContentCount,
+      previousMonthActiveStreamers,
+      // Ödeme istatistikleri
+      totalUnpaid,
+      totalPaid,
+      totalDue,
+    }
+  } catch (error) {
+    console.error('Error in getStats:', error)
+    // Varsayılan değerler döndür
+    return {
+      totalStreamers: 0,
+      activeStreamers: 0,
+      totalContent: 0,
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      totalExpense: 0,
+      monthlyExpense: 0,
+      totalStreamCosts: 0,
+      monthlyStreamCosts: 0,
+      previousMonthRevenue: 0,
+      previousMonthExpense: 0,
+      previousMonthStreamCosts: 0,
+      previousMonthStreamCount: 0,
+      previousMonthContentCount: 0,
+      previousMonthActiveStreamers: 0,
+      totalUnpaid: 0,
+      totalPaid: 0,
+      totalDue: 0,
+    }
   }
 }
 
@@ -198,7 +232,35 @@ function calculateChange(current: number, previous: number): { value: number; is
 }
 
 export default async function DashboardPage() {
-  const stats = await getStats()
+  // Hata yönetimi ile stats çek
+  let stats: any
+  try {
+    stats = await getStats()
+  } catch (error: any) {
+    console.error('Error fetching stats:', error)
+    // Varsayılan değerler
+    stats = {
+      totalStreamers: 0,
+      activeStreamers: 0,
+      totalContent: 0,
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      totalExpense: 0,
+      monthlyExpense: 0,
+      totalStreamCosts: 0,
+      monthlyStreamCosts: 0,
+      previousMonthRevenue: 0,
+      previousMonthExpense: 0,
+      previousMonthStreamCosts: 0,
+      previousMonthStreamCount: 0,
+      previousMonthContentCount: 0,
+      previousMonthActiveStreamers: 0,
+      totalUnpaid: 0,
+      totalPaid: 0,
+      totalDue: 0,
+    }
+  }
+
   // Prisma Client güncellenene kadar geçici çözüm
   let recentStreams: any[] = []
   try {
@@ -212,19 +274,32 @@ export default async function DashboardPage() {
     // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
     if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
       console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
-      recentStreams = await prisma.stream.findMany({
-        take: 5,
-        orderBy: { date: 'asc' },
-        include: { streamer: true },
-      })
+      try {
+        recentStreams = await prisma.stream.findMany({
+          take: 5,
+          orderBy: { date: 'asc' },
+          include: { streamer: true },
+        })
+      } catch (e) {
+        console.error('Error fetching streams:', e)
+        recentStreams = []
+      }
     } else {
-      throw error
+      console.error('Error fetching streams:', error)
+      recentStreams = []
     }
   }
-  const recentContent = await prisma.content.findMany({
-    take: 5,
-    orderBy: { publishDate: 'asc' },
-  })
+  
+  let recentContent: any[] = []
+  try {
+    recentContent = await prisma.content.findMany({
+      take: 5,
+      orderBy: { publishDate: 'asc' },
+    })
+  } catch (error) {
+    console.error('Error fetching content:', error)
+    recentContent = []
+  }
 
   const currentMonth = format(new Date(), 'MMMM yyyy', { locale: tr })
   const currentMonthKey = format(new Date(), 'yyyy-MM')
