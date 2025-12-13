@@ -81,3 +81,4 @@ Environment variables ekledikten sonra, projeyi deploy ettiğinde bu variables o
 **Önce environment variables'ı ekle, sonra deploy edelim!** 🚀
 
 
+

@@ -50,3 +50,4 @@ Gördüğün sayfa muhtemelen:
 **Sol menüde "Environment Variables" seçeneğini görüyor musun? Oraya tıkla!** 🚀
 
 
+

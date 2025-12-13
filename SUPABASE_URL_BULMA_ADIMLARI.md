@@ -134,3 +134,4 @@ Eğer bu formatta değilse veya `[YOUR-PASSWORD]` yazıyorsa, şifreyi manuel ol
 
 
 
+

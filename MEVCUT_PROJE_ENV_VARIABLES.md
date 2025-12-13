@@ -101,3 +101,4 @@ Environment variables eklendikten sonra:
 **Hazırsan başlayalım! Environment variables eklemeye başla!** 🚀
 
 
+
