@@ -140,6 +140,11 @@ npx prisma studio
 
 ## 🆘 Sorun Giderme
 
+**Build hatası: `contentType column does not exist`**
+- ✅ **ÇÖZÜLDÜ!** Build komutu artık otomatik column ekliyor
+- Eğer hala hata alırsanız: `DEPLOYMENT_CONTENTTYPE_FIX.md` dosyasına bakın
+- Veya Supabase SQL Editor'den manuel ekleyin (yukarıdaki rehberde var)
+
 **Build hatası alırsan:**
 - Environment variables'ların doğru eklendiğini kontrol et
 - `npx prisma generate` komutunu build'e ekle

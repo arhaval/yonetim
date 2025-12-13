@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && next build",
+    "build": "npm run add-contenttype || true && prisma generate && next build",
     "start": "next start -p 3001",
     "lint": "next lint",
     "db:push": "prisma db push",
@@ -14,7 +14,8 @@
     "reset-db": "tsx scripts/reset-database.ts",
     "test-creator-login": "tsx scripts/test-creator-login.ts",
     "create-creator": "tsx scripts/create-creator.ts",
-    "create-voice-actor": "tsx scripts/create-voice-actor.ts"
+    "create-voice-actor": "tsx scripts/create-voice-actor.ts",
+    "add-contenttype": "tsx scripts/add-contenttype-column.ts"
   },
   "dependencies": {
     "next": "^14.2.0",
