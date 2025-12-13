@@ -7,6 +7,10 @@ import { Check, X, DollarSign } from 'lucide-react'
 import StreamCostModal from '@/components/StreamCostModal'
 import ApproveStreamButton from '@/components/ApproveStreamButton'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function PendingStreamsPage() {
   // Prisma Client güncellenene kadar geçici çözüm
   let pendingStreams: any[] = []

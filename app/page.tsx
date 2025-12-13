@@ -5,6 +5,10 @@ import { tr } from 'date-fns/locale/tr'
 import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, Twitter, Twitch, Music, Target, BarChart3, AlertCircle, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 
+// Force dynamic rendering - build sırasında database'e bağlanma
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getStats() {
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   const previousMonthStart = startOfMonth(subMonths(new Date(), 1))

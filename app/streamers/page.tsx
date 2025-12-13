@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus, ExternalLink, Users } from 'lucide-react'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function StreamersPage() {
   const streamers = await prisma.streamer.findMany({
     include: {

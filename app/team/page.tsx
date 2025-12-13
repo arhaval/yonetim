@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus, Video, Users, DollarSign, CheckCircle2, Mic } from 'lucide-react'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function TeamPage() {
   const [members, streamers, voiceActors] = await Promise.all([
     prisma.teamMember.findMany({
