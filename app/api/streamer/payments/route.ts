@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 // Yayıncının ödeme bilgilerini ve geçmişini getir
 export async function GET(request: NextRequest) {
   try {

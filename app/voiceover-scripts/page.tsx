@@ -6,6 +6,10 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import AudioLink from './AudioLink'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function VoiceoverScriptsPage() {
   let scripts: any[] = []
   

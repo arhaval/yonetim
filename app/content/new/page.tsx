@@ -1,10 +1,10 @@
 'use client'
 
 import Layout from '@/components/Layout'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function NewContentPage() {
+function NewContentPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -311,6 +311,14 @@ export default function NewContentPage() {
         </form>
       </div>
     </Layout>
+  )
+}
+
+export default function NewContentPage() {
+  return (
+    <Suspense fallback={<Layout><div className="p-8">Yükleniyor...</div></Layout>}>
+      <NewContentPageContent />
+    </Suspense>
   )
 }
 
