@@ -72,8 +72,8 @@ export default function NewStreamerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email || null,
-          password: formData.password || null,
+          email: formData.email,
+          password: formData.password,
           profilePhoto: formData.profilePhoto || null,
           iban: formData.iban || null,
           phone: formData.phone || null,

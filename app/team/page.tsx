@@ -186,7 +186,7 @@ export default async function TeamPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Görevler</p>
-                            <p className="text-lg font-bold text-gray-900">{member._count.tasks}</p>
+                            <p className="text-lg font-bold text-gray-900">{member._count?.tasks || 0}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -195,19 +195,21 @@ export default async function TeamPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Ödemeler</p>
-                            <p className="text-lg font-bold text-gray-900">{member._count.payments}</p>
+                            <p className="text-lg font-bold text-gray-900">{member._count?.payments || 0}</p>
                           </div>
                         </div>
-                        <div className="col-span-2 mt-2 pt-4 border-t border-gray-50">
-                          <p className="text-xs text-gray-500 mb-1">Maaş</p>
-                          <p className="text-xl font-bold text-gray-900">
-                            {member.baseSalary.toLocaleString('tr-TR', {
-                              style: 'currency',
-                              currency: 'TRY',
-                              minimumFractionDigits: 0,
-                            })}
-                          </p>
-                        </div>
+                        {member.baseSalary !== undefined && member.baseSalary !== null && (
+                          <div className="col-span-2 mt-2 pt-4 border-t border-gray-50">
+                            <p className="text-xs text-gray-500 mb-1">Maaş</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {member.baseSalary.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                                minimumFractionDigits: 0,
+                              })}
+                            </p>
+                          </div>
+                        )}
                       </>
                     ) : member.type === 'voice-actor' ? (
                       <>
@@ -217,7 +219,7 @@ export default async function TeamPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Metinler</p>
-                            <p className="text-lg font-bold text-gray-900">{member._count.scripts}</p>
+                            <p className="text-lg font-bold text-gray-900">{member._count?.scripts || 0}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -238,10 +240,10 @@ export default async function TeamPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Yayınlar</p>
-                            <p className="text-lg font-bold text-gray-900">{member._count.streams}</p>
+                            <p className="text-lg font-bold text-gray-900">{member._count?.streams || 0}</p>
                           </div>
                         </div>
-                        {member.hourlyRate > 0 ? (
+                        {member.hourlyRate && member.hourlyRate > 0 ? (
                           <div className="flex items-center space-x-2">
                             <div className="p-2 bg-green-50 rounded-lg">
                               <DollarSign className="w-5 h-5 text-green-600" />
