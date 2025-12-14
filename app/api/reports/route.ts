@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 5)
 
     // Platform bazlı dağılım
-    const platformMap = new Map<string, number>()
+    const platformMap = new Map<string, number>();
     (allContents || []).forEach((content) => {
       if (content.platform) {
         const count = platformMap.get(content.platform) || 0
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
 
     // İçerik türü bazlı dağılım
-    const typeMap = new Map<string, number>()
+    const typeMap = new Map<string, number>();
     (allContents || []).forEach((content) => {
       if (content.type) {
         const count = typeMap.get(content.type) || 0
