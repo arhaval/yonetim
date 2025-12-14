@@ -37,14 +37,23 @@ export default function StreamsPage() {
     setLoading(true)
     try {
       const response = await fetch('/api/streams/list')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       
       if (Array.isArray(data)) {
         let filteredStreams = data
         if (filter === 'monthly') {
           filteredStreams = data.filter((stream: any) => {
-            const streamMonth = format(new Date(stream.date), 'yyyy-MM')
-            return streamMonth === selectedMonth
+            try {
+              const streamMonth = format(new Date(stream.date), 'yyyy-MM')
+              return streamMonth === selectedMonth
+            } catch {
+              return false
+            }
           })
         }
         setStreams(filteredStreams)
@@ -66,6 +75,11 @@ export default function StreamsPage() {
     setLoading(true)
     try {
       const response = await fetch('/api/streams/pending')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       
       if (Array.isArray(data)) {

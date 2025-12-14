@@ -247,17 +247,26 @@ export default function ContentPage() {
           type: typeName,
         })
         const response = await fetch(`/api/content/list?${params}`)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
         const data = await response.json()
         
         console.log('Fetched contents:', data.contents?.length || 0, 'items')
         
-        setContents(data.contents || [])
-        setStats(data.stats || {
+        // Güvenli array kontrolü
+        const safeContents = Array.isArray(data.contents) ? data.contents : []
+        const safeStats = data.stats || {
           total: 0,
           totalViews: 0,
           totalLikes: 0,
           totalEngagement: 0,
-        })
+        }
+        
+        setContents(safeContents)
+        setStats(safeStats)
       } catch (error) {
         console.error('Error fetching content:', error)
         setContents([])

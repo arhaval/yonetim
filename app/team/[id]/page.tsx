@@ -13,40 +13,47 @@ export default async function TeamMemberDetailPage({
   params: { id: string }
 }) {
   // Önce ekip üyesi olarak kontrol et
-  let member = await prisma.teamMember.findUnique({
-    where: { id: params.id },
-    include: {
-      tasks: {
-        orderBy: { createdAt: 'asc' },
-      },
-      payments: {
-        orderBy: { paidAt: 'asc' },
-      },
-    },
-  })
-
-  // Eğer ekip üyesi değilse, seslendirmen olarak kontrol et
+  let member = null
   let voiceActor = null
-  if (!member) {
-    voiceActor = await prisma.voiceActor.findUnique({
+  
+  try {
+    member = await prisma.teamMember.findUnique({
       where: { id: params.id },
       include: {
-        scripts: {
-          include: {
-            creator: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
+        tasks: {
           orderBy: { createdAt: 'asc' },
         },
+        payments: {
+          orderBy: { paidAt: 'asc' },
+        },
       },
-    })
-  }
+    }).catch(() => null)
 
-  if (!member && !voiceActor) {
+    // Eğer ekip üyesi değilse, seslendirmen olarak kontrol et
+    if (!member) {
+      voiceActor = await prisma.voiceActor.findUnique({
+        where: { id: params.id },
+        include: {
+          scripts: {
+            include: {
+              creator: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      }).catch(() => null)
+    }
+
+    if (!member && !voiceActor) {
+      notFound()
+    }
+  } catch (error) {
+    console.error('Error fetching team member:', error)
     notFound()
   }
 
@@ -87,7 +94,7 @@ export default async function TeamMemberDetailPage({
         paidAt: null,
       },
       _sum: { amount: true },
-    })
+    }).catch(() => ({ _sum: { amount: null } }))
 
     totalUnpaid = unpaidPayments._sum.amount || 0
   }

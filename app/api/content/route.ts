@@ -7,14 +7,11 @@ export async function GET() {
   try {
     const contents = await prisma.content.findMany({
       orderBy: { publishDate: 'asc' },
-    })
+    }).catch(() => [])
     return NextResponse.json(contents)
   } catch (error) {
     console.error('Error fetching content:', error)
-    return NextResponse.json(
-      { error: 'İçerikler getirilemedi' },
-      { status: 500 }
-    )
+    return NextResponse.json([], { status: 200 }) // Boş array döndür
   }
 }
 

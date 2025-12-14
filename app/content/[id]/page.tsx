@@ -11,19 +11,26 @@ export default async function ContentDetailPage({
 }: {
   params: { id: string }
 }) {
-  const content = await prisma.content.findUnique({
-    where: { id: params.id },
-    include: {
-      creator: {
-        select: {
-          id: true,
-          name: true,
+  let content = null
+  
+  try {
+    content = await prisma.content.findUnique({
+      where: { id: params.id },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-  })
+    }).catch(() => null)
 
-  if (!content) {
+    if (!content) {
+      notFound()
+    }
+  } catch (error) {
+    console.error('Error fetching content:', error)
     notFound()
   }
 

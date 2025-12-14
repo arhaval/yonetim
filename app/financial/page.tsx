@@ -55,20 +55,28 @@ export default function FinancialPage() {
         fetch(`/api/streams/list?${params}`),
       ])
 
+      if (!recordsRes.ok || !streamsRes.ok) {
+        throw new Error('API error')
+      }
+
       const recordsData = await recordsRes.json()
       const streamsData = await streamsRes.json()
 
+      // Güvenli array kontrolü
+      const safeRecords = Array.isArray(recordsData) ? recordsData : []
+      const safeStreams = Array.isArray(streamsData) ? streamsData : []
+
       // İstatistikleri hesapla
-      const totalIncome = recordsData
-        .filter((r: any) => r.type === 'income')
-        .reduce((sum: number, r: any) => sum + r.amount, 0)
+      const totalIncome = safeRecords
+        .filter((r: any) => r?.type === 'income')
+        .reduce((sum: number, r: any) => sum + (r?.amount || 0), 0)
 
-      const totalExpense = recordsData
-        .filter((r: any) => r.type === 'expense')
-        .reduce((sum: number, r: any) => sum + r.amount, 0)
+      const totalExpense = safeRecords
+        .filter((r: any) => r?.type === 'expense')
+        .reduce((sum: number, r: any) => sum + (r?.amount || 0), 0)
 
-      const streamCosts = streamsData.reduce(
-        (sum: number, s: any) => sum + (s.cost || 0),
+      const streamCosts = safeStreams.reduce(
+        (sum: number, s: any) => sum + (s?.cost || 0),
         0
       )
 
@@ -80,8 +88,8 @@ export default function FinancialPage() {
         streamCosts,
         monthlyStreamCosts: streamCosts,
       })
-      setRecords(recordsData)
-      setStreams(streamsData)
+      setRecords(safeRecords)
+      setStreams(safeStreams)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {

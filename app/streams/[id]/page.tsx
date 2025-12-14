@@ -11,14 +11,21 @@ export default async function StreamDetailPage({
 }: {
   params: { id: string }
 }) {
-  const stream = await prisma.stream.findUnique({
-    where: { id: params.id },
-    include: {
-      streamer: true,
-    },
-  })
+  let stream = null
+  
+  try {
+    stream = await prisma.stream.findUnique({
+      where: { id: params.id },
+      include: {
+        streamer: true,
+      },
+    }).catch(() => null)
 
-  if (!stream) {
+    if (!stream) {
+      notFound()
+    }
+  } catch (error) {
+    console.error('Error fetching stream:', error)
     notFound()
   }
 

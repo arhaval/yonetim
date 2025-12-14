@@ -53,13 +53,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(streams)
+    return NextResponse.json(streams || [])
   } catch (error) {
     console.error('Error fetching streams:', error)
-    return NextResponse.json(
-      { error: 'Yayınlar getirilemedi' },
-      { status: 500 }
-    )
+    return NextResponse.json([], { status: 200 }) // Boş array döndür
   }
 }
 
