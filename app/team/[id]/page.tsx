@@ -34,7 +34,7 @@ export default async function TeamMemberDetailPage({
     // Eğer ekip üyesi değilse, seslendirmen olarak kontrol et
     if (!member) {
       voiceActor = await prisma.voiceActor.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
           scripts: {
             include: {
