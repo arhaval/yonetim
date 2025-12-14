@@ -4,14 +4,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Prisma Client'ı her seferinde yeniden oluştur (development için)
+// Prisma Client'ı singleton pattern ile oluştur
+// Supabase Connection Pooler için özel ayarlar
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
 
-if (process.env.NODE_ENV !== 'production') {
+// Her zaman singleton kullan (Vercel serverless için)
+if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma
 }
 
