@@ -6,9 +6,10 @@ export const dynamic = 'force-dynamic'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const { id } = await Promise.resolve(params)
     const data = await request.json()
     
     // Email ve şifre güncelleme
@@ -48,8 +49,16 @@ export async function PATCH(
       updateData.baseSalary = parseFloat(data.baseSalary) || 0
     }
 
+    // Eğer güncellenecek bir şey yoksa hata döndür
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'Güncellenecek bir alan belirtilmedi' },
+        { status: 400 }
+      )
+    }
+
     const member = await prisma.teamMember.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     })
     

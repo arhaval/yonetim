@@ -11,15 +11,16 @@ import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 export default async function TeamMemberDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
+  const { id } = await Promise.resolve(params)
   // Önce ekip üyesi olarak kontrol et
   let member = null
   let voiceActor = null
   
   try {
     member = await prisma.teamMember.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         tasks: {
           orderBy: { createdAt: 'asc' },

@@ -12,8 +12,9 @@ import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 export default async function StreamerDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
+  const { id } = await Promise.resolve(params)
   let streamer = null
   let totalStreams = 0
   let totalExternalStreams = 0
@@ -21,7 +22,7 @@ export default async function StreamerDetailPage({
   
   try {
     streamer = await prisma.streamer.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         streams: {
           orderBy: { date: 'asc' },
