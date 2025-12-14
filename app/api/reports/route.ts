@@ -130,24 +130,25 @@ export async function GET(request: NextRequest) {
 
     // Platform bazlı dağılım
     const platformMap = new Map<string, number>();
-    (allContents || []).forEach((content) => {
+    const allContentsArray = allContents || [];
+    allContentsArray.forEach((content) => {
       if (content.platform) {
-        const count = platformMap.get(content.platform) || 0
-        platformMap.set(content.platform, count + 1)
+        const count = platformMap.get(content.platform) || 0;
+        platformMap.set(content.platform, count + 1);
       }
-    })
+    });
     const contentByPlatform = Array.from(platformMap.entries())
       .map(([platform, count]) => ({ platform, count }))
       .sort((a, b) => b.count - a.count)
 
     // İçerik türü bazlı dağılım
     const typeMap = new Map<string, number>();
-    (allContents || []).forEach((content) => {
+    allContentsArray.forEach((content) => {
       if (content.type) {
-        const count = typeMap.get(content.type) || 0
-        typeMap.set(content.type, count + 1)
+        const count = typeMap.get(content.type) || 0;
+        typeMap.set(content.type, count + 1);
       }
-    })
+    });
     const contentByType = Array.from(typeMap.entries())
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count)
