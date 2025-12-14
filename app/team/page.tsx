@@ -8,39 +8,48 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function TeamPage() {
-  const [members, streamers, voiceActors] = await Promise.all([
-    prisma.teamMember.findMany({
-      include: {
-        _count: {
-          select: {
-            tasks: true,
-            payments: true,
+  let members: any[] = []
+  let streamers: any[] = []
+  let voiceActors: any[] = []
+  
+  try {
+    [members, streamers, voiceActors] = await Promise.all([
+      prisma.teamMember.findMany({
+        include: {
+          _count: {
+            select: {
+              tasks: true,
+              payments: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.streamer.findMany({
-      include: {
-        _count: {
-          select: {
-            streams: true,
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+      prisma.streamer.findMany({
+        include: {
+          _count: {
+            select: {
+              streams: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.voiceActor.findMany({
-      include: {
-        _count: {
-          select: {
-            scripts: true,
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+      prisma.voiceActor.findMany({
+        include: {
+          _count: {
+            select: {
+              scripts: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ])
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+    ])
+  } catch (error) {
+    console.error('Error fetching team data:', error)
+    // Boş array'ler zaten set edildi, devam et
+  }
 
   // Tüm üyeleri birleştir (ekip üyeleri + yayıncılar + seslendirmenler)
   const allMembers = [

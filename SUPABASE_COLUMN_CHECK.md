@@ -43,3 +43,4 @@ ORDER BY table_name, ordinal_position;
 Bu, tüm tabloları ve kolonlarını gösterecek.
 
 
+

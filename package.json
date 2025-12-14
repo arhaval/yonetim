@@ -16,6 +16,7 @@
     "test-creator-login": "tsx scripts/test-creator-login.ts",
     "create-creator": "tsx scripts/create-creator.ts",
     "create-voice-actor": "tsx scripts/create-voice-actor.ts",
+    "create-streamer": "tsx scripts/create-streamer.ts",
     "add-contenttype": "tsx scripts/add-contenttype-column.ts"
   },
   "dependencies": {

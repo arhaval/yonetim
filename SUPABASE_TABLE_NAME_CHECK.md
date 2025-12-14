@@ -29,3 +29,4 @@ ORDER BY table_name, ordinal_position;
 Bu, script veya voice içeren tüm tabloları ve kolonlarını gösterecek.
 
 
+

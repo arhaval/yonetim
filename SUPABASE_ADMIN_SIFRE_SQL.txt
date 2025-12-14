@@ -1,0 +1,8 @@
+-- Admin kullanıcısının şifresini güncelle (admin123)
+UPDATE "User"
+SET password = '$2a$10$BFGDpaJO5keEz4afygYWMeTsI7W9p5vLCygzCVG.wXyFG0jlYygjW'
+WHERE email = 'admin@arhaval.com';
+
+-- Kontrol et
+SELECT email, name, role FROM "User" WHERE email = 'admin@arhaval.com';
+

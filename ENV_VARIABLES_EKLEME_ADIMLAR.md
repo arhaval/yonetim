@@ -76,3 +76,4 @@ Environment variables eklendikten sonra:
 **Not:** Environment variables eklendikten sonra mutlaka redeploy yapın! Yoksa yeni variables kullanılmaz.
 
 
+

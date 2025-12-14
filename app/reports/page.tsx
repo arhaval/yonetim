@@ -23,6 +23,16 @@ export default function ReportsPage() {
     expense: 0,
     streamCost: 0,
   })
+  
+  // Stats'ın her zaman geçerli olduğundan emin ol
+  const safeStats = stats || {
+    streamCount: 0,
+    externalStreamCount: 0,
+    contentCount: 0,
+    income: 0,
+    expense: 0,
+    streamCost: 0,
+  }
   const [contentStats, setContentStats] = useState({
     totalViews: 0,
     totalLikes: 0,
@@ -50,9 +60,50 @@ export default function ReportsPage() {
       })
 
       const response = await fetch(`/api/reports?${params}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
 
-      setStats(data.stats)
+      // Hata kontrolü
+      if (data.error || !data.stats) {
+        console.error('API Error:', data.error || 'Stats not found')
+        // Varsayılan değerlerle devam et
+        setStats({
+          streamCount: 0,
+          externalStreamCount: 0,
+          contentCount: 0,
+          income: 0,
+          expense: 0,
+          streamCost: 0,
+        })
+        setContentStats({
+          totalViews: 0,
+          totalLikes: 0,
+          totalComments: 0,
+          totalShares: 0,
+          totalSaves: 0,
+          totalEngagement: 0,
+        })
+        setTopStreamers([])
+        setTopContent([])
+        setTopContentByViews([])
+        setContentByPlatform([])
+        setContentByType([])
+        return
+      }
+
+      // Stats'ı güvenli bir şekilde set et
+      setStats({
+        streamCount: data.stats?.streamCount || 0,
+        externalStreamCount: data.stats?.externalStreamCount || 0,
+        contentCount: data.stats?.contentCount || 0,
+        income: data.stats?.income || 0,
+        expense: data.stats?.expense || 0,
+        streamCost: data.stats?.streamCost || 0,
+      })
       setContentStats(data.contentStats || {
         totalViews: 0,
         totalLikes: 0,
@@ -98,7 +149,7 @@ export default function ReportsPage() {
     )
   }
 
-  const netProfit = stats.income - stats.expense
+  const netProfit = (safeStats.income || 0) - (safeStats.expense || 0)
 
   return (
     <Layout>
@@ -193,7 +244,7 @@ export default function ReportsPage() {
                   </div>
                   <p className="text-sm font-semibold text-gray-600 mb-2">Gelir</p>
                   <p className="text-3xl font-bold text-green-700">
-                    {stats.income.toLocaleString('tr-TR', {
+                    {(safeStats.income || 0).toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                       maximumFractionDigits: 0,
@@ -212,7 +263,7 @@ export default function ReportsPage() {
                   </div>
                   <p className="text-sm font-semibold text-gray-600 mb-2">Gider</p>
                   <p className="text-3xl font-bold text-red-700">
-                    {stats.expense.toLocaleString('tr-TR', {
+                    {(safeStats.expense || 0).toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                       maximumFractionDigits: 0,
@@ -263,7 +314,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-gray-600 mb-2">Yayın Sayısı</p>
-                  <p className="text-3xl font-bold text-blue-700">{stats.streamCount}</p>
+                  <p className="text-3xl font-bold text-blue-700">{safeStats.streamCount || 0}</p>
                 </div>
               </div>
             </div>
@@ -342,7 +393,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">Toplam Yayın</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.streamCount}</p>
+                <p className="text-3xl font-bold text-gray-900">{safeStats.streamCount || 0}</p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -352,7 +403,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">Dış Yayın</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.externalStreamCount}</p>
+                <p className="text-3xl font-bold text-gray-900">{safeStats.externalStreamCount || 0}</p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -363,7 +414,7 @@ export default function ReportsPage() {
                 </div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">Yayın Maliyeti</p>
                 <p className="text-3xl font-bold text-red-600">
-                  {stats.streamCost.toLocaleString('tr-TR', {
+                  {(safeStats.streamCost || 0).toLocaleString('tr-TR', {
                     style: 'currency',
                     currency: 'TRY',
                     maximumFractionDigits: 0,
@@ -421,7 +472,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">İçerik Sayısı</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.contentCount}</p>
+                <p className="text-3xl font-bold text-gray-900">{safeStats.contentCount || 0}</p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">

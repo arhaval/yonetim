@@ -80,3 +80,4 @@ Vercel Environment Variables'da DATABASE_URL doğru mu kontrol edin:
 3. Vercel'de redeploy yapın
 
 
+

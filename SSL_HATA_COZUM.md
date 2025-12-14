@@ -53,3 +53,4 @@ Bazen tarayıcı cache'i sorun yaratabilir:
 **Not:** Şu an tüm deployment'lar Error durumunda, bu yüzden site çalışmıyor. Önce build'in başarılı olması gerekiyor.
 
 
+

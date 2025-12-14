@@ -83,3 +83,4 @@ Aynı şekilde diğer variables'ları da ekleyin:
 
 
 
+

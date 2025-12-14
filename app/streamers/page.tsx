@@ -8,18 +8,25 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function StreamersPage() {
-  const streamers = await prisma.streamer.findMany({
-    include: {
-      _count: {
-        select: {
-          streams: true,
-          externalStreams: true,
+  let streamers = []
+  
+  try {
+    streamers = await prisma.streamer.findMany({
+      include: {
+        _count: {
+          select: {
+            streams: true,
+            externalStreams: true,
+          },
         },
+        teamRates: true,
       },
-      teamRates: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+      orderBy: { createdAt: 'desc' },
+    })
+  } catch (error) {
+    console.error('Error fetching streamers:', error)
+    streamers = []
+  }
 
   return (
     <Layout>

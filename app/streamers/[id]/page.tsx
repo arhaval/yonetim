@@ -13,38 +13,49 @@ export default async function StreamerDetailPage({
 }: {
   params: { id: string }
 }) {
-  const streamer = await prisma.streamer.findUnique({
-    where: { id: params.id },
-    include: {
-      streams: {
-        // Prisma Client güncellenene kadar status filtresi kaldırıldı
-        orderBy: { date: 'asc' },
+  let streamer = null
+  let totalStreams = 0
+  let totalExternalStreams = 0
+  let totalCost = { _sum: { cost: null as number | null } }
+  
+  try {
+    streamer = await prisma.streamer.findUnique({
+      where: { id: params.id },
+      include: {
+        streams: {
+          orderBy: { date: 'asc' },
+        },
+        externalStreams: {
+          take: 10,
+          orderBy: { date: 'asc' },
+        },
+        payments: {
+          orderBy: { paidAt: 'asc' },
+        },
+        teamRates: true,
       },
-      externalStreams: {
-        take: 10,
-        orderBy: { date: 'asc' },
-      },
-      payments: {
-        orderBy: { paidAt: 'asc' },
-      },
-      teamRates: true,
-    },
-  })
+    })
 
-  if (!streamer) {
+    if (!streamer) {
+      notFound()
+    }
+
+    totalStreams = await prisma.stream.count({
+      where: { streamerId: streamer.id },
+    }).catch(() => 0)
+    
+    totalExternalStreams = await prisma.externalStream.count({
+      where: { streamerId: streamer.id },
+    }).catch(() => 0)
+    
+    totalCost = await prisma.stream.aggregate({
+      where: { streamerId: streamer.id },
+      _sum: { cost: true },
+    }).catch(() => ({ _sum: { cost: null } }))
+  } catch (error) {
+    console.error('Error fetching streamer:', error)
     notFound()
   }
-
-  const totalStreams = await prisma.stream.count({
-    where: { streamerId: streamer.id },
-  })
-  const totalExternalStreams = await prisma.externalStream.count({
-    where: { streamerId: streamer.id },
-  })
-  const totalCost = await prisma.stream.aggregate({
-    where: { streamerId: streamer.id },
-    _sum: { cost: true },
-  })
 
   // Takım bazlı kazanç hesaplamaları
   const teamEarnings = await prisma.stream.groupBy({
@@ -60,12 +71,12 @@ export default async function StreamerDetailPage({
     _count: {
       id: true,
     },
-  })
+  }).catch(() => [])
 
   const totalStreamerEarning = await prisma.stream.aggregate({
     where: { streamerId: streamer.id },
     _sum: { streamerEarning: true },
-  })
+  }).catch(() => ({ _sum: { streamerEarning: null } }))
 
   // Ödenmemiş paraları hesapla
   const unpaidStreams = await prisma.stream.aggregate({
@@ -74,7 +85,7 @@ export default async function StreamerDetailPage({
       paymentStatus: 'pending',
     },
     _sum: { streamerEarning: true },
-  })
+  }).catch(() => ({ _sum: { streamerEarning: null } }))
 
   const unpaidPayments = await prisma.payment.aggregate({
     where: {
@@ -82,7 +93,7 @@ export default async function StreamerDetailPage({
       paidAt: null,
     },
     _sum: { amount: true },
-  })
+  }).catch(() => ({ _sum: { amount: null } }))
 
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 

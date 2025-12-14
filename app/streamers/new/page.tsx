@@ -9,8 +9,11 @@ export default function NewStreamerPage() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    password: '',
     profilePhoto: '',
     iban: '',
+    phone: '',
   })
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -69,8 +72,11 @@ export default function NewStreamerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          email: formData.email || null,
+          password: formData.password || null,
           profilePhoto: formData.profilePhoto || null,
           iban: formData.iban || null,
+          phone: formData.phone || null,
           platform: 'Twitch', // Varsayılan
           teamRates: teamRates
             .filter(tr => tr.teamName.trim() && tr.hourlyRate)
@@ -118,6 +124,57 @@ export default function NewStreamerPage() {
                   }
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
                   placeholder="Yayıncı adı"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Email (Giriş için)
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                  placeholder="yayinci@example.com"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Yayıncı bu email ile sisteme giriş yapabilir
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Şifre (Giriş için)
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                  placeholder="Giriş şifresi"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Yayıncı bu şifre ile sisteme giriş yapabilir
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Telefon
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                  placeholder="555 123 45 67"
                 />
               </div>
 
