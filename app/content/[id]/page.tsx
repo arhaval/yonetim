@@ -9,13 +9,14 @@ import { tr } from 'date-fns/locale/tr'
 export default async function ContentDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
+  const { id } = await Promise.resolve(params)
   let content = null
   
   try {
     content = await prisma.content.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         creator: {
           select: {

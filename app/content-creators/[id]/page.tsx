@@ -10,10 +10,14 @@ import CreateScriptButton from './CreateScriptButton'
 export default async function ContentCreatorDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
-  const creator = await prisma.contentCreator.findUnique({
-    where: { id: params.id },
+  const { id } = await Promise.resolve(params)
+  let creator = null
+  
+  try {
+    creator = await prisma.contentCreator.findUnique({
+      where: { id },
     include: {
       contents: {
         orderBy: { publishDate: 'asc' },
@@ -36,9 +40,13 @@ export default async function ContentCreatorDetailPage({
         },
       },
     },
-  })
+  }).catch(() => null)
 
   if (!creator) {
+    notFound()
+  }
+  } catch (error) {
+    console.error('Error fetching content creator:', error)
     notFound()
   }
 

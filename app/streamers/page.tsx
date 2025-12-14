@@ -107,15 +107,15 @@ export default async function StreamersPage() {
                     <div className="flex items-center space-x-6">
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-900">
-                          {streamer._count.streams} yayın
+                          {streamer._count?.streams || 0} yayın
                         </p>
                         <p className="text-xs text-gray-500">
-                          {streamer._count.externalStreams} dış yayın
+                          {streamer._count?.externalStreams || 0} dış yayın
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-indigo-600">
-                          {streamer.hourlyRate.toLocaleString('tr-TR', {
+                          {(streamer.hourlyRate || 0).toLocaleString('tr-TR', {
                             style: 'currency',
                             currency: 'TRY',
                           })}

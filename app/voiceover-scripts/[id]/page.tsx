@@ -10,13 +10,14 @@ import ApproveScriptButton from './ApproveScriptButton'
 export default async function VoiceoverScriptDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
+  const { id } = await Promise.resolve(params)
   let script: any = null
 
   try {
     script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         creator: {
           select: {

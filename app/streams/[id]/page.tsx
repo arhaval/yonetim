@@ -9,13 +9,14 @@ import DeleteStreamButton from '@/components/DeleteStreamButton'
 export default async function StreamDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }> | { id: string }
 }) {
+  const { id } = await Promise.resolve(params)
   let stream = null
   
   try {
     stream = await prisma.stream.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         streamer: true,
       },
@@ -38,14 +39,14 @@ export default async function StreamDetailPage({
           <div className="flex items-center justify-between">
             <div>
               <Link
-                href={`/streamers/${stream.streamerId}`}
+                href={`/streamers/${stream?.streamerId}`}
                 className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
               >
-                ← {stream.streamer.name} profiline dön
+                ← {stream?.streamer?.name || 'Yayıncı'} profiline dön
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Yayın Detayları</h1>
             </div>
-            <DeleteStreamButton streamId={stream.id} streamerId={stream.streamerId} />
+            {stream && <DeleteStreamButton streamId={stream.id} streamerId={stream.streamerId} />}
           </div>
         </div>
 
@@ -55,19 +56,19 @@ export default async function StreamDetailPage({
               <div className="bg-gray-50 rounded-lg p-4">
                 <dt className="text-sm font-medium text-gray-500">Tarih</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
+                  {stream?.date ? format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr }) : '-'}
                 </dd>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <dt className="text-sm font-medium text-gray-500">Süre</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stream.duration} saat
+                  {stream?.duration || 0} saat
                 </dd>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <dt className="text-sm font-medium text-gray-500">Maliyet</dt>
                 <dd className="mt-1 text-lg font-semibold text-red-600">
-                  {stream.cost.toLocaleString('tr-TR', {
+                  {(stream?.cost || 0).toLocaleString('tr-TR', {
                     style: 'currency',
                     currency: 'TRY',
                   })}
@@ -76,8 +77,8 @@ export default async function StreamDetailPage({
               <div className="bg-gray-50 rounded-lg p-4">
                 <dt className="text-sm font-medium text-gray-500">Saatlik Maliyet</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stream.duration > 0
-                    ? (stream.cost / stream.duration).toLocaleString('tr-TR', {
+                  {stream?.duration && stream.duration > 0
+                    ? ((stream.cost || 0) / stream.duration).toLocaleString('tr-TR', {
                         style: 'currency',
                         currency: 'TRY',
                       })
@@ -91,12 +92,16 @@ export default async function StreamDetailPage({
               <div>
                 <dt className="text-sm font-medium text-gray-500">Yayıncı</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  <Link
-                    href={`/streamers/${stream.streamerId}`}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    {stream.streamer.name}
-                  </Link>
+                  {stream?.streamer ? (
+                    <Link
+                      href={`/streamers/${stream.streamerId}`}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {stream.streamer.name}
+                    </Link>
+                  ) : (
+                    <span>Yayıncı bulunamadı</span>
+                  )}
                 </dd>
               </div>
 
