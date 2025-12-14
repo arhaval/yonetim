@@ -25,8 +25,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    // Timeout ile fetch
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 saniye timeout
+    
+    fetch('/api/auth/me', { signal: controller.signal })
       .then(res => {
+        clearTimeout(timeoutId)
         if (!res.ok) {
           console.error('Failed to fetch user:', res.status)
           return { user: null }
@@ -35,7 +40,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       })
       .then(data => setUser(data.user))
       .catch(error => {
-        console.error('Error fetching user:', error)
+        clearTimeout(timeoutId)
+        if (error.name === 'AbortError') {
+          console.warn('User fetch timeout')
+        } else {
+          console.error('Error fetching user:', error)
+        }
         setUser(null)
       })
   }, [])
