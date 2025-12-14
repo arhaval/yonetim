@@ -30,7 +30,7 @@ export default async function StreamDetailPage({
     notFound()
   }
 
-  const teams = stream.teams ? JSON.parse(stream.teams) : []
+  const teams = stream?.teams ? (typeof stream.teams === 'string' ? JSON.parse(stream.teams) : stream.teams) : []
 
   return (
     <Layout>
@@ -105,14 +105,14 @@ export default async function StreamDetailPage({
                 </dd>
               </div>
 
-              {stream.matchInfo && (
+              {stream?.matchInfo && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Maç</dt>
                   <dd className="mt-1 text-sm text-gray-900">{stream.matchInfo}</dd>
                 </div>
               )}
 
-              {teams.length > 0 && (
+              {teams && teams.length > 0 && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Firmalar</dt>
                   <dd className="mt-1">
@@ -130,7 +130,7 @@ export default async function StreamDetailPage({
                 </div>
               )}
 
-              {stream.notes && (
+              {stream?.notes && (
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Notlar</dt>
                   <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
