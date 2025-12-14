@@ -32,14 +32,26 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Şifre varsa hash'le
-    let hashedPassword = null
-    if (data.password && data.password.trim()) {
-      hashedPassword = await hashPassword(data.password)
+    // Email ve şifre zorunlu
+    if (!data.email || !data.email.trim()) {
+      return NextResponse.json(
+        { error: 'Email gereklidir' },
+        { status: 400 }
+      )
     }
 
+    if (!data.password || !data.password.trim()) {
+      return NextResponse.json(
+        { error: 'Şifre gereklidir' },
+        { status: 400 }
+      )
+    }
+    
+    // Şifre hash'le
+    const hashedPassword = await hashPassword(data.password.trim())
+
     // Email'i normalize et (küçük harfe çevir ve trim yap)
-    const normalizedEmail = data.email ? data.email.toLowerCase().trim() : null
+    const normalizedEmail = data.email.toLowerCase().trim()
 
     const streamer = await prisma.streamer.create({
       data: {

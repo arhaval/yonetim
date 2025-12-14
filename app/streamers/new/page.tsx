@@ -127,12 +127,19 @@ export default function NewStreamerPage() {
                 />
               </div>
 
+              {/* Giriş Bilgileri */}
+              <div className="col-span-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800 font-semibold mb-2">🔐 Dashboard Girişi İçin</p>
+                <p className="text-xs text-blue-700">Yayıncı <code className="bg-blue-100 px-1 rounded">/streamer-login</code> sayfasından giriş yapabilecek.</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Email (Giriş için)
+                  Email <span className="text-red-500">*</span> (Giriş için)
                 </label>
                 <input
                   type="email"
+                  required
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -147,10 +154,11 @@ export default function NewStreamerPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Şifre (Giriş için)
+                  Şifre <span className="text-red-500">*</span> (Giriş için)
                 </label>
                 <input
                   type="password"
+                  required
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })

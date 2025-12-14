@@ -99,16 +99,17 @@ export default function NewTeamMemberPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Giriş Bilgileri</h2>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-800 font-medium mb-2">Dashboard Girişi İçin</p>
+                <p className="text-sm text-blue-800 font-medium mb-2">🔐 Dashboard Girişi İçin</p>
                 <p className="text-xs text-blue-600">Ekip üyesi <code className="bg-blue-100 px-1 rounded">/team-login</code> sayfasından giriş yapabilecek.</p>
               </div>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
+                    required
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -117,16 +118,17 @@ export default function NewTeamMemberPage() {
                     placeholder="ornek@email.com"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Dashboard girişi için email adresi
+                    Dashboard girişi için email adresi (zorunlu)
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Şifre
+                    Şifre <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
+                    required
                     value={formData.password}
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
@@ -135,7 +137,7 @@ export default function NewTeamMemberPage() {
                     placeholder="Şifre belirleyin"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Dashboard girişi için şifre (opsiyonel)
+                    Dashboard girişi için şifre (zorunlu)
                   </p>
                 </div>
               </div>
