@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import StreamList from './StreamList'
 import PaymentCards from './PaymentCards'
+import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 
 export default async function StreamerDetailPage({
   params,
