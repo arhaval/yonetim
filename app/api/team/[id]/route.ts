@@ -2,81 +2,57 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const member = await prisma.teamMember.findUnique({
-      where: { id: params.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        iban: true,
-        role: true,
-        baseSalary: true,
-        notes: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
+export const dynamic = 'force-dynamic'
 
-    if (!member) {
-      return NextResponse.json(
-        { error: 'Ekip üyesi bulunamadı' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(member)
-  } catch (error) {
-    console.error('Error fetching team member:', error)
-    return NextResponse.json(
-      { error: 'Ekip üyesi getirilemedi' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const data = await request.json()
-
-    // Şifre varsa hash'le
-    let hashedPassword = undefined
-    if (data.password && data.password.trim()) {
-      hashedPassword = await hashPassword(data.password)
+    
+    // Email ve şifre güncelleme
+    const updateData: any = {}
+    
+    if (data.email !== undefined) {
+      if (!data.email || !data.email.trim()) {
+        return NextResponse.json(
+          { error: 'Email boş olamaz' },
+          { status: 400 }
+        )
+      }
+      updateData.email = data.email.toLowerCase().trim()
     }
-
-    // Email'i normalize et (küçük harfe çevir ve trim yap)
-    const normalizedEmail = data.email ? data.email.toLowerCase().trim() : null
-
-    const updateData: any = {
-      name: data.name,
-      email: normalizedEmail,
-      phone: data.phone || null,
-      iban: data.iban || null,
-      role: data.role,
-      baseSalary: data.baseSalary || 0,
-      notes: data.notes || null,
+    
+    if (data.password !== undefined && data.password.trim()) {
+      updateData.password = await hashPassword(data.password.trim())
     }
-
-    // Şifre varsa ekle
-    if (hashedPassword) {
-      updateData.password = hashedPassword
+    
+    if (data.name !== undefined) {
+      updateData.name = data.name
+    }
+    
+    if (data.phone !== undefined) {
+      updateData.phone = data.phone || null
+    }
+    
+    if (data.iban !== undefined) {
+      updateData.iban = data.iban || null
+    }
+    
+    if (data.role !== undefined) {
+      updateData.role = data.role
+    }
+    
+    if (data.baseSalary !== undefined) {
+      updateData.baseSalary = parseFloat(data.baseSalary) || 0
     }
 
     const member = await prisma.teamMember.update({
       where: { id: params.id },
       data: updateData,
     })
-
+    
     // Şifreyi response'dan çıkar
     const { password, ...memberWithoutPassword } = member
     return NextResponse.json(memberWithoutPassword)
@@ -90,10 +66,16 @@ export async function PUT(
       )
     }
     
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Ekip üyesi bulunamadı' },
+        { status: 404 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Ekip üyesi güncellenemedi' },
+      { error: error.message || 'Ekip üyesi güncellenemedi' },
       { status: 500 }
     )
   }
 }
-

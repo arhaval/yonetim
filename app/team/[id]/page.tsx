@@ -6,6 +6,7 @@ import { Plus, CreditCard, AlertCircle, Mic, Download, CheckCircle, Clock, Dolla
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import TeamPaymentCards from './TeamPaymentCards'
+import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 
 export default async function TeamMemberDetailPage({
   params,
@@ -129,10 +130,21 @@ export default async function TeamMemberDetailPage({
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900">{voiceActor.name}</h1>
                     {voiceActor.email && (
-                      <p className="mt-1 text-sm text-gray-600">{voiceActor.email}</p>
+                      <div className="mt-2 flex items-center space-x-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                        <span className="text-xs text-green-600 font-medium">📧 Email:</span>
+                        <p className="text-sm text-gray-900 font-semibold">
+                          {voiceActor.email}
+                        </p>
+                        <span className="text-xs text-green-600">(Giriş için)</span>
+                      </div>
+                    )}
+                    {!voiceActor.email && (
+                      <div className="mt-2 flex items-center space-x-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                        <span className="text-xs text-yellow-600 font-medium">⚠️ Giriş bilgileri eklenmemiş</span>
+                      </div>
                     )}
                     {voiceActor.phone && (
-                      <p className="text-sm text-gray-600">{voiceActor.phone}</p>
+                      <p className="mt-2 text-sm text-gray-600">{voiceActor.phone}</p>
                     )}
                   </div>
                 </>
@@ -141,6 +153,20 @@ export default async function TeamMemberDetailPage({
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-gray-900">{member.name}</h1>
                     <p className="mt-2 text-sm text-gray-600">{member.role}</p>
+                    {member.email && (
+                      <div className="mt-2 flex items-center space-x-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                        <span className="text-xs text-green-600 font-medium">📧 Email:</span>
+                        <p className="text-sm text-gray-900 font-semibold">
+                          {member.email}
+                        </p>
+                        <span className="text-xs text-green-600">(Giriş için)</span>
+                      </div>
+                    )}
+                    {!member.email && (
+                      <div className="mt-2 flex items-center space-x-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                        <span className="text-xs text-yellow-600 font-medium">⚠️ Giriş bilgileri eklenmemiş</span>
+                      </div>
+                    )}
                     {member.iban && (
                       <div className="mt-3 inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                         <CreditCard className="w-4 h-4 text-blue-600" />
@@ -180,6 +206,21 @@ export default async function TeamMemberDetailPage({
             </div>
           </div>
         </div>
+
+        {/* Giriş Bilgileri */}
+        {isVoiceActor && voiceActor ? (
+          <LoginCredentialsForm
+            type="voice-actor"
+            id={voiceActor.id}
+            currentEmail={voiceActor.email}
+          />
+        ) : member ? (
+          <LoginCredentialsForm
+            type="team"
+            id={member.id}
+            currentEmail={member.email}
+          />
+        ) : null}
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           {isVoiceActor && voiceActor ? (

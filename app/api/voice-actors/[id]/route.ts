@@ -36,24 +36,20 @@ export async function PATCH(
       updateData.phone = data.phone || null
     }
     
-    if (data.iban !== undefined) {
-      updateData.iban = data.iban || null
-    }
-    
     if (data.profilePhoto !== undefined) {
       updateData.profilePhoto = data.profilePhoto || null
     }
 
-    const streamer = await prisma.streamer.update({
+    const voiceActor = await prisma.voiceActor.update({
       where: { id: params.id },
       data: updateData,
     })
     
     // Şifreyi response'dan çıkar
-    const { password, ...streamerWithoutPassword } = streamer
-    return NextResponse.json(streamerWithoutPassword)
+    const { password, ...voiceActorWithoutPassword } = voiceActor
+    return NextResponse.json(voiceActorWithoutPassword)
   } catch (error: any) {
-    console.error('Error updating streamer:', error)
+    console.error('Error updating voice actor:', error)
     
     if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
       return NextResponse.json(
@@ -64,14 +60,15 @@ export async function PATCH(
     
     if (error.code === 'P2025') {
       return NextResponse.json(
-        { error: 'Yayıncı bulunamadı' },
+        { error: 'Seslendirmen bulunamadı' },
         { status: 404 }
       )
     }
     
     return NextResponse.json(
-      { error: error.message || 'Yayıncı güncellenemedi' },
+      { error: error.message || 'Seslendirmen güncellenemedi' },
       { status: 500 }
     )
   }
 }
+

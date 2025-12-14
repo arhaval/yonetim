@@ -58,8 +58,8 @@ export default async function TeamPage() {
     ...voiceActors.map((v) => ({ ...v, type: 'voice-actor' as const })),
   ].sort((a, b) => {
     // Tarihe göre sırala (en yeni önce)
-    const dateA = new Date(a.createdAt).getTime()
-    const dateB = new Date(b.createdAt).getTime()
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
     return dateB - dateA
   })
 
