@@ -14,7 +14,7 @@ console.log('📝 Yayıncı bilgileri:')
 console.log(`   İsim: ${streamerData.name}`)
 console.log(`   Email: ${streamerData.email}`)
 console.log(`   Şifre: ${streamerData.password}`)
-console.log('\n⚠️  Bu script production API'yi kullanır.')
+console.log("\n⚠️ Bu script production API'yi kullanır.")
 console.log('   Vercel deployment URL\'inizi kullanın veya local server çalıştırın.\n')
 
 // Production URL veya local URL
