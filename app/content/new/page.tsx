@@ -71,12 +71,8 @@ function NewContentPageContent() {
           const tabForRedirect = contentType === 'shorts' ? 'shorts' : 'video'
           const platformForRedirect = platformParam
           
-          // Mevcut ayı al (içerik bugün eklendiği için mevcut ay filtresine yönlendir)
-          const currentMonth = new Date().toISOString().slice(0, 7)
-          
-          setTimeout(() => {
-            window.location.href = `/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=monthly&month=${currentMonth}`
-          }, 1000)
+          // Varsayılan olarak "total" filtresi kullan (tüm içerikleri göster)
+          router.push(`/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=total`)
           return
         } else if (formData.platform === 'Instagram') {
           // Instagram API'den çek
@@ -104,12 +100,8 @@ function NewContentPageContent() {
           const tabForRedirect = contentType === 'reel' ? 'reels' : contentType === 'post' ? 'post' : 'reels'
           const platformForRedirect = platformParam
           
-          // Mevcut ayı al (içerik bugün eklendiği için mevcut ay filtresine yönlendir)
-          const currentMonth = new Date().toISOString().slice(0, 7)
-          
-          setTimeout(() => {
-            window.location.href = `/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=monthly&month=${currentMonth}`
-          }, 1000)
+          // Varsayılan olarak "total" filtresi kullan (tüm içerikleri göster)
+          router.push(`/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=total`)
           return
         }
       }
@@ -168,12 +160,8 @@ function NewContentPageContent() {
         
         const platformForRedirect = formData.platform === 'YouTube' ? 'youtube' : 'instagram'
         
-        // Mevcut ayı al (içerik bugün eklendiği için mevcut ay filtresine yönlendir)
-        const currentMonth = new Date().toISOString().slice(0, 7)
-        
-        setTimeout(() => {
-          window.location.href = `/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=monthly&month=${currentMonth}`
-        }, 1000)
+        // Varsayılan olarak "total" filtresi kullan (tüm içerikleri göster)
+        router.push(`/content?platform=${platformForRedirect}&tab=${tabForRedirect}&filter=total`)
       } else {
         console.error('API Error:', responseData)
         alert(responseData.error || responseData.details || 'İçerik eklenirken bir hata oluştu')

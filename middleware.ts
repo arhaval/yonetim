@@ -25,12 +25,13 @@ export function middleware(request: NextRequest) {
   const isApiVoiceActorAuth = request.nextUrl.pathname.startsWith('/api/voice-actor-auth')
   const isApiVoiceActor = request.nextUrl.pathname.startsWith('/api/voice-actor')
   const isApiVoiceActors = request.nextUrl.pathname.startsWith('/api/voice-actors')
+  const isApiVoiceActorContents = request.nextUrl.pathname.startsWith('/api/voice-actor/contents')
   const isApiTeamAuth = request.nextUrl.pathname.startsWith('/api/team-auth')
   const isApiTeam = request.nextUrl.pathname.startsWith('/api/team')
   const isApiContent = request.nextUrl.pathname.startsWith('/api/content')
 
   // API auth endpoint'lerine izin ver
-  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiTeamAuth || isApiTeam || isApiContent) {
+  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiVoiceActorContents || isApiTeamAuth || isApiTeam || isApiContent) {
     return NextResponse.next()
   }
 

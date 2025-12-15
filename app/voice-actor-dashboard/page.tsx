@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, FileText, User, Calendar, CheckCircle, Upload, X, Clock, Download, DollarSign, Mic } from 'lucide-react'
+import { LogOut, FileText, User, Calendar, CheckCircle, Upload, X, Clock, Download, DollarSign, Mic, Eye, Heart, MessageCircle, Share2, Bookmark, Video, Image } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 
@@ -10,6 +10,7 @@ export default function VoiceActorDashboardPage() {
   const router = useRouter()
   const [voiceActor, setVoiceActor] = useState<any>(null)
   const [scripts, setScripts] = useState<any[]>([])
+  const [contents, setContents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedScript, setSelectedScript] = useState<any>(null)
   const [showModal, setShowModal] = useState(false)
@@ -32,6 +33,7 @@ export default function VoiceActorDashboardPage() {
 
       setVoiceActor(data.voiceActor)
       loadScripts()
+      loadContents()
     } catch (error) {
       router.push('/voice-actor-login')
     }
@@ -48,6 +50,18 @@ export default function VoiceActorDashboardPage() {
       console.error('Error loading scripts:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadContents = async () => {
+    try {
+      const res = await fetch('/api/voice-actor/contents')
+      const data = await res.json()
+      if (res.ok) {
+        setContents(data)
+      }
+    } catch (error) {
+      console.error('Error loading contents:', error)
     }
   }
 
@@ -352,6 +366,122 @@ export default function VoiceActorDashboardPage() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        </div>
+
+        {/* Contents List */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">İçerikler</h2>
+            <p className="text-sm text-gray-600 mt-1">Atandığınız scriptlerin creator'larının içerikleri</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {contents.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">Henüz içerik bulunmuyor</p>
+              </div>
+            ) : (
+              contents.map((content) => {
+                const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+                const formatNumber = (num: number) => {
+                  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+                  if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+                  return num.toString()
+                }
+                
+                return (
+                  <a
+                    key={content.id}
+                    href={`/content/${content.id}`}
+                    className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 block"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+                            {content.title}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.platform === 'YouTube' 
+                                ? 'bg-red-50 text-red-700 border-red-200' 
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}>
+                              {content.platform}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              contentType === 'Shorts' || contentType === 'Reels'
+                                ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {contentType}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {content.creator && (
+                        <div className="mb-4">
+                          <p className="text-xs text-gray-500 mb-1">İçerik Üreticisi</p>
+                          <p className="text-sm font-medium text-indigo-600">
+                            {content.creator.name}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                        <div className="flex items-center space-x-2">
+                          <Eye className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">Görüntülenme</p>
+                            <p className="text-sm font-bold text-gray-900">{formatNumber(content.views || 0)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Heart className="w-4 h-4 text-red-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">Beğeni</p>
+                            <p className="text-sm font-bold text-gray-900">{formatNumber(content.likes || 0)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <MessageCircle className="w-4 h-4 text-blue-400" />
+                          <div>
+                            <p className="text-xs text-gray-500">Yorum</p>
+                            <p className="text-sm font-bold text-gray-900">{formatNumber(content.comments || 0)}</p>
+                          </div>
+                        </div>
+                        {content.platform === 'Instagram' && (
+                          <>
+                            <div className="flex items-center space-x-2">
+                              <Share2 className="w-4 h-4 text-green-400" />
+                              <div>
+                                <p className="text-xs text-gray-500">Paylaşım</p>
+                                <p className="text-sm font-bold text-gray-900">{formatNumber(content.shares || 0)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Bookmark className="w-4 h-4 text-purple-400" />
+                              <div>
+                                <p className="text-xs text-gray-500">Kaydetme</p>
+                                <p className="text-sm font-bold text-gray-900">{formatNumber(content.saves || 0)}</p>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                )
+              })
             )}
           </div>
         </div>

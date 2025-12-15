@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
 
 /**
  * Instagram URL'den shortcode çıkarır
@@ -60,7 +61,7 @@ async function fetchInstagramMediaData(shortcode: string, accessToken: string) {
 /**
  * Instagram URL'den tek bir içerik çeker
  */
-async function fetchSingleInstagramContent(url: string) {
+async function fetchSingleInstagramContent(url: string, creatorId?: string | null) {
   try {
     const urlInfo = extractShortcodeFromUrl(url)
     if (!urlInfo) {
@@ -128,6 +129,7 @@ async function fetchSingleInstagramContent(url: string) {
                 platform: 'Instagram',
                 url: matchedMedia.permalink || url.trim(),
                 publishDate: new Date(matchedMedia.timestamp),
+                creatorId: creatorId || null,
                 views: 0, // Instagram API'de views yok
                 likes: parseInt(matchedMedia.like_count || '0'),
                 comments: parseInt(matchedMedia.comments_count || '0'),
@@ -160,6 +162,7 @@ async function fetchSingleInstagramContent(url: string) {
         platform: 'Instagram',
         url: url.trim(),
         publishDate: new Date(),
+        creatorId: creatorId || null,
         views: 0,
         likes: 0,
         comments: 0,
@@ -196,9 +199,13 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
     const { url, accountId, type = 'reel' } = data
 
+    // Creator ID'yi cookie'den al
+    const cookieStore = await cookies()
+    const creatorId = cookieStore.get('creator-id')?.value || null
+
     // Eğer URL verilmişse, URL'den içerik çek
     if (url) {
-      return await fetchSingleInstagramContent(url)
+      return await fetchSingleInstagramContent(url, creatorId)
     }
 
     if (!accountId) {
@@ -272,6 +279,7 @@ export async function POST(request: NextRequest) {
               platform: 'Instagram',
               url: item.permalink,
               publishDate: new Date(item.timestamp),
+              creatorId: creatorId || null,
               views: 0, // Instagram API'de views yok
               likes: parseInt(item.like_count || '0'),
               comments: parseInt(item.comments_count || '0'),

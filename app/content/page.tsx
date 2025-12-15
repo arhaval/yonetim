@@ -69,7 +69,9 @@ export default function ContentPage() {
   const [filter, setFilter] = useState<FilterType>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      return (params.get('filter') as FilterType) || 'total' // Varsayılan olarak "Toplam" göster
+      const filterParam = params.get('filter') as FilterType
+      // Eğer filter parametresi yoksa veya geçersizse, varsayılan olarak "total" kullan
+      return filterParam === 'monthly' || filterParam === 'total' ? filterParam : 'total'
     }
     return 'total' // Varsayılan olarak "Toplam" göster
   })
@@ -284,8 +286,15 @@ export default function ContentPage() {
     }
     window.addEventListener('focus', handleFocus)
     
+    // URL parametreleri değiştiğinde de yenile
+    const handlePopState = () => {
+      fetchData()
+    }
+    window.addEventListener('popstate', handlePopState)
+    
     return () => {
       window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('popstate', handlePopState)
     }
   }, [filter, selectedMonth, activeTab, selectedPlatform])
 

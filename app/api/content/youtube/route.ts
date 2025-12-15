@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
 
 /**
  * YouTube API'den içerikleri çeker ve veritabanına kaydeder
@@ -27,14 +28,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Creator ID'yi cookie'den al
+    const cookieStore = await cookies()
+    const creatorId = cookieStore.get('creator-id')?.value || null
+
     // Eğer URL verilmişse, tek video çek
     if (url) {
-      return await fetchSingleVideo(url, YOUTUBE_API_KEY)
+      return await fetchSingleVideo(url, YOUTUBE_API_KEY, creatorId)
     }
 
     // Eğer channelId verilmişse, tüm kanalı çek
     if (channelId) {
-      return await fetchChannelVideos(channelId, YOUTUBE_API_KEY)
+      return await fetchChannelVideos(channelId, YOUTUBE_API_KEY, creatorId)
     }
 
     return NextResponse.json(
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Tek video çekme fonksiyonu
-async function fetchSingleVideo(url: string, apiKey: string) {
+async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string | null) {
   // URL'den video ID'yi çıkar
   let videoId: string | null = null
   
@@ -149,6 +154,7 @@ async function fetchSingleVideo(url: string, apiKey: string) {
       url: videoUrl,
       publishDate: new Date(video.snippet.publishedAt),
       creatorName: video.snippet.channelTitle,
+      creatorId: creatorId || null,
       views: parseInt(video.statistics.viewCount || '0'),
       likes: parseInt(video.statistics.likeCount || '0'),
       comments: parseInt(video.statistics.commentCount || '0'),
@@ -165,7 +171,7 @@ async function fetchSingleVideo(url: string, apiKey: string) {
 }
 
 // Tüm kanalı çekme fonksiyonu
-async function fetchChannelVideos(channelId: string, apiKey: string) {
+async function fetchChannelVideos(channelId: string, apiKey: string, creatorId?: string | null) {
   // Channel ID'yi temizle (URL'den veya sadece ID olarak gelebilir)
   let cleanChannelId = channelId.trim()
   
@@ -308,6 +314,7 @@ async function fetchChannelVideos(channelId: string, apiKey: string) {
             url: videoUrl,
             publishDate: new Date(video.snippet.publishedAt),
             creatorName: video.snippet.channelTitle,
+            creatorId: creatorId || null,
             views: parseInt(video.statistics.viewCount || '0'),
             likes: parseInt(video.statistics.likeCount || '0'),
             comments: parseInt(video.statistics.commentCount || '0'),

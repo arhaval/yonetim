@@ -17,20 +17,23 @@ export async function GET(request: NextRequest) {
     // Platform filtresi - büyük/küçük harf duyarsız eşleşme
     if (platform) {
       // "YouTube" veya "youtube" -> "YouTube"
-      if (platform.toLowerCase() === 'youtube') {
+      const normalizedPlatform = platform.toLowerCase()
+      if (normalizedPlatform === 'youtube') {
         whereClause.platform = 'YouTube'
-      } else if (platform.toLowerCase() === 'instagram') {
+      } else if (normalizedPlatform === 'instagram') {
         whereClause.platform = 'Instagram'
       } else {
+        // Eğer bilinmeyen bir platform ise, olduğu gibi kullan
         whereClause.platform = platform
       }
     }
     
-    // Tip filtresi - küçük harfe çevir
+    // Tip filtresi - küçük harfe çevir ve esnek eşleştir
     if (type) {
       // "reels" -> "reel", "post" -> "post", "video" -> "video", "shorts" -> "shorts"
       const normalizedType = type.toLowerCase()
-      whereClause.type = normalizedType === 'reels' ? 'reel' : normalizedType
+      const mappedType = normalizedType === 'reels' ? 'reel' : normalizedType
+      whereClause.type = mappedType
     }
 
     // Tarih filtresi sadece "monthly" seçiliyse uygula
@@ -46,6 +49,13 @@ export async function GET(request: NextRequest) {
 
     console.log('Content list query:', JSON.stringify(whereClause, null, 2))
 
+    // Önce tüm içerikleri say (debug için)
+    const allContents = await prisma.content.findMany({
+      select: { id: true, platform: true, type: true, publishDate: true },
+    }).catch(() => [])
+    console.log(`Total contents in DB: ${allContents.length}`)
+    console.log('Sample contents:', allContents.slice(0, 5).map(c => ({ platform: c.platform, type: c.type })))
+
     const contents = await prisma.content.findMany({
       where: whereClause,
       include: {
@@ -57,7 +67,10 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { publishDate: 'desc' },
-    }).catch(() => [])
+    }).catch((err) => {
+      console.error('Error fetching contents:', err)
+      return []
+    })
 
     console.log(`Found ${contents.length} contents matching filters`)
 
