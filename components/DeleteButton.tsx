@@ -6,7 +6,8 @@ import { Trash2, Loader2 } from 'lucide-react'
 
 interface DeleteButtonProps {
   id: string
-  type: 'streamer' | 'content-creator' | 'content' | 'voice-actor' | 'user'
+  // 'stream' ve 'external-stream' buraya eklendi
+  type: 'streamer' | 'content-creator' | 'content' | 'voice-actor' | 'user' | 'stream' | 'external-stream'
   onDelete?: () => void
   compact?: boolean
 }
@@ -19,9 +20,10 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
     switch (type) {
       case 'streamer': return '/api/streamers'
       case 'content-creator': return '/api/content-creators'
-      case 'content': return '/api/content' // Klasör yapına göre singular
+      case 'content': return '/api/content'
       case 'voice-actor': return '/api/voice-actors'
       case 'user': return '/api/users'
+      // Çoğul eki kuralına uyanlar (stream -> streams)
       default: return `/api/${type}s`
     }
   }
@@ -44,12 +46,10 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
 
       if (res.ok) {
         if (onDelete) {
-          // Eğer bir yenileme fonksiyonu gönderildiyse onu çalıştır
           onDelete()
         } else {
-          // Gönderilmediyse (Server Component'ler için) sayfayı yenile
           router.refresh()
-          router.push(window.location.pathname) // Force reload etkisi
+          window.location.reload()
         }
       } else {
         const errorData = await res.json()
