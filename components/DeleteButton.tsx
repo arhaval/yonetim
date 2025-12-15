@@ -6,8 +6,8 @@ import { Trash2, Loader2 } from 'lucide-react'
 
 interface DeleteButtonProps {
   id: string
-  // 'stream' ve 'external-stream' buraya eklendi
-  type: 'streamer' | 'content-creator' | 'content' | 'voice-actor' | 'user' | 'stream' | 'external-stream'
+  // BURAYA 'team' EKLENDİ
+  type: 'streamer' | 'content-creator' | 'content' | 'voice-actor' | 'user' | 'stream' | 'external-stream' | 'team'
   onDelete?: () => void
   compact?: boolean
 }
@@ -23,7 +23,8 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
       case 'content': return '/api/content'
       case 'voice-actor': return '/api/voice-actors'
       case 'user': return '/api/users'
-      // Çoğul eki kuralına uyanlar (stream -> streams)
+      // BURAYA TEAM ROTASI EKLENDİ
+      case 'team': return '/api/team' 
       default: return `/api/${type}s`
     }
   }
