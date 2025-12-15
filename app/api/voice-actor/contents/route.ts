@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Unique creator ID'leri al
-    const creatorIds = [...new Set(scripts.map(s => s.creatorId).filter(Boolean))]
+    // Unique creator ID'leri al (null değerleri filtrele)
+    const creatorIds = [...new Set(scripts.map(s => s.creatorId).filter((id): id is string => id !== null))]
 
     if (creatorIds.length === 0) {
       return NextResponse.json([])
