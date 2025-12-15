@@ -1,83 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function PATCH(
+// Seslendirmen sil
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = await Promise.resolve(params)
-    const data = await request.json()
+    const resolvedParams = await Promise.resolve(params)
     
-    // Email ve şifre güncelleme
-    const updateData: any = {}
-    
-    if (data.email !== undefined) {
-      if (!data.email || !data.email.trim()) {
-        return NextResponse.json(
-          { error: 'Email boş olamaz' },
-          { status: 400 }
-        )
-      }
-      updateData.email = data.email.toLowerCase().trim()
-    }
-    
-    if (data.password !== undefined && data.password.trim()) {
-      updateData.password = await hashPassword(data.password.trim())
-    }
-    
-    if (data.name !== undefined) {
-      updateData.name = data.name
-    }
-    
-    if (data.phone !== undefined) {
-      updateData.phone = data.phone || null
-    }
-    
-    if (data.profilePhoto !== undefined) {
-      updateData.profilePhoto = data.profilePhoto || null
-    }
-
-    // Eğer güncellenecek bir şey yoksa hata döndür
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: 'Güncellenecek bir alan belirtilmedi' },
-        { status: 400 }
-      )
-    }
-
-    const voiceActor = await prisma.voiceActor.update({
-      where: { id },
-      data: updateData,
+    // Seslendirmeni bul
+    const voiceActor = await prisma.voiceActor.findUnique({
+      where: { id: resolvedParams.id },
     })
-    
-    // Şifreyi response'dan çıkar
-    const { password, ...voiceActorWithoutPassword } = voiceActor
-    return NextResponse.json(voiceActorWithoutPassword)
-  } catch (error: any) {
-    console.error('Error updating voice actor:', error)
-    
-    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-      return NextResponse.json(
-        { error: 'Bu email adresi zaten kullanılıyor' },
-        { status: 400 }
-      )
-    }
-    
-    if (error.code === 'P2025') {
+
+    if (!voiceActor) {
       return NextResponse.json(
         { error: 'Seslendirmen bulunamadı' },
         { status: 404 }
       )
     }
-    
+
+    // Seslendirmeni sil (ilişkili metinler cascade ile silinecek veya SetNull olacak)
+    await prisma.voiceActor.delete({
+      where: { id: resolvedParams.id },
+    })
+
+    return NextResponse.json({
+      message: 'Seslendirmen başarıyla silindi',
+    })
+  } catch (error: any) {
+    console.error('Error deleting voice actor:', error)
     return NextResponse.json(
-      { error: error.message || 'Seslendirmen güncellenemedi' },
+      { error: `Seslendirmen silinemedi: ${error.message}` },
       { status: 500 }
     )
   }
 }
-
