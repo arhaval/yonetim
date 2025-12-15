@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyPassword, getUserByEmail } from '@/lib/auth'
+// Diğer yardımcı fonksiyonları da buraya ekledik:
+import { 
+  verifyPassword, 
+  getUserByEmail, 
+  getStreamerByEmail, 
+  getContentCreatorByEmail, 
+  getVoiceActorByEmail, 
+  getTeamMemberByEmail 
+} from '@/lib/auth'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -15,59 +23,134 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Email'i normalize et (küçük harfe çevir ve trim yap)
+    // Email'i normalize et
     const normalizedEmail = email.toLowerCase().trim()
 
-    try {
-      const user = await getUserByEmail(normalizedEmail)
-      
-      if (!user) {
-        return NextResponse.json(
-          { error: 'Geçersiz email veya şifre' },
-          { status: 401 }
-        )
+    let account = null
+    let role = ''
+    let type = ''
+    let checkActive = false
+
+    // 1. ADIM: Admin/User Kontrolü
+    const user = await getUserByEmail(normalizedEmail)
+    if (user) {
+      account = user
+      role = user.role // 'ADMIN' vb.
+      type = 'user'
+      checkActive = false // User tablosunda isActive yoksa false
+    }
+
+    // 2. ADIM: Eğer Admin değilse, Yayıncı mı diye bak
+    if (!account) {
+      const streamer = await getStreamerByEmail(normalizedEmail)
+      if (streamer) {
+        account = streamer
+        role = 'STREAMER'
+        type = 'streamer'
+        checkActive = true // Yayıncı aktif mi diye bakılmalı
       }
+    }
 
-      if (!user.password) {
-        console.error('User has no password:', user.email)
-        return NextResponse.json(
-          { error: 'Kullanıcı şifresi bulunamadı' },
-          { status: 500 }
-        )
+    // 3. ADIM: Creator mı diye bak
+    if (!account) {
+      const creator = await getContentCreatorByEmail(normalizedEmail)
+      if (creator) {
+        account = creator
+        role = 'CONTENT_CREATOR'
+        type = 'content-creator'
+        checkActive = true
       }
+    }
 
-      const isValid = await verifyPassword(password, user.password)
-      if (!isValid) {
-        return NextResponse.json(
-          { error: 'Geçersiz email veya şifre' },
-          { status: 401 }
-        )
+    // 4. ADIM: Seslendirmen mi diye bak
+    if (!account) {
+      const voiceActor = await getVoiceActorByEmail(normalizedEmail)
+      if (voiceActor) {
+        account = voiceActor
+        role = 'VOICE_ACTOR'
+        type = 'voice-actor'
+        checkActive = true
       }
+    }
 
-      // Basit session yönetimi (production'da JWT kullanılmalı)
-      const cookieStore = await cookies()
-      cookieStore.set('user-id', user.id, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 gün
-      })
+    // 5. ADIM: Ekip Üyesi mi diye bak
+    if (!account) {
+      const teamMember = await getTeamMemberByEmail(normalizedEmail)
+      if (teamMember) {
+        account = teamMember
+        role = teamMember.role || 'TEAM'
+        type = 'team'
+        checkActive = false // Ekip tablosunda isActive var mı bilmiyoruz, varsa true yap
+      }
+    }
 
-      return NextResponse.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
-      })
-    } catch (dbError: any) {
-      console.error('Database error in login:', dbError)
+    // --- KONTROLLER ---
+
+    // Kimse bulunamadıysa
+    if (!account) {
       return NextResponse.json(
-        { error: 'Veritabanı hatası: ' + (dbError.message || 'Bilinmeyen hata') },
+        { error: 'Geçersiz email veya şifre' },
+        { status: 401 }
+      )
+    }
+
+    // Hesap Pasif mi? (Sadece checkActive true olanlar için)
+    // @ts-ignore - TypeScript bazen dinamik tiplerde kızabilir, ama mantık doğru
+    if (checkActive && account.isActive === false) {
+      return NextResponse.json(
+        { error: 'Hesabınız pasif durumdadır. Yönetici ile iletişime geçin.' },
+        { status: 403 }
+      )
+    }
+
+    // Şifre Var mı?
+    if (!account.password) {
+      console.error('Account has no password:', normalizedEmail)
+      return NextResponse.json(
+        { error: 'Hesap şifresi bulunamadı.' },
         { status: 500 }
       )
     }
+
+    // Şifre Doğru mu?
+    const isValid = await verifyPassword(password, account.password)
+    if (!isValid) {
+      return NextResponse.json(
+        { error: 'Geçersiz email veya şifre' },
+        { status: 401 }
+      )
+    }
+
+    // --- GİRİŞ BAŞARILI ---
+
+    const cookieStore = await cookies()
+    
+    // User ID çerezi
+    cookieStore.set('user-id', account.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 gün
+    })
+
+    // User Type çerezi (Bunu da ekledim ki sistem kimin girdiğini bilsin)
+    cookieStore.set('user-type', type, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+
+    return NextResponse.json({
+      user: {
+        id: account.id,
+        email: account.email,
+        name: account.name,
+        role: role,
+        type: type, // Frontend'e tip bilgisini de dönüyoruz
+      },
+    })
+
   } catch (error: any) {
     console.error('Login error:', error)
     return NextResponse.json(
@@ -76,12 +159,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-
-
-
-
-
-
-
-
