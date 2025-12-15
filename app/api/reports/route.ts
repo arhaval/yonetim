@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
     const platformMap = new Map<string, number>();
     const allContentsArray = allContents || [];
     allContentsArray.forEach((content) => {
-      if (content.platform) {
+     if (content.platform) {
         const count = platformMap.get(content.platform) || 0;
         platformMap.set(content.platform, count + 1);
       }
