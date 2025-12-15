@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, getVoiceActorByEmail } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -13,12 +15,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Email'i normalize et
+    // Email'i normalize et (küçük harfe çevir ve trim yap)
     const normalizedEmail = email.toLowerCase().trim()
-    const voiceActor = await getVoiceActorByEmail(normalizedEmail)
+
+    // Önce normalize edilmiş email ile ara
+    let voiceActor = await getVoiceActorByEmail(normalizedEmail)
+    
+    // Bulunamazsa, case-insensitive arama yap (PostgreSQL için)
+    if (!voiceActor) {
+      const { prisma } = await import('@/lib/prisma')
+      const allVoiceActors = await prisma.voiceActor.findMany({
+        where: {
+          email: { not: null },
+        },
+      })
+      voiceActor = allVoiceActors.find(va => va.email?.toLowerCase().trim() === normalizedEmail) || null
+    }
+
+    console.log('Voice actor login attempt:', {
+      email: normalizedEmail,
+      voiceActorFound: !!voiceActor,
+      hasPassword: !!voiceActor?.password,
+      isActive: voiceActor?.isActive,
+    })
+
     if (!voiceActor) {
       return NextResponse.json(
-        { error: 'Geçersiz email veya şifre' },
+        { error: 'Bu email adresi ile kayıtlı seslendirmen bulunamadı' },
         { status: 401 }
       )
     }
@@ -38,9 +61,15 @@ export async function POST(request: NextRequest) {
     }
 
     const isValid = await verifyPassword(password, voiceActor.password)
+    
+    console.log('Password verification:', {
+      isValid,
+      voiceActorId: voiceActor.id,
+    })
+
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Geçersiz email veya şifre' },
+        { error: 'Şifre hatalı. Lütfen tekrar deneyin.' },
         { status: 401 }
       )
     }
@@ -52,31 +81,27 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 gün
-      path: '/', // Cookie'nin tüm site genelinde geçerli olması için
     })
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       voiceActor: {
         id: voiceActor.id,
         email: voiceActor.email,
         name: voiceActor.name,
       },
     })
-    
-    // Response'a da cookie ekle (bazı durumlarda gerekli)
-    response.cookies.set('voice-actor-id', voiceActor.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
-
-    return response
-  } catch (error) {
+  } catch (error: any) {
     console.error('Voice actor login error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    })
     return NextResponse.json(
-      { error: 'Bir hata oluştu' },
+      { 
+        error: `Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

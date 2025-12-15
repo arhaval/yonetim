@@ -46,11 +46,9 @@ export default function CreatorLoginPage() {
         return
       }
 
-      // Başarılı giriş - cookie'nin set edilmesi için kısa bir bekleme
-      console.log('Login successful, redirecting...')
-      setTimeout(() => {
-        window.location.href = '/creator-dashboard'
-      }, 100)
+      // Başarılı giriş
+      router.push('/creator-dashboard')
+      router.refresh()
     } catch (err) {
       setError('Bir hata oluştu')
       setLoading(false)

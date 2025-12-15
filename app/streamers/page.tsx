@@ -1,32 +1,42 @@
+'use client'
+
 import Layout from '@/components/Layout'
-import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Plus, ExternalLink, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import DeleteButton from '@/components/DeleteButton'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export default function StreamersPage() {
+  const router = useRouter()
+  const [streamers, setStreamers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-export default async function StreamersPage() {
-  // TypeScript hatasını önlemek için ': any[]' eklendi
-  let streamers: any[] = []
-  
-  try {
-    streamers = await prisma.streamer.findMany({
-      include: {
-        _count: {
-          select: {
-            streams: true,
-            externalStreams: true,
-          },
-        },
-        teamRates: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-  } catch (error) {
-    console.error('Error fetching streamers:', error)
-    streamers = []
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/streamers')
+      const data = await res.json()
+      setStreamers(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error fetching streamers:', error)
+      setStreamers = []
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <p>Yükleniyor...</p>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -55,78 +65,88 @@ export default async function StreamersPage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
           <div className="divide-y divide-gray-200">
             {streamers.map((streamer) => (
-              <Link
-                key={streamer.id}
-                href={`/streamers/${streamer.id}`}
-                className="block hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200 group"
-              >
-                <div className="px-6 py-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {streamer.profilePhoto ? (
-                        <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-lg group-hover:scale-110 transition-transform">
-                          <img
-                            src={streamer.profilePhoto}
-                            alt={streamer.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <span className="text-white font-bold text-xl">
-                            {streamer.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                            {streamer.name}
-                          </p>
-                          {!streamer.isActive && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              Pasif
+              <div key={streamer.id} className="relative group">
+                <Link
+                  href={`/streamers/${streamer.id}`}
+                  className="block hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition-all duration-200"
+                >
+                  <div className="px-6 py-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        {streamer.profilePhoto ? (
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-lg group-hover:scale-110 transition-transform">
+                            <img
+                              src={streamer.profilePhoto}
+                              alt={streamer.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <span className="text-white font-bold text-xl">
+                              {streamer.name.charAt(0).toUpperCase()}
                             </span>
-                          )}
-                        </div>
-                        {streamer.channelUrl && (
-                          <div className="mt-1 flex items-center text-sm text-gray-500">
-                            <a
-                              href={streamer.channelUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-indigo-600 hover:text-indigo-800 inline-flex items-center space-x-1"
-                            >
-                              <span>Kanal</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
                           </div>
                         )}
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <p className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                              {streamer.name}
+                            </p>
+                            {!streamer.isActive && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Pasif
+                              </span>
+                            )}
+                          </div>
+                          {streamer.channelUrl && (
+                            <div className="mt-1 flex items-center text-sm text-gray-500">
+                              <a
+                                href={streamer.channelUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-indigo-600 hover:text-indigo-800 inline-flex items-center space-x-1"
+                              >
+                                <span>Kanal</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-6">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {streamer._count?.streams || 0} yayın
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {streamer._count?.externalStreams || 0} dış yayın
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-indigo-600">
-                          {(streamer.hourlyRate || 0).toLocaleString('tr-TR', {
-                            style: 'currency',
-                            currency: 'TRY',
-                          })}
-                        </p>
-                        <p className="text-xs text-gray-500">saat başı</p>
+                      <div className="flex items-center space-x-6">
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {streamer._count?.streams || 0} yayın
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {streamer._count?.externalStreams || 0} dış yayın
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-indigo-600">
+                            {(streamer.hourlyRate || 0).toLocaleString('tr-TR', {
+                              style: 'currency',
+                              currency: 'TRY',
+                            })}
+                          </p>
+                          <p className="text-xs text-gray-500">saat başı</p>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </Link>
+                {/* Silme Butonu */}
+                <div className="absolute top-4 right-4 z-10">
+                  <DeleteButton
+                    id={streamer.id}
+                    type="streamer"
+                    onDelete={fetchData}
+                    compact={true}
+                  />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
           {streamers.length === 0 && (

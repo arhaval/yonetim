@@ -64,6 +64,23 @@ export default function NewStreamerPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Form validation
+    if (!formData.name || !formData.name.trim()) {
+      alert('İsim gereklidir')
+      return
+    }
+    
+    if (!formData.email || !formData.email.trim()) {
+      alert('Email gereklidir')
+      return
+    }
+    
+    if (!formData.password || !formData.password.trim()) {
+      alert('Şifre gereklidir')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -71,13 +88,12 @@ export default function NewStreamerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password.trim(),
           profilePhoto: formData.profilePhoto || null,
-          iban: formData.iban || null,
-          phone: formData.phone || null,
-          platform: 'Twitch', // Varsayılan
+          iban: formData.iban?.trim() || null,
+          phone: formData.phone?.trim() || null,
           teamRates: teamRates
             .filter(tr => tr.teamName.trim() && tr.hourlyRate)
             .map(tr => ({
@@ -87,16 +103,24 @@ export default function NewStreamerPage() {
         }),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
+        if (data.message) {
+          alert(data.message)
+        } else {
+          alert('Yayıncı başarıyla oluşturuldu!')
+        }
         router.push('/streamers')
+        router.refresh()
       } else {
-        const data = await res.json()
         console.error('Error response:', data)
         alert(data.error || 'Bir hata oluştu')
         setLoading(false)
       }
-    } catch (error) {
-      alert('Bir hata oluştu')
+    } catch (error: any) {
+      console.error('Error:', error)
+      alert('Bir hata oluştu: ' + (error.message || 'Bilinmeyen hata'))
       setLoading(false)
     }
   }

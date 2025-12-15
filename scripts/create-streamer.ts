@@ -9,12 +9,11 @@ async function main() {
   const name = process.argv[4]
   const phone = process.argv[5] || null
   const iban = process.argv[6] || null
-  const platform = process.argv[7] || 'Twitch'
-  const hourlyRate = process.argv[8] ? parseFloat(process.argv[8]) : 0
+  const hourlyRate = process.argv[7] ? parseFloat(process.argv[7]) : 0
 
   if (!email || !password || !name) {
-    console.error('Kullanım: npm run create-streamer <email> <password> <name> [phone] [iban] [platform] [hourlyRate]')
-    console.error('Örnek: npm run create-streamer yayinci@example.com sifre123 "Yayıncı Adı" "5551234567" "TR123456789012345678901234" "Twitch" 300')
+    console.error('Kullanım: npm run create-streamer <email> <password> <name> [phone] [iban] [hourlyRate]')
+    console.error('Örnek: npm run create-streamer yayinci@example.com sifre123 "Yayıncı Adı" "5551234567" "TR123456789012345678901234" 300')
     process.exit(1)
   }
 
@@ -24,7 +23,6 @@ async function main() {
   console.log(`İsim: ${name}`)
   console.log(`Telefon: ${phone || 'Belirtilmedi'}`)
   console.log(`IBAN: ${iban || 'Belirtilmedi'}`)
-  console.log(`Platform: ${platform}`)
   console.log(`Saatlik Ücret: ${hourlyRate}₺`)
 
   // Email'i normalize et
@@ -48,7 +46,6 @@ async function main() {
         password: hashedPassword,
         phone: phone || null,
         iban: iban || null,
-        platform,
         hourlyRate,
         isActive: true,
       },
@@ -65,7 +62,6 @@ async function main() {
         password: hashedPassword,
         phone: phone || null,
         iban: iban || null,
-        platform,
         hourlyRate,
         isActive: true,
       },
@@ -87,7 +83,6 @@ async function main() {
     console.log('✅ Yayıncı veritabanında bulundu!')
     console.log(`   İsim: ${testStreamer.name}`)
     console.log(`   Email: ${testStreamer.email}`)
-    console.log(`   Platform: ${testStreamer.platform}`)
     console.log(`   Saatlik Ücret: ${testStreamer.hourlyRate}₺`)
     console.log(`   Aktif: ${testStreamer.isActive}`)
     console.log(`   Şifre var: ${testStreamer.password ? 'Evet' : 'HAYIR'}`)

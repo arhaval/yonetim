@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getContentCreatorByEmail } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 // Email'in veritabanında olup olmadığını kontrol et
 export async function POST(request: NextRequest) {
   try {

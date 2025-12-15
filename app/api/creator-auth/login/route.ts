@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, getContentCreatorByEmail } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -13,30 +15,61 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Email'i normalize et
+    // Email'i normalize et (küçük harfe çevir ve trim yap)
     const normalizedEmail = email.toLowerCase().trim()
-    console.log('Login attempt for email:', normalizedEmail)
+
+    // Önce normalize edilmiş email ile ara
+    let creator = await getContentCreatorByEmail(normalizedEmail)
     
-    const creator = await getContentCreatorByEmail(normalizedEmail)
-    console.log('Creator found:', creator ? `Yes - ${creator.name}` : 'No')
-    
+    // Bulunamazsa, case-insensitive arama yap (PostgreSQL için)
     if (!creator) {
-      // Tüm creator'ları listele (debug için)
       const { prisma } = await import('@/lib/prisma')
       const allCreators = await prisma.contentCreator.findMany({
-        select: { email: true, name: true },
+        where: {
+          email: { not: null },
+        },
       })
-      console.log('All creators in DB:', allCreators.map(c => ({ email: c.email, name: c.name })))
+      creator = allCreators.find(c => c.email?.toLowerCase().trim() === normalizedEmail) || null
+    }
+
+    console.log('Creator login attempt:', {
+      email: normalizedEmail,
+      creatorFound: !!creator,
+      hasPassword: !!creator?.password,
+      isActive: creator?.isActive,
+    })
+
+    if (!creator) {
+      // Debug: Tüm creator'ları listele
+      const { prisma } = await import('@/lib/prisma')
+      const allCreators = await prisma.contentCreator.findMany({
+        select: { email: true, name: true, password: true, isActive: true },
+      })
+      
+      console.log('Creator not found. All creators:', allCreators.map(c => ({
+        email: c.email,
+        normalized: c.email?.toLowerCase().trim(),
+        searched: normalizedEmail,
+        matches: c.email?.toLowerCase().trim() === normalizedEmail
+      })))
       
       return NextResponse.json(
-        { error: 'Geçersiz email veya şifre' },
+        { 
+          error: 'Bu email adresi ile kayıtlı içerik üreticisi bulunamadı',
+          debug: process.env.NODE_ENV === 'development' ? {
+            searchedEmail: normalizedEmail,
+            totalCreators: allCreators.length,
+            creatorsWithEmail: allCreators.filter(c => c.email).map(c => ({
+              email: c.email,
+              normalized: c.email?.toLowerCase().trim(),
+              matches: c.email?.toLowerCase().trim() === normalizedEmail
+            }))
+          } : undefined
+        },
         { status: 401 }
       )
     }
 
-    console.log('Creator isActive:', creator.isActive)
-    console.log('Creator has password:', !!creator.password)
-    
     if (!creator.password) {
       return NextResponse.json(
         { error: 'Bu içerik üreticisi için şifre ayarlanmamış. Lütfen admin ile iletişime geçin.' },
@@ -52,11 +85,15 @@ export async function POST(request: NextRequest) {
     }
 
     const isValid = await verifyPassword(password, creator.password)
-    console.log('Password valid:', isValid)
     
+    console.log('Password verification:', {
+      isValid,
+      creatorId: creator.id,
+    })
+
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Geçersiz email veya şifre' },
+        { error: 'Şifre hatalı. Lütfen tekrar deneyin.' },
         { status: 401 }
       )
     }
@@ -68,34 +105,27 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 gün
-      path: '/',
     })
-    
-    console.log('Cookie set for creator:', creator.id)
-    console.log('Cookie value:', cookieStore.get('creator-id')?.value)
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       creator: {
         id: creator.id,
         email: creator.email,
         name: creator.name,
       },
     })
-    
-    // Response'a da cookie ekle (bazı durumlarda gerekli)
-    response.cookies.set('creator-id', creator.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
-
-    return response
-  } catch (error) {
+  } catch (error: any) {
     console.error('Content creator login error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    })
     return NextResponse.json(
-      { error: 'Bir hata oluştu' },
+      { 
+        error: `Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

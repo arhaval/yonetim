@@ -224,84 +224,97 @@ export default function StreamsPage() {
               streams.map((stream) => {
                 const teams = stream.teams ? JSON.parse(stream.teams) : []
                 return (
-                  <Link
-                    key={stream.id}
-                    href={`/streamers/${stream.streamerId}`}
-                    className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-                              <span className="text-white font-bold text-sm">Y</span>
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#08d9d6] transition-colors">
-                                {stream.streamer.name}
-                              </h3>
-                              <p className="text-xs text-gray-500">
-                                {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
-                              </p>
+                  <div key={stream.id} className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative">
+                    <Link
+                      href={`/streamers/${stream.streamerId}`}
+                      className="block"
+                    >
+                      <div className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                                <span className="text-white font-bold text-sm">Y</span>
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#08d9d6] transition-colors">
+                                  {stream.streamer.name}
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                  {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
-                          {stream.duration} saat
-                        </span>
-                      </div>
-
-                      {stream.matchInfo && (
-                        <div className="mb-4">
-                          <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                            {stream.matchInfo}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {stream.teamName ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border" style={{ backgroundColor: 'rgba(8, 217, 214, 0.1)', borderColor: '#08d9d6' + '40', color: '#252a34' }}>
-                            {stream.teamName}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
+                            {stream.duration} saat
                           </span>
-                        ) : teams.length > 0 ? (
-                          teams.map((team: string, idx: number) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border" style={{ backgroundColor: 'rgba(8, 217, 214, 0.1)', borderColor: '#08d9d6' + '40', color: '#252a34' }}
-                            >
-                              {team}
-                            </span>
-                          ))
-                        ) : null}
-                      </div>
+                        </div>
 
-                      <div className="pt-4 border-t border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Maliyet</span>
-                          {stream.streamerEarning > 0 ? (
-                            <span className="text-lg font-bold" style={{ color: '#ff2e63' }}>
-                              {stream.streamerEarning.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                                maximumFractionDigits: 0,
-                              })}
+                        {stream.matchInfo && (
+                          <div className="mb-4">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                              {stream.matchInfo}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {stream.teamName ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border" style={{ backgroundColor: 'rgba(8, 217, 214, 0.1)', borderColor: '#08d9d6' + '40', color: '#252a34' }}>
+                              {stream.teamName}
                             </span>
-                          ) : stream.cost > 0 ? (
-                            <span className="text-lg font-bold" style={{ color: '#ff2e63' }}>
-                              {stream.cost.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                                maximumFractionDigits: 0,
-                              })}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-400 italic">Girilmemiş</span>
-                          )}
+                          ) : teams.length > 0 ? (
+                            teams.map((team: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border" style={{ backgroundColor: 'rgba(8, 217, 214, 0.1)', borderColor: '#08d9d6' + '40', color: '#252a34' }}
+                              >
+                                {team}
+                              </span>
+                            ))
+                          ) : null}
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">Maliyet</span>
+                            {stream.streamerEarning > 0 ? (
+                              <span className="text-lg font-bold" style={{ color: '#ff2e63' }}>
+                                {stream.streamerEarning.toLocaleString('tr-TR', {
+                                  style: 'currency',
+                                  currency: 'TRY',
+                                  maximumFractionDigits: 0,
+                                })}
+                              </span>
+                            ) : stream.cost > 0 ? (
+                              <span className="text-lg font-bold" style={{ color: '#ff2e63' }}>
+                                {stream.cost.toLocaleString('tr-TR', {
+                                  style: 'currency',
+                                  currency: 'TRY',
+                                  maximumFractionDigits: 0,
+                                })}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-400 italic">Girilmemiş</span>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    </Link>
+                    {/* Silme Butonu */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <DeleteButton
+                        id={stream.id}
+                        type="stream"
+                        onDelete={() => {
+                          fetchData()
+                          fetchPendingStreams()
+                        }}
+                        compact={true}
+                      />
                     </div>
-                  </Link>
+                  </div>
                 )
               })
             )}

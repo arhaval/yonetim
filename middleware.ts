@@ -21,13 +21,15 @@ export function middleware(request: NextRequest) {
   const isApiStreamer = request.nextUrl.pathname.startsWith('/api/streamer')
   const isApiCreatorAuth = request.nextUrl.pathname.startsWith('/api/creator-auth')
   const isApiCreator = request.nextUrl.pathname.startsWith('/api/creator')
+  const isApiContentCreators = request.nextUrl.pathname.startsWith('/api/content-creators')
   const isApiVoiceActorAuth = request.nextUrl.pathname.startsWith('/api/voice-actor-auth')
   const isApiVoiceActor = request.nextUrl.pathname.startsWith('/api/voice-actor')
+  const isApiVoiceActors = request.nextUrl.pathname.startsWith('/api/voice-actors')
   const isApiTeamAuth = request.nextUrl.pathname.startsWith('/api/team-auth')
   const isApiTeam = request.nextUrl.pathname.startsWith('/api/team')
 
   // API auth endpoint'lerine izin ver
-  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiVoiceActorAuth || isApiVoiceActor || isApiTeamAuth || isApiTeam) {
+  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiTeamAuth || isApiTeam) {
     return NextResponse.next()
   }
 

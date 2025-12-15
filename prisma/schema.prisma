@@ -29,7 +29,6 @@ model Streamer {
   iban            String?   // IBAN bilgisi
   password        String?   // Yayıncı login için şifre (hash'lenmiş)
   loginToken      String?   @unique // Yayıncı login için token (opsiyonel)
-  platform        String    @default("Twitch")
   channelUrl      String?
   hourlyRate      Float     @default(0) // Saat başı ücret
   commissionRate  Float     @default(0) // Yüzde olarak

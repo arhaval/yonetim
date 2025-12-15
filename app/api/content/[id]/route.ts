@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-// Ekip üyesi sil
+// İçerik sil
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -11,31 +11,32 @@ export async function DELETE(
   try {
     const resolvedParams = await Promise.resolve(params)
     
-    // Ekip üyesini bul
-    const member = await prisma.teamMember.findUnique({
+    // İçeriği bul
+    const content = await prisma.content.findUnique({
       where: { id: resolvedParams.id },
     })
 
-    if (!member) {
+    if (!content) {
       return NextResponse.json(
-        { error: 'Ekip üyesi bulunamadı' },
+        { error: 'İçerik bulunamadı' },
         { status: 404 }
       )
     }
 
-    // Ekip üyesini sil (ilişkili görevler ve ödemeler cascade ile silinecek)
-    await prisma.teamMember.delete({
+    // İçeriği sil
+    await prisma.content.delete({
       where: { id: resolvedParams.id },
     })
 
     return NextResponse.json({
-      message: 'Ekip üyesi başarıyla silindi',
+      message: 'İçerik başarıyla silindi',
     })
   } catch (error: any) {
-    console.error('Error deleting team member:', error)
+    console.error('Error deleting content:', error)
     return NextResponse.json(
-      { error: `Ekip üyesi silinemedi: ${error.message}` },
+      { error: `İçerik silinemedi: ${error.message}` },
       { status: 500 }
     )
   }
 }
+

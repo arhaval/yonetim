@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const creators = await prisma.contentCreator.findMany({
@@ -29,12 +31,20 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Şifre varsa hash'le
-    let hashedPassword = null
-    if (data.password && data.password.trim()) {
-      hashedPassword = await hashPassword(data.password)
+    console.log('Creating content creator:', {
+      name: data.name,
+      email: data.email,
+      hasPassword: !!data.password,
+    })
+    
+    // İsim kontrolü
+    if (!data.name || !data.name.trim()) {
+      return NextResponse.json(
+        { error: 'İsim gereklidir' },
+        { status: 400 }
+      )
     }
-
+    
     // Email'i normalize et (küçük harfe çevir ve trim yap)
     const normalizedEmail = data.email ? data.email.toLowerCase().trim() : null
     
@@ -44,6 +54,17 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Şifre kontrolü - email varsa şifre de zorunlu
+    if (!data.password || !data.password.trim()) {
+      return NextResponse.json(
+        { error: 'Şifre gereklidir' },
+        { status: 400 }
+      )
+    }
+    
+    // Şifre hash'le
+    const hashedPassword = await hashPassword(data.password.trim())
 
     // Aynı email ile kayıtlı creator var mı kontrol et (case-insensitive)
     const existingCreators = await prisma.contentCreator.findMany({
@@ -55,43 +76,50 @@ export async function POST(request: NextRequest) {
     )
 
     if (existingCreator) {
+      console.log('Updating existing creator:', existingCreator.id)
       // Mevcut kaydı güncelle
       const updatedCreator = await prisma.contentCreator.update({
         where: { id: existingCreator.id },
         data: {
-          name: data.name,
+          name: data.name.trim(),
           email: normalizedEmail, // Email'i normalize edilmiş haliyle güncelle
-          password: hashedPassword || existingCreator.password, // Şifre verilmişse güncelle, yoksa eski şifreyi koru
+          password: hashedPassword, // Şifreyi her zaman güncelle (yeni kayıt için zorunlu)
           profilePhoto: data.profilePhoto || existingCreator.profilePhoto,
-          phone: data.phone || existingCreator.phone,
+          phone: data.phone?.trim() || existingCreator.phone,
           platform: data.platform || existingCreator.platform,
-          channelUrl: data.channelUrl || existingCreator.channelUrl,
+          channelUrl: data.channelUrl?.trim() || existingCreator.channelUrl,
           isActive: data.isActive !== undefined ? data.isActive : existingCreator.isActive,
-          notes: data.notes || existingCreator.notes,
+          notes: data.notes?.trim() || existingCreator.notes,
         },
       })
       
+      console.log('Creator updated successfully:', updatedCreator.id)
       return NextResponse.json({
         message: 'İçerik üreticisi güncellendi',
         creator: updatedCreator,
       })
     }
 
+    console.log('Creating new creator...')
     const creator = await prisma.contentCreator.create({
       data: {
-        name: data.name,
+        name: data.name.trim(),
         email: normalizedEmail,
         password: hashedPassword,
         profilePhoto: data.profilePhoto || null,
-        phone: data.phone || null,
+        phone: data.phone?.trim() || null,
         platform: data.platform || null,
-        channelUrl: data.channelUrl || null,
+        channelUrl: data.channelUrl?.trim() || null,
         isActive: data.isActive !== undefined ? data.isActive : true,
-        notes: data.notes || null,
+        notes: data.notes?.trim() || null,
       },
     })
 
-    return NextResponse.json(creator)
+    console.log('Creator created successfully:', creator.id)
+    return NextResponse.json({
+      message: 'İçerik üreticisi oluşturuldu',
+      creator: creator,
+    })
   } catch (error: any) {
     console.error('Error creating content creator:', error)
     return NextResponse.json(

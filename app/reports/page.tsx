@@ -335,7 +335,6 @@ export default function ReportsPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">{streamer.name}</p>
-                          <p className="text-sm text-gray-500">{streamer.platform}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -433,7 +432,6 @@ export default function ReportsPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Yayıncı</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Platform</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Yayın Sayısı</th>
                     </tr>
                   </thead>
@@ -442,9 +440,6 @@ export default function ReportsPage() {
                       <tr key={streamer.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <p className="font-semibold text-gray-900">{streamer.name}</p>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-600">{streamer.platform}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <span className="font-bold text-indigo-600">{streamer.streamCount}</span>

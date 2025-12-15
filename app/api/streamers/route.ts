@@ -32,6 +32,14 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
+    // İsim zorunlu
+    if (!data.name || !data.name.trim()) {
+      return NextResponse.json(
+        { error: 'İsim gereklidir' },
+        { status: 400 }
+      )
+    }
+    
     // Email ve şifre zorunlu
     if (!data.email || !data.email.trim()) {
       return NextResponse.json(
@@ -53,14 +61,47 @@ export async function POST(request: NextRequest) {
     // Email'i normalize et (küçük harfe çevir ve trim yap)
     const normalizedEmail = data.email.toLowerCase().trim()
 
+    // Mevcut yayıncı var mı kontrol et (case-insensitive)
+    const existingStreamers = await prisma.streamer.findMany({
+      where: { email: { not: null } },
+    })
+    
+    const existingStreamer = existingStreamers.find(
+      s => s.email && s.email.toLowerCase().trim() === normalizedEmail
+    )
+
+    if (existingStreamer) {
+      // Mevcut kaydı güncelle
+      const updated = await prisma.streamer.update({
+        where: { id: existingStreamer.id },
+        data: {
+          name: data.name.trim(),
+          email: normalizedEmail,
+          password: hashedPassword,
+          profilePhoto: data.profilePhoto || existingStreamer.profilePhoto,
+          iban: data.iban || existingStreamer.iban,
+          phone: data.phone || existingStreamer.phone,
+        },
+        include: {
+          teamRates: true,
+        },
+      })
+      
+      const { password, ...streamerWithoutPassword } = updated
+      return NextResponse.json({
+        message: 'Yayıncı güncellendi',
+        streamer: streamerWithoutPassword,
+      })
+    }
+
     const streamer = await prisma.streamer.create({
       data: {
-        name: data.name,
+        name: data.name.trim(),
         email: normalizedEmail,
         password: hashedPassword,
         profilePhoto: data.profilePhoto || null,
         iban: data.iban || null,
-        platform: data.platform || 'Twitch',
+        phone: data.phone || null,
         teamRates: data.teamRates && data.teamRates.length > 0
           ? {
               create: data.teamRates.map((tr: { teamName: string; hourlyRate: number }) => ({

@@ -1,85 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-export async function PATCH(
+// Yayıncı sil
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = await Promise.resolve(params)
-    const data = await request.json()
+    const resolvedParams = await Promise.resolve(params)
     
-    // Email ve şifre güncelleme
-    const updateData: any = {}
-    
-    if (data.email !== undefined) {
-      if (!data.email || !data.email.trim()) {
-        return NextResponse.json(
-          { error: 'Email boş olamaz' },
-          { status: 400 }
-        )
-      }
-      updateData.email = data.email.toLowerCase().trim()
-    }
-    
-    if (data.password !== undefined && data.password.trim()) {
-      updateData.password = await hashPassword(data.password.trim())
-    }
-    
-    if (data.name !== undefined) {
-      updateData.name = data.name
-    }
-    
-    if (data.phone !== undefined) {
-      updateData.phone = data.phone || null
-    }
-    
-    if (data.iban !== undefined) {
-      updateData.iban = data.iban || null
-    }
-    
-    if (data.profilePhoto !== undefined) {
-      updateData.profilePhoto = data.profilePhoto || null
-    }
-
-    // Eğer güncellenecek bir şey yoksa hata döndür
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: 'Güncellenecek bir alan belirtilmedi' },
-        { status: 400 }
-      )
-    }
-
-    const streamer = await prisma.streamer.update({
-      where: { id },
-      data: updateData,
+    // Yayıncıyı bul
+    const streamer = await prisma.streamer.findUnique({
+      where: { id: resolvedParams.id },
     })
-    
-    // Şifreyi response'dan çıkar
-    const { password, ...streamerWithoutPassword } = streamer
-    return NextResponse.json(streamerWithoutPassword)
-  } catch (error: any) {
-    console.error('Error updating streamer:', error)
-    
-    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-      return NextResponse.json(
-        { error: 'Bu email adresi zaten kullanılıyor' },
-        { status: 400 }
-      )
-    }
-    
-    if (error.code === 'P2025') {
+
+    if (!streamer) {
       return NextResponse.json(
         { error: 'Yayıncı bulunamadı' },
         { status: 404 }
       )
     }
-    
+
+    // Yayıncıyı sil (ilişkili yayınlar, ödemeler cascade ile silinecek)
+    await prisma.streamer.delete({
+      where: { id: resolvedParams.id },
+    })
+
+    return NextResponse.json({
+      message: 'Yayıncı başarıyla silindi',
+    })
+  } catch (error: any) {
+    console.error('Error deleting streamer:', error)
     return NextResponse.json(
-      { error: error.message || 'Yayıncı güncellenemedi' },
+      { error: `Yayıncı silinemedi: ${error.message}` },
       { status: 500 }
     )
   }

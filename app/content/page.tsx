@@ -7,6 +7,7 @@ import { format, parse } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import DeleteButton from '@/components/DeleteButton'
 
 type FilterType = 'monthly' | 'total'
 type Platform = 'youtube' | 'instagram'
@@ -445,12 +446,15 @@ export default function ContentPage() {
               }
 
               return (
-                <Link
+                <div
                   key={content.id}
-                  href={`/content/${content.id}`}
-                  className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                  className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative"
                 >
-                  <div className="p-6">
+                  <Link
+                    href={`/content/${content.id}`}
+                    className="block"
+                  >
+                    <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#08d9d6] transition-colors line-clamp-2 mb-2">
@@ -537,8 +541,18 @@ export default function ContentPage() {
                         <span>Son güncelleme: {format(new Date(content.updatedAt), 'dd MMM yyyy, HH:mm', { locale: tr })}</span>
                       </div>
                     </div>
+                    </div>
+                  </Link>
+                  {/* Silme Butonu */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <DeleteButton
+                      id={content.id}
+                      type="content"
+                      onDelete={fetchData}
+                      compact={true}
+                    />
                   </div>
-                </Link>
+                </div>
               )
             })
           )}

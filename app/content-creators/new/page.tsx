@@ -69,33 +69,54 @@ export default function NewContentCreatorPage() {
     setLoading(true)
 
     try {
+      // Email ve şifre kontrolü
+      if (!formData.email || !formData.email.trim()) {
+        alert('Email gereklidir')
+        setLoading(false)
+        return
+      }
+
+      if (!formData.password || !formData.password.trim()) {
+        alert('Şifre gereklidir')
+        setLoading(false)
+        return
+      }
+
       const res = await fetch('/api/content-creators', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email || null,
-          password: formData.password || null,
-          phone: formData.phone || null,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password.trim(),
+          phone: formData.phone?.trim() || null,
           platform: formData.platform || null,
-          channelUrl: formData.channelUrl || null,
+          channelUrl: formData.channelUrl?.trim() || null,
           profilePhoto: formData.profilePhoto || null,
-          notes: formData.notes || null,
+          notes: formData.notes?.trim() || null,
           isActive: formData.isActive,
         }),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
-        alert('İçerik üreticisi başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.')
-        router.push('/creator-login')
+        if (data.message) {
+          alert(`${data.message}! Şimdi giriş yapabilirsiniz.`)
+        } else {
+          alert('İçerik üreticisi başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.')
+        }
+        router.push('/content-creators')
+        router.refresh()
       } else {
-        const data = await res.json()
         console.error('Error response:', data)
-        alert(data.error || 'Bir hata oluştu')
+        const errorMessage = data.error || 'Bir hata oluştu'
+        alert(`Hata: ${errorMessage}`)
         setLoading(false)
       }
-    } catch (error) {
-      alert('Bir hata oluştu')
+    } catch (error: any) {
+      console.error('Error:', error)
+      alert(`Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
       setLoading(false)
     }
   }

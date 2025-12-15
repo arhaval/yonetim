@@ -42,26 +42,43 @@ export async function getContentCreatorByEmail(email: string) {
   // Email'i normalize et (case-insensitive arama için)
   const normalizedEmail = email.toLowerCase().trim()
   
-  // SQLite case-insensitive arama yapamadığı için tüm creator'ları çekip filtrele
-  const allCreators = await prisma.contentCreator.findMany({
-    where: { email: { not: null } },
-  })
-  
-  // Normalize edilmiş email ile karşılaştır
-  const creator = allCreators.find(
-    c => c.email && c.email.toLowerCase().trim() === normalizedEmail
-  )
-  
-  if (creator) {
-    return creator
+  // PostgreSQL'de case-insensitive arama için raw query kullan
+  // veya tüm creator'ları çekip filtrele (PostgreSQL'de de case-sensitive olabilir)
+  try {
+    // Önce exact match dene (normalize edilmiş email ile)
+    const exactMatch = await prisma.contentCreator.findUnique({
+      where: { email: normalizedEmail },
+    })
+    
+    if (exactMatch) {
+      return exactMatch
+    }
+    
+    // Eğer bulamazsak, tüm creator'ları çekip JavaScript'te filtrele
+    // (PostgreSQL'de email unique constraint case-sensitive olabilir)
+    const allCreators = await prisma.contentCreator.findMany({
+      where: { email: { not: null } },
+    })
+    
+    // Normalize edilmiş email ile karşılaştır
+    const creator = allCreators.find(
+      c => c.email && c.email.toLowerCase().trim() === normalizedEmail
+    )
+    
+    return creator || null
+  } catch (error) {
+    console.error('Error in getContentCreatorByEmail:', error)
+    // Fallback: tüm creator'ları çekip filtrele
+    const allCreators = await prisma.contentCreator.findMany({
+      where: { email: { not: null } },
+    })
+    
+    const creator = allCreators.find(
+      c => c.email && c.email.toLowerCase().trim() === normalizedEmail
+    )
+    
+    return creator || null
   }
-  
-  // Eğer bulamazsak, exact match deneyelim (belki veritabanında normalize edilmemiş)
-  const exactMatch = await prisma.contentCreator.findUnique({
-    where: { email: normalizedEmail },
-  })
-  
-  return exactMatch || null
 }
 
 export async function getVoiceActorByEmail(email: string) {
