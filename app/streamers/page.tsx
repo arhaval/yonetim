@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function StreamersPage() {
-  let streamers = []
+  // TypeScript hatasını önlemek için ': any[]' eklendi
+  let streamers: any[] = []
   
   try {
     streamers = await prisma.streamer.findMany({

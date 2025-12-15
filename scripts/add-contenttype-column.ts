@@ -1,25 +1,55 @@
 /**
  * Bu script VoiceoverScript tablosuna contentType column'unu ekler
- * 
- * Kullanım:
+ * * Kullanım:
  * npm run add-contenttype
- * 
- * Veya direkt:
+ * * Veya direkt:
  * tsx scripts/add-contenttype-column.ts
  */
 
+import * as dotenv from 'dotenv'
+import path from 'path'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+// --- DÜZELTME BURADA ---
+// Script 'scripts' klasöründe olduğu için .env dosyası bir üst klasördedir ('../.env')
+// Hem .env hem de .env.local kontrolü yapalım
+const envPath = path.resolve(__dirname, '../.env')
+const envLocalPath = path.resolve(__dirname, '../.env.local')
+
+// Önce .env yüklemeyi dene
+const envConfig = dotenv.config({ path: envPath })
+
+// Eğer .env yoksa veya DATABASE_URL gelmediyse .env.local dene
+if (envConfig.error || !process.env.DATABASE_URL) {
+  console.log('ℹ️  .env dosyasında URL bulunamadı, .env.local deneniyor...')
+  dotenv.config({ path: envLocalPath })
+}
+// -----------------------
+
+// Prisma Client'ı URL ile başlatalım (Garanti olsun)
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+})
 
 async function main() {
   console.log('🔍 VoiceoverScript tablosuna contentType column ekleniyor...')
   
+  // URL kontrolü (Güvenlik için sadece var mı yok mu diye bakıyoruz)
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ HATA: DATABASE_URL bulunamadı! .env veya .env.local dosyanızı kontrol edin.')
+    // Build'in patlamaması için çıkış yapıyoruz ama hata kodu döndürmüyoruz
+    return 
+  }
+
   try {
     // Prisma'nın raw SQL desteğini kullanarak column ekle
     await prisma.$executeRaw`
       ALTER TABLE "VoiceoverScript" 
-      ADD COLUMN IF NOT EXISTS "contentType" TEXT;
+      ADD COLUMN IF NOT EXISTS "contentType" TEXT DEFAULT 'VIDEO';
     `
     
     console.log('✅ contentType column başarıyla eklendi!')
@@ -46,7 +76,6 @@ async function main() {
     } else {
       console.warn('⚠️  Column eklenirken hata oluştu:', error.message)
       console.warn('ℹ️  Build devam ediyor... (Column zaten mevcut olabilir)')
-      // Build'in devam etmesi için exit(0) - || true ile birlikte çalışacak
     }
   } finally {
     await prisma.$disconnect()
@@ -57,7 +86,5 @@ main()
   .catch((error) => {
     console.warn('⚠️  Beklenmeyen hata:', error)
     console.warn('ℹ️  Build devam ediyor...')
-    // Build'in devam etmesi için exit(0)
     process.exit(0)
   })
-
