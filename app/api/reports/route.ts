@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
       topStreamers: (streamers || []).map((s) => ({
         id: s.id,
         name: s.name,
-        platform: s.platform,
+        // platform: s.platform, // BU SATIR SİLİNDİ (Veritabanında yoksa hata verir)
         streamCount: s.streams?.length || s._count?.streams || 0,
       })),
       topContent: contents,
