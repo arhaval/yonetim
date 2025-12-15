@@ -23,7 +23,8 @@ export default function StreamersPage() {
       setStreamers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching streamers:', error)
-      setStreamers = []
+      // DÜZELTME BURADA YAPILDI
+      setStreamers([])
     } finally {
       setLoading(false)
     }

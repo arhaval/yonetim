@@ -23,7 +23,8 @@ export default function ContentCreatorsPage() {
       setCreators(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching content creators:', error)
-      setCreators = []
+      // DÜZELTME BURADA YAPILDI
+      setCreators([])
     } finally {
       setLoading(false)
     }
@@ -186,4 +187,3 @@ export default function ContentCreatorsPage() {
     </Layout>
   )
 }
-
