@@ -548,7 +548,7 @@ export default function ContentPage() {
                     <DeleteButton
                       id={content.id}
                       type="content"
-                      onDelete={fetchData}
+                      
                       compact={true}
                     />
                   </div>
