@@ -246,9 +246,14 @@ export default function ContentPage() {
         const params = new URLSearchParams({
           filter: filter,
           month: selectedMonth,
-          platform: platformName,
-          type: typeName,
         })
+        // Platform ve tip filtresini sadece seçiliyse ekle
+        if (selectedPlatform) {
+          params.append('platform', platformName)
+        }
+        if (activeTab) {
+          params.append('type', typeName)
+        }
         const response = await fetch(`/api/content/list?${params}`)
         
         if (!response.ok) {
