@@ -44,8 +44,20 @@ export default function TeamLoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
           {/* Logo & Header */}
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-4">
-              <span className="text-white font-bold text-2xl">A</span>
+            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-black">
+              <img 
+                src="/arhaval-logo.png" 
+                alt="Arhaval Logo" 
+                className="w-full h-full object-contain rounded-2xl"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = '<span class="text-white font-bold text-2xl">A</span>'
+                    target.parentElement.className = 'mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-4'
+                  }
+                }}
+              />
             </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
               Ekip Üyesi Girişi

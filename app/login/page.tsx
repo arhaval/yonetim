@@ -45,8 +45,21 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
           {/* Logo & Header */}
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg mb-4" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-              <span className="text-white font-bold text-2xl">A</span>
+            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-black">
+              <img 
+                src="/arhaval-logo.png" 
+                alt="Arhaval Logo" 
+                className="w-full h-full object-contain rounded-2xl"
+                onError={(e) => {
+                  // Fallback: Eğer logo yüklenemezse eski görünümü göster
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = '<span class="text-white font-bold text-2xl">A</span>'
+                    target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                  }
+                }}
+              />
             </div>
             <h2 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Arhaval Denetim Merkezi

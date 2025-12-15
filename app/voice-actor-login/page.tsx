@@ -44,6 +44,23 @@ export default function VoiceActorLoginPage() {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#eaeaea' }}>
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="text-center mb-6">
+            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-black">
+              <img 
+                src="/arhaval-logo.png" 
+                alt="Arhaval Logo" 
+                className="w-full h-full object-contain rounded-2xl"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = '<span class="text-white font-bold text-2xl">A</span>'
+                    target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                  }
+                }}
+              />
+            </div>
+          </div>
           <h2 className="mt-6 text-center text-4xl font-extrabold" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             Seslendirmen Girişi
           </h2>
