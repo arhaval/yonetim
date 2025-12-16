@@ -622,11 +622,11 @@ export default function CreatorDashboardPage() {
             <h2 className="text-2xl font-bold text-gray-900">Tüm İçerikler</h2>
             <p className="text-sm text-gray-600 mt-1">Admin panelinden güncellenen tüm içerikler</p>
           </div>
-          {contents.length === 0 ? (
+            {contents.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-500 font-medium">Henüz içerik eklenmemiş</p>
-            </div>
-          ) : (
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -665,14 +665,14 @@ export default function CreatorDashboardPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {contents.map((content) => {
-                    const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+                const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
                     const formatNumber = (num: number) => {
                       if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
                       if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
                       return num.toString()
                     }
-
-                    return (
+                
+                return (
                       <tr
                         key={content.id}
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
@@ -680,26 +680,26 @@ export default function CreatorDashboardPage() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={content.title}>
-                            {content.title}
+                              {content.title}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                            content.platform === 'YouTube' 
-                              ? 'bg-red-50 text-red-700 border-red-200' 
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
-                          }`}>
-                            {content.platform}
-                          </span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.platform === 'YouTube' 
+                                ? 'bg-red-50 text-red-700 border-red-200' 
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}>
+                              {content.platform}
+                            </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                            content.type === 'shorts' || content.type === 'reel'
-                              ? 'bg-orange-50 text-orange-700 border-orange-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}>
-                            {contentType}
-                          </span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.type === 'shorts' || content.type === 'reel'
+                                ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {contentType}
+                            </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -723,7 +723,7 @@ export default function CreatorDashboardPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
+                          {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
                           </div>
                         </td>
                       </tr>
@@ -731,8 +731,8 @@ export default function CreatorDashboardPage() {
                   })}
                 </tbody>
               </table>
-            </div>
-          )}
+                          </div>
+                        )}
         </div>
       </div>
     </div>
