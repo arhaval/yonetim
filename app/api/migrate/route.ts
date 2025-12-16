@@ -11,11 +11,16 @@ export async function POST(request: NextRequest) {
     // Bu endpoint'i sadece admin kullanabilir
     // Güvenlik için bir secret token kullanabilirsiniz
     const authHeader = request.headers.get('authorization')
-    const secretToken = process.env.MIGRATION_SECRET || 'your-secret-token'
+    const secretToken = process.env.MIGRATION_SECRET || 'arhaval-migration-2024'
 
+    // Eğer MIGRATION_SECRET environment variable yoksa, varsayılan token'ı kullan
+    // Production'da mutlaka environment variable olarak ayarlayın!
     if (authHeader !== `Bearer ${secretToken}`) {
       return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
+        { 
+          error: 'Yetkisiz erişim',
+          hint: 'Authorization header\'ında Bearer token göndermelisiniz. Örnek: Authorization: Bearer arhaval-migration-2024'
+        },
         { status: 401 }
       )
     }
