@@ -142,3 +142,48 @@ export async function PUT(
   }
 }
 
+// Metni sil (sadece admin)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('user-id')?.value
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 401 }
+      )
+    }
+
+    // Admin kontrolü
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 403 }
+      )
+    }
+
+    // Metni sil
+    await prisma.voiceoverScript.delete({
+      where: { id: params.id },
+    })
+
+    return NextResponse.json({
+      message: 'Metin başarıyla silindi',
+    })
+  } catch (error: any) {
+    console.error('Error deleting script:', error)
+    return NextResponse.json(
+      { error: error.message || 'Metin silinemedi' },
+      { status: 500 }
+    )
+  }
+}
+

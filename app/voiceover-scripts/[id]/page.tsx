@@ -6,6 +6,7 @@ import { ArrowLeft, FileText, CheckCircle, Clock, Download, Mic, User, DollarSig
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import ApproveScriptButton from './ApproveScriptButton'
+import DeleteScriptButton from './DeleteScriptButton'
 
 export default async function VoiceoverScriptDetailPage({
   params,
@@ -122,7 +123,10 @@ export default async function VoiceoverScriptDetailPage({
         </div>
 
         {/* Admin Actions */}
-        <ApproveScriptButton scriptId={script.id} currentStatus={script.status} currentPrice={script.price} />
+        <div className="flex items-center gap-4 mb-6">
+          <ApproveScriptButton scriptId={script.id} currentStatus={script.status} currentPrice={script.price} />
+          <DeleteScriptButton scriptId={script.id} />
+        </div>
 
         {/* Script Content */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
