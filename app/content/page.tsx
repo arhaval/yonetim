@@ -247,13 +247,8 @@ export default function ContentPage() {
           filter: filter,
           month: selectedMonth,
         })
-        // Platform ve tip filtresini sadece seçiliyse ekle
-        if (selectedPlatform) {
-          params.append('platform', platformName)
-        }
-        if (activeTab) {
-          params.append('type', typeName)
-        }
+        // Platform ve tip filtresini KALDIR - tüm içerikler gözüksün
+        // Filtreleme sadece görsel olarak yapılacak (client-side)
         const response = await fetch(`/api/content/list?${params}`)
         
         if (!response.ok) {
@@ -435,140 +430,194 @@ export default function ContentPage() {
         </div>
 
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Tablo Formatı */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {contents.length === 0 ? (
-            <div className="col-span-full text-center py-16 bg-white rounded-2xl shadow-xl border border-gray-100">
+            <div className="text-center py-16">
               <p className="text-gray-500 font-medium">Henüz içerik eklenmemiş</p>
             </div>
           ) : (
-            contents.map((content) => {
-              // İçerik tipini belirle
-              let contentType = ''
-              if (content.platform === 'YouTube') {
-                contentType = content.type === 'shorts' ? 'Shorts' : 'Video'
-              } else if (content.platform === 'Instagram') {
-                contentType = content.type === 'reel' ? 'Reels' : 'Gönderi'
-              } else {
-                contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
-              }
-
-              // Sayıları formatla
-              const formatNumber = (num: number) => {
-                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-                if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-                return num.toString()
-              }
-
-              return (
-                <div
-                  key={content.id}
-                  className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative"
-                >
-                  <Link
-                    href={`/content/${content.id}`}
-                    className="block"
-                  >
-                    <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#08d9d6] transition-colors line-clamp-2 mb-2">
-                          {content.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                            content.platform === 'YouTube' 
-                              ? 'bg-red-50 text-red-700 border-red-200' 
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
-                          }`}>
-                            {content.platform}
-                          </span>
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                            contentType === 'Shorts' || contentType === 'Reels'
-                              ? 'bg-orange-50 text-orange-700 border-orange-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}>
-                            {contentType}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {content.creator && (
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500 mb-1">İçerik Üreticisi</p>
-                        <Link
-                          href={`/content-creators/${content.creator.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-sm font-medium hover:underline"
-                          style={{ color: '#08d9d6' }}
-                        >
-                          {content.creator.name}
-                        </Link>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center space-x-2">
-                        <Eye className="w-4 h-4 text-gray-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">Görüntülenme</p>
-                          <p className="text-sm font-bold text-gray-900">{formatNumber(content.views || 0)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Heart className="w-4 h-4 text-red-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">Beğeni</p>
-                          <p className="text-sm font-bold text-gray-900">{formatNumber(content.likes || 0)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <MessageCircle className="w-4 h-4 text-blue-400" />
-                        <div>
-                          <p className="text-xs text-gray-500">Yorum</p>
-                          <p className="text-sm font-bold text-gray-900">{formatNumber(content.comments || 0)}</p>
-                        </div>
-                      </div>
-                      {selectedPlatform === 'instagram' && (
-                        <>
-                          <div className="flex items-center space-x-2">
-                            <Share2 className="w-4 h-4 text-green-400" />
-                            <div>
-                              <p className="text-xs text-gray-500">Paylaşım</p>
-                              <p className="text-sm font-bold text-gray-900">{formatNumber(content.shares || 0)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Bookmark className="w-4 h-4 text-purple-400" />
-                            <div>
-                              <p className="text-xs text-gray-500">Kaydetme</p>
-                              <p className="text-sm font-bold text-gray-900">{formatNumber(content.saves || 0)}</p>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center space-x-2 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" style={{ color: '#08d9d6' }} />
-                        <span>Son güncelleme: {format(new Date(content.updatedAt), 'dd MMM yyyy, HH:mm', { locale: tr })}</span>
-                      </div>
-                    </div>
-                    </div>
-                  </Link>
-                  {/* Silme Butonu */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <DeleteButton
-                      id={content.id}
-                      type="content"
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Başlık
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Platform
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tip
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İçerik Üreticisi
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Görüntülenme
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Beğeni
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Yorum
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Paylaşım
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kaydetme
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tarih
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İşlemler
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {contents
+                    .filter((content) => {
+                      // Client-side filtreleme - sadece görsel
+                      const matchesPlatform = !selectedPlatform || 
+                        (selectedPlatform === 'youtube' && content.platform === 'YouTube') ||
+                        (selectedPlatform === 'instagram' && content.platform === 'Instagram')
                       
-                      compact={true}
-                    />
-                  </div>
-                </div>
-              )
-            })
+                      // Tip filtresi - shorts'lar sadece shorts tab'ında, videolar sadece video tab'ında
+                      let matchesType = true
+                      if (activeTab) {
+                        if (selectedPlatform === 'youtube') {
+                          if (activeTab === 'video') {
+                            matchesType = content.type === 'video' // Sadece video tipi
+                          } else if (activeTab === 'shorts') {
+                            matchesType = content.type === 'shorts' // Sadece shorts tipi
+                          }
+                        } else if (selectedPlatform === 'instagram') {
+                          if (activeTab === 'reels') {
+                            matchesType = content.type === 'reel' // Sadece reel tipi
+                          } else if (activeTab === 'post') {
+                            matchesType = content.type === 'post' // Sadece post tipi
+                          }
+                        }
+                      }
+                      
+                      return matchesPlatform && matchesType
+                    })
+                    .map((content) => {
+                      // İçerik tipini belirle
+                      let contentType = ''
+                      if (content.platform === 'YouTube') {
+                        contentType = content.type === 'shorts' ? 'Shorts' : 'Video'
+                      } else if (content.platform === 'Instagram') {
+                        contentType = content.type === 'reel' ? 'Reels' : 'Gönderi'
+                      } else {
+                        contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+                      }
+
+                      // Sayıları formatla
+                      const formatNumber = (num: number) => {
+                        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+                        if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+                        return num.toString()
+                      }
+
+                      return (
+                        <tr
+                          key={content.id}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => router.push(`/content/${content.id}`)}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={content.title}>
+                              {content.title}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              content.platform === 'YouTube' 
+                                ? 'bg-red-50 text-red-700 border-red-200' 
+                                : 'bg-purple-50 text-purple-700 border-purple-200'
+                            }`}>
+                              {content.platform}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                              contentType === 'Shorts' || contentType === 'Reels'
+                                ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}>
+                              {contentType}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {content.creator ? (
+                              <Link
+                                href={`/content-creators/${content.creator.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                              >
+                                {content.creator.name}
+                              </Link>
+                            ) : (
+                              <span className="text-sm text-gray-500">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-1">
+                              <Eye className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.views || 0)}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-1">
+                              <Heart className="w-4 h-4 text-red-400" />
+                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.likes || 0)}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-1">
+                              <MessageCircle className="w-4 h-4 text-blue-400" />
+                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.comments || 0)}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {content.platform === 'Instagram' ? (
+                              <div className="flex items-center space-x-1">
+                                <Share2 className="w-4 h-4 text-green-400" />
+                                <span className="text-sm font-medium text-gray-900">{formatNumber(content.shares || 0)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {content.platform === 'Instagram' ? (
+                              <div className="flex items-center space-x-1">
+                                <Bookmark className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm font-medium text-gray-900">{formatNumber(content.saves || 0)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                            <DeleteButton
+                              id={content.id}
+                              type="content"
+                              compact={true}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
         </>
