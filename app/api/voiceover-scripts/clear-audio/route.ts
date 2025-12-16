@@ -29,46 +29,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Önce kaç tane ses dosyası olduğunu say (null olmayan ve boş string olmayan)
-    const count = await prisma.voiceoverScript.count({
-      where: {
-        AND: [
-          {
-            audioFile: {
-              not: null,
-            },
-          },
-          {
-            audioFile: {
-              not: '',
-            },
-          },
-        ],
+    // Önce tüm script'leri getir ve audioFile'ı olanları bul
+    const allScripts = await prisma.voiceoverScript.findMany({
+      select: {
+        id: true,
+        audioFile: true,
       },
     })
 
-    // Tüm ses dosyalarını temizle (null olmayan ve boş string olmayan)
-    const result = await prisma.voiceoverScript.updateMany({
-      where: {
-        AND: [
-          {
-            audioFile: {
-              not: null,
-            },
-          },
-          {
-            audioFile: {
-              not: '',
-            },
-          },
-        ],
-      },
-      data: {
-        audioFile: null,
-      },
-    })
+    // audioFile'ı null olmayan ve boş string olmayan script'leri filtrele
+    const scriptsWithAudio = allScripts.filter(
+      (script) => script.audioFile && script.audioFile.trim() !== ''
+    )
 
-    console.log(`Cleared ${result.count} audio files out of ${count} found`)
+    console.log(`Found ${scriptsWithAudio.length} scripts with audio files out of ${allScripts.length} total`)
+
+    // Her bir script'i güncelle
+    let clearedCount = 0
+    for (const script of scriptsWithAudio) {
+      try {
+        await prisma.voiceoverScript.update({
+          where: { id: script.id },
+          data: { audioFile: null },
+        })
+        clearedCount++
+      } catch (error) {
+        console.error(`Error clearing audio for script ${script.id}:`, error)
+      }
+    }
+
+    console.log(`Cleared ${clearedCount} audio files`)
 
     return NextResponse.json({
       message: `${result.count} ses dosyası temizlendi`,
