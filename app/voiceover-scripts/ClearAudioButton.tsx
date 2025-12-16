@@ -15,19 +15,32 @@ export default function ClearAudioButton() {
     try {
       const res = await fetch('/api/voiceover-scripts/clear-audio', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Bilinmeyen hata' }))
+        throw new Error(errorData.error || `HTTP ${res.status}`)
+      }
 
       const data = await res.json()
 
-      if (res.ok) {
+      if (data.count !== undefined) {
         alert(`${data.count} ses dosyası temizlendi. Sayfa yenilenecek.`)
-        window.location.reload()
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
-        alert(data.error || 'Bir hata oluştu')
+        alert(data.message || 'Ses dosyaları temizlendi. Sayfa yenilenecek.')
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       }
-    } catch (error) {
-      alert('Bir hata oluştu')
-    } finally {
+    } catch (error: any) {
+      console.error('Error clearing audio:', error)
+      alert(`Hata: ${error.message || 'Bir hata oluştu'}`)
       setLoading(false)
     }
   }

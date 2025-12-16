@@ -137,6 +137,17 @@ export async function POST(request: NextRequest) {
           },
         })
       }
+
+      // Finansal kayıt oluştur (gider olarak)
+      await prisma.financialRecord.create({
+        data: {
+          type: 'expense',
+          category: 'salary',
+          amount: amount,
+          description: note || `${teamPayment.period} ayı ekip üyesi ödemesi`,
+          date: paymentDate,
+        },
+      })
     } else if (type === 'voice-actors' && voiceActorId) {
       // Seslendirmen ödemesi
       const [year, monthNum] = month.split('-').map(Number)

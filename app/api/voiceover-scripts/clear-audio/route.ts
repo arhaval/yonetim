@@ -29,16 +29,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Önce kaç tane ses dosyası olduğunu say (null olmayan ve boş string olmayan)
+    const count = await prisma.voiceoverScript.count({
+      where: {
+        AND: [
+          {
+            audioFile: {
+              not: null,
+            },
+          },
+          {
+            audioFile: {
+              not: '',
+            },
+          },
+        ],
+      },
+    })
+
+    // Tüm ses dosyalarını temizle (null olmayan ve boş string olmayan)
     const result = await prisma.voiceoverScript.updateMany({
       where: {
-        audioFile: {
-          not: null,
-        },
+        AND: [
+          {
+            audioFile: {
+              not: null,
+            },
+          },
+          {
+            audioFile: {
+              not: '',
+            },
+          },
+        ],
       },
       data: {
         audioFile: null,
       },
     })
+
+    console.log(`Cleared ${result.count} audio files out of ${count} found`)
 
     return NextResponse.json({
       message: `${result.count} ses dosyası temizlendi`,
