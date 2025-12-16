@@ -102,6 +102,21 @@ export default function TeamDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-1.5">
+                <img 
+                  src="/arhaval-logo.png" 
+                  alt="Arhaval Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    if (target.parentElement) {
+                      target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-lg">A</span>'
+                      target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                    }
+                  }}
+                />
+              </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-lg">{member.name.charAt(0).toUpperCase()}</span>
               </div>

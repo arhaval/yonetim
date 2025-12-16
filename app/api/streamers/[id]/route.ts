@@ -22,7 +22,7 @@ export async function DELETE(
         { status: 404 }
       )
     }
-
+    
     // Yayıncıyı sil (ilişkili yayınlar, ödemeler cascade ile silinecek)
     await prisma.streamer.delete({
       where: { id: resolvedParams.id },

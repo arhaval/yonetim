@@ -22,7 +22,7 @@ export async function DELETE(
         { status: 404 }
       )
     }
-
+    
     // Ekip üyesini sil (ilişkili görevler ve ödemeler cascade ile silinecek)
     await prisma.teamMember.delete({
       where: { id: resolvedParams.id },

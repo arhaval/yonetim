@@ -92,7 +92,7 @@ export default function TeamPage() {
       }
 
       setMembers(combinedMembers)
-    } catch (error) {
+  } catch (error) {
       console.error('Veriler çekilemedi:', error)
     } finally {
       setLoading(false)
@@ -161,19 +161,19 @@ export default function TeamPage() {
               {showDropdown && (
                 <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1" role="menu">
-                    <Link
-                      href="/team/new"
+            <Link
+              href="/team/new"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       role="menuitem"
                       onClick={() => setShowDropdown(false)}
-                    >
+            >
                       <div className="flex items-center">
                         <Shield className="w-4 h-4 mr-2 text-blue-500" />
                         Ekip Üyesi
                       </div>
-                    </Link>
-                    <Link
-                      href="/voice-actors/new"
+            </Link>
+            <Link
+              href="/voice-actors/new"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       role="menuitem"
                       onClick={() => setShowDropdown(false)}
@@ -199,12 +199,12 @@ export default function TeamPage() {
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       role="menuitem"
                       onClick={() => setShowDropdown(false)}
-                    >
+            >
                       <div className="flex items-center">
                         <Video className="w-4 h-4 mr-2 text-purple-500" />
                         İçerik Üreticisi
                       </div>
-                    </Link>
+            </Link>
                   </div>
                 </div>
               )}
@@ -219,15 +219,15 @@ export default function TeamPage() {
               <li key={`${member.type}-${member.id}`}>
                 <div className="px-4 py-4 sm:px-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div className="flex items-center flex-1 min-w-0 cursor-pointer" onClick={() => handleEdit(member)}>
-                    <div className="flex-shrink-0">
+                      <div className="flex-shrink-0">
                       {member.profilePhoto ? (
                         <img className="h-12 w-12 rounded-full object-cover" src={member.profilePhoto} alt="" />
-                      ) : (
+                        ) : (
                         <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
                           {getRoleIcon(member.type)}
                         </div>
-                      )}
-                    </div>
+                            )}
+                          </div>
                     <div className="ml-4 truncate">
                       <div className="flex items-center">
                         <p className="text-sm font-medium text-indigo-600 truncate">{member.name}</p>
@@ -251,7 +251,7 @@ export default function TeamPage() {
               </li>
             ))}
           </ul>
-        </div>
+          </div>
       </div>
     </Layout>
   )

@@ -219,6 +219,21 @@ export default function CreatorDashboardPage() {
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-2">
+                <img 
+                  src="/arhaval-logo.png" 
+                  alt="Arhaval Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    if (target.parentElement) {
+                      target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
+                      target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                    }
+                  }}
+                />
+              </div>
               {creator.profilePhoto ? (
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-2 ring-indigo-200">
                   <img

@@ -505,74 +505,74 @@ export default function ContentPage() {
                       return matchesPlatform && matchesType
                     })
                     .map((content) => {
-                      // İçerik tipini belirle
-                      let contentType = ''
-                      if (content.platform === 'YouTube') {
-                        contentType = content.type === 'shorts' ? 'Shorts' : 'Video'
-                      } else if (content.platform === 'Instagram') {
-                        contentType = content.type === 'reel' ? 'Reels' : 'Gönderi'
-                      } else {
-                        contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
-                      }
+              // İçerik tipini belirle
+              let contentType = ''
+              if (content.platform === 'YouTube') {
+                contentType = content.type === 'shorts' ? 'Shorts' : 'Video'
+              } else if (content.platform === 'Instagram') {
+                contentType = content.type === 'reel' ? 'Reels' : 'Gönderi'
+              } else {
+                contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+              }
 
-                      // Sayıları formatla
-                      const formatNumber = (num: number) => {
-                        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-                        if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
-                        return num.toString()
-                      }
+              // Sayıları formatla
+              const formatNumber = (num: number) => {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+                return num.toString()
+              }
 
-                      return (
+              return (
                         <tr
-                          key={content.id}
+                  key={content.id}
                           className="hover:bg-gray-50 transition-colors cursor-pointer"
                           onClick={() => router.push(`/content/${content.id}`)}
-                        >
+                >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={content.title}>
-                              {content.title}
+                          {content.title}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                              content.platform === 'YouTube' 
-                                ? 'bg-red-50 text-red-700 border-red-200' 
-                                : 'bg-purple-50 text-purple-700 border-purple-200'
-                            }`}>
-                              {content.platform}
-                            </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                            content.platform === 'YouTube' 
+                              ? 'bg-red-50 text-red-700 border-red-200' 
+                              : 'bg-purple-50 text-purple-700 border-purple-200'
+                          }`}>
+                            {content.platform}
+                          </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                              contentType === 'Shorts' || contentType === 'Reels'
-                                ? 'bg-orange-50 text-orange-700 border-orange-200'
-                                : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}>
-                              {contentType}
-                            </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                            contentType === 'Shorts' || contentType === 'Reels'
+                              ? 'bg-orange-50 text-orange-700 border-orange-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            {contentType}
+                          </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {content.creator ? (
-                              <Link
-                                href={`/content-creators/${content.creator.id}`}
-                                onClick={(e) => e.stopPropagation()}
+                        <Link
+                          href={`/content-creators/${content.creator.id}`}
+                          onClick={(e) => e.stopPropagation()}
                                 className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                              >
-                                {content.creator.name}
-                              </Link>
+                        >
+                          {content.creator.name}
+                        </Link>
                             ) : (
                               <span className="text-sm text-gray-500">-</span>
-                            )}
+                    )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-1">
-                              <Eye className="w-4 h-4 text-gray-400" />
+                        <Eye className="w-4 h-4 text-gray-400" />
                               <span className="text-sm font-medium text-gray-900">{formatNumber(content.views || 0)}</span>
-                            </div>
+                        </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-1">
-                              <Heart className="w-4 h-4 text-red-400" />
+                        <Heart className="w-4 h-4 text-red-400" />
                               <span className="text-sm font-medium text-gray-900">{formatNumber(content.likes || 0)}</span>
                             </div>
                           </td>
@@ -587,17 +587,17 @@ export default function ContentPage() {
                               <div className="flex items-center space-x-1">
                                 <Share2 className="w-4 h-4 text-green-400" />
                                 <span className="text-sm font-medium text-gray-900">{formatNumber(content.shares || 0)}</span>
-                              </div>
+                          </div>
                             ) : (
                               <span className="text-sm text-gray-400">-</span>
-                            )}
+                      )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {content.platform === 'Instagram' ? (
                               <div className="flex items-center space-x-1">
                                 <Bookmark className="w-4 h-4 text-purple-400" />
                                 <span className="text-sm font-medium text-gray-900">{formatNumber(content.saves || 0)}</span>
-                              </div>
+                    </div>
                             ) : (
                               <span className="text-sm text-gray-400">-</span>
                             )}
@@ -617,7 +617,7 @@ export default function ContentPage() {
                     })}
                 </tbody>
               </table>
-            </div>
+                  </div>
           )}
         </div>
         </>

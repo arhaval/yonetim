@@ -1,10 +1,11 @@
 import Layout from '@/components/Layout'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { Plus, FileText, CheckCircle, Clock, Download, Mic } from 'lucide-react'
+import { Plus, FileText, CheckCircle, Clock, Download, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import AudioLink from './AudioLink'
+import ClearAudioButton from './ClearAudioButton'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -54,7 +55,8 @@ export default async function VoiceoverScriptsPage() {
               Tüm seslendirme metinlerini görüntüleyin ve yönetin
             </p>
           </div>
-          <div className="mt-4 sm:mt-0">
+          <div className="mt-4 sm:mt-0 flex space-x-3">
+            <ClearAudioButton />
             <Link
               href="/voiceover-scripts/new"
               className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
