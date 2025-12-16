@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,39 +20,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Dosya boyutunu kontrol et (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Dosya boyutunu kontrol et (max 2MB - base64 için daha küçük limit)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'Dosya boyutu 5MB\'dan büyük olamaz' },
+        { error: 'Dosya boyutu 2MB\'dan büyük olamaz' },
         { status: 400 }
       )
     }
 
+    // Dosyayı base64'e çevir
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-
-    // Dosya adını oluştur (timestamp + orijinal ad)
-    const timestamp = Date.now()
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const fileName = `${timestamp}_${originalName}`
-
-    // Uploads klasörünü oluştur (yoksa)
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'profiles')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
-    // Dosyayı kaydet
-    const filePath = join(uploadsDir, fileName)
-    await writeFile(filePath, buffer)
-
-    // Public URL'yi döndür
-    const publicUrl = `/uploads/profiles/${fileName}`
+    const base64 = buffer.toString('base64')
+    
+    // Data URL oluştur
+    const dataUrl = `data:${file.type};base64,${base64}`
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
-      fileName: fileName,
+      url: dataUrl,
+      fileName: file.name,
     })
   } catch (error) {
     console.error('Error uploading file:', error)

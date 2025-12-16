@@ -30,9 +30,11 @@ export function middleware(request: NextRequest) {
   const isApiTeam = request.nextUrl.pathname.startsWith('/api/team')
   const isApiContent = request.nextUrl.pathname.startsWith('/api/content')
   const isApiVoiceoverScripts = request.nextUrl.pathname.startsWith('/api/voiceover-scripts')
+  const isApiUpload = request.nextUrl.pathname.startsWith('/api/upload')
+  const isApiMigrate = request.nextUrl.pathname.startsWith('/api/migrate')
 
   // API auth endpoint'lerine izin ver
-  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiVoiceActorContents || isApiTeamAuth || isApiTeam || isApiContent || isApiVoiceoverScripts) {
+  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiVoiceActorContents || isApiTeamAuth || isApiTeam || isApiContent || isApiVoiceoverScripts || isApiUpload || isApiMigrate) {
     return NextResponse.next()
   }
 
