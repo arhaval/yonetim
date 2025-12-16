@@ -87,16 +87,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="p-6 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-black overflow-hidden">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-1.5">
                   <img 
                     src="/arhaval-logo.png" 
                     alt="Arhaval Logo" 
-                    className="w-full h-full object-contain rounded-xl"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       if (target.parentElement) {
-                        target.parentElement.innerHTML = '<span class="text-white font-bold text-xl">A</span>'
+                        target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
                         target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
                       }
                     }}
