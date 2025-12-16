@@ -36,13 +36,6 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // O ay için yapılan ödemeleri getir
-    const paymentsMade = await prisma.payment.findMany({
-      where: {
-        period: month,
-      },
-    })
-
     // Yayıncı bazında grupla
     const groupedByStreamer = streams.reduce((acc: any, stream) => {
       const streamerId = stream.streamerId
@@ -66,22 +59,8 @@ export async function GET(request: NextRequest) {
       return acc
     }, {})
 
-    // Ödemeleri yayıncı bazında topla
-    const paymentsByStreamer = paymentsMade.reduce((acc: any, payment) => {
-      if (!acc[payment.streamerId]) {
-        acc[payment.streamerId] = 0
-      }
-      acc[payment.streamerId] += payment.amount
-      return acc
-    }, {})
-
-    // Ödenen tutarları güncelle (kısmi ödemeler dahil)
+    // Ödenen tutarları hesapla - sadece paymentStatus'a göre
     const payments = Object.values(groupedByStreamer).map((payment: any) => {
-      const paidFromPayments = paymentsByStreamer[payment.streamerId] || 0
-      // Ödenen tutar: ya tam ödenmiş yayınlar ya da kısmi ödemeler
-      const actualPaid = Math.max(payment.paidAmount, paidFromPayments)
-      const actualPending = payment.totalAmount - actualPaid
-      
       // Bu yayıncıya ait onaylanmış yayınları getir
       const streamerStreams = streams
         .filter(s => s.streamerId === payment.streamerId)
@@ -99,8 +78,7 @@ export async function GET(request: NextRequest) {
       
       return {
         ...payment,
-        paidAmount: actualPaid,
-        pendingAmount: Math.max(0, actualPending),
+        // paidAmount ve pendingAmount zaten doğru hesaplanmış (paymentStatus'a göre)
         streams: streamerStreams, // Detaylı yayın listesi
       }
     })

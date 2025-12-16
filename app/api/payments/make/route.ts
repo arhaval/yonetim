@@ -86,6 +86,18 @@ export async function POST(request: NextRequest) {
           paidAt: paidAt ? new Date(paidAt) : new Date(),
         },
       })
+
+      // Finansal kayıt oluştur (gider olarak)
+      await prisma.financialRecord.create({
+        data: {
+          type: 'expense',
+          category: 'salary',
+          amount: amount,
+          description: note || `${month} ayı yayıncı ödemesi`,
+          date: paidAt ? new Date(paidAt) : new Date(),
+          streamerId: streamerId,
+        },
+      })
     } else if (type === 'team' && teamPaymentId) {
       // Ekip üyesi ödemesi
       const teamPayment = await prisma.teamPayment.findUnique({
