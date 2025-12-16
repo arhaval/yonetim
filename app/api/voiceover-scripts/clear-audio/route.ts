@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
     console.log(`Cleared ${clearedCount} audio files`)
 
     return NextResponse.json({
-      message: `${result.count} ses dosyası temizlendi`,
-      count: result.count,
+      message: `${clearedCount} ses dosyası temizlendi`,
+      count: clearedCount,
     })
   } catch (error: any) {
     console.error('Error clearing audio files:', error)
