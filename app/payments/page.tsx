@@ -289,13 +289,13 @@ export default function PaymentsPage() {
           </div>
         ) : activeTab === 'streamers' ? (
           <div className="space-y-4">
-            {streamerPayments.length === 0 ? (
+            {streamerPayments.filter(p => p.pendingAmount > 0).length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Bu ay için ödeme kaydı bulunamadı</p>
+                <p className="text-gray-500">Bu ay için ödenmemiş ödeme bulunamadı</p>
               </div>
             ) : (
               <>
-                {streamerPayments.map((payment) => (
+                {streamerPayments.filter(p => p.pendingAmount > 0).map((payment) => (
                   <div
                     key={payment.streamerId}
                     className="bg-white rounded-lg shadow-lg p-6 border border-gray-200"
@@ -441,13 +441,13 @@ export default function PaymentsPage() {
           </div>
         ) : activeTab === 'team' ? (
           <div className="space-y-4">
-            {teamPayments.length === 0 ? (
+            {teamPayments.filter(p => !p.paidAt).length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Bu ay için ödeme kaydı bulunamadı</p>
+                <p className="text-gray-500">Bu ay için ödenmemiş ödeme bulunamadı</p>
               </div>
             ) : (
               <>
-                {teamPayments.map((payment) => (
+                {teamPayments.filter(p => !p.paidAt).map((payment) => (
                   <div
                     key={payment.id}
                     className="bg-white rounded-lg shadow-lg p-6 border border-gray-200"
@@ -569,13 +569,13 @@ export default function PaymentsPage() {
           </div>
         ) : activeTab === 'voice-actors' ? (
           <div className="space-y-4">
-            {voiceActorPayments.length === 0 ? (
+            {voiceActorPayments.filter(p => p.pendingAmount > 0).length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Bu ay için ödeme kaydı bulunamadı</p>
+                <p className="text-gray-500">Bu ay için ödenmemiş ödeme bulunamadı</p>
               </div>
             ) : (
               <>
-                {voiceActorPayments.map((payment) => (
+                {voiceActorPayments.filter(p => p.pendingAmount > 0).map((payment) => (
                   <div
                     key={payment.id}
                     className="bg-white rounded-lg shadow-lg p-6 border border-gray-200"
