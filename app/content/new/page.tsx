@@ -46,11 +46,15 @@ function NewContentPageContent() {
       if (formData.url && formData.url.trim()) {
         console.log('URL detected, fetching from API...')
         if (formData.platform === 'YouTube') {
-          // YouTube API'den çek
+          // YouTube API'den çek - form'dan seçilen tipi de gönder
+          console.log('Form\'dan gönderilen tip:', formData.type)
           const youtubeRes = await fetch('/api/content/youtube', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: formData.url.trim() }),
+            body: JSON.stringify({ 
+              url: formData.url.trim(),
+              type: formData.type // Form'dan seçilen tipi gönder
+            }),
           })
 
           const youtubeData = await youtubeRes.json()

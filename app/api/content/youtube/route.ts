@@ -17,7 +17,7 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { url, channelId } = data
+    const { url, channelId, type } = data // type parametresini al (form'dan gelen tip)
 
     const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Eğer URL verilmişse, tek video çek
     if (url) {
-      return await fetchSingleVideo(url, YOUTUBE_API_KEY, creatorId)
+      return await fetchSingleVideo(url, YOUTUBE_API_KEY, creatorId, type)
     }
 
     // Eğer channelId verilmişse, tüm kanalı çek
@@ -56,9 +56,10 @@ export async function POST(request: NextRequest) {
 }
 
 // Tek video çekme fonksiyonu
-async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string | null) {
+async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string | null, userSelectedType?: string) {
   // URL'den video ID'yi çıkar
   let videoId: string | null = null
+  let isShortsUrl = false
   
   // Farklı YouTube URL formatlarını destekle
   const patterns = [
@@ -70,6 +71,10 @@ async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string 
     const match = url.match(pattern)
     if (match) {
       videoId = match[1]
+      // URL'de /shorts/ varsa shorts olarak işaretle
+      if (url.includes('/shorts/')) {
+        isShortsUrl = true
+      }
       break
     }
   }
@@ -113,9 +118,37 @@ async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string 
     durationSeconds = hours * 3600 + minutes * 60 + seconds
   }
 
-  // Shorts kontrolü: 60 saniye veya daha kısa
-  const isShorts = durationSeconds > 0 && durationSeconds <= 60
-  const videoType = isShorts ? 'shorts' : 'video'
+  // Tip belirleme önceliği:
+  // 1. Kullanıcı form'da tip seçmişse onu kullan
+  // 2. URL'de /shorts/ varsa shorts
+  // 3. Video süresi 60 saniye veya daha kısa ise shorts
+  // 4. Diğer durumlarda video
+  let videoType = 'video'
+  
+  console.log('Tip belirleme:', {
+    userSelectedType,
+    isShortsUrl,
+    durationSeconds,
+    url
+  })
+  
+  if (userSelectedType) {
+    // Kullanıcı form'da tip seçmişse onu kullan
+    videoType = userSelectedType.toLowerCase()
+    console.log('Kullanıcı seçimi kullanılıyor:', videoType)
+  } else if (isShortsUrl) {
+    // URL'de /shorts/ varsa shorts
+    videoType = 'shorts'
+    console.log('URL\'den shorts tespit edildi')
+  } else if (durationSeconds > 0 && durationSeconds <= 60) {
+    // Video süresi 60 saniye veya daha kısa ise shorts
+    videoType = 'shorts'
+    console.log('Video süresinden shorts tespit edildi:', durationSeconds, 'saniye')
+  } else {
+    console.log('Varsayılan tip kullanılıyor: video')
+  }
+  
+  console.log('Belirlenen tip:', videoType)
 
   // Video URL'ini oluştur
   const videoUrl = url.includes('youtube.com') ? url : `https://www.youtube.com/watch?v=${videoId}`
@@ -126,11 +159,12 @@ async function fetchSingleVideo(url: string, apiKey: string, creatorId?: string 
   })
 
   if (existing) {
-    // Mevcut içeriği güncelle
+    // Mevcut içeriği güncelle - tip de güncellenmeli
     const updated = await prisma.content.update({
       where: { id: existing.id },
       data: {
         title: video.snippet.title,
+        type: videoType, // Tip de güncellenmeli
         views: parseInt(video.statistics.viewCount || '0'),
         likes: parseInt(video.statistics.likeCount || '0'),
         comments: parseInt(video.statistics.commentCount || '0'),
