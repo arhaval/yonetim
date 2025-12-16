@@ -616,131 +616,123 @@ export default function CreatorDashboardPage() {
           </div>
         </div>
 
-        {/* Contents List */}
+        {/* Contents List - Tablo Formatı */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">İçeriklerim</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Tüm İçerikler</h2>
+            <p className="text-sm text-gray-600 mt-1">Admin panelinden güncellenen tüm içerikler</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            {contents.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500">Henüz içerik eklenmemiş</p>
-              </div>
-            ) : (
-              contents.map((content) => {
-                const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
-                
-                return (
-                  <div key={content.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          {content.url ? (
-                            <a
-                              href={content.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-lg font-bold text-gray-900 hover:text-[#08d9d6] transition-colors line-clamp-2 block"
-                            >
-                              {content.title}
-                            </a>
-                          ) : (
-                            <h3 className="text-lg font-bold text-gray-900 line-clamp-2">{content.title}</h3>
-                          )}
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                              content.platform === 'YouTube' 
-                                ? 'bg-red-50 text-red-700 border-red-200' 
-                                : 'bg-purple-50 text-purple-700 border-purple-200'
-                            }`}>
-                              {content.platform}
-                            </span>
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                              content.type === 'shorts' || content.type === 'reel'
-                                ? 'bg-orange-50 text-orange-700 border-orange-200'
-                                : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}>
-                              {contentType}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+          {contents.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-gray-500 font-medium">Henüz içerik eklenmemiş</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Başlık
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Platform
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tip
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      İçerik Üreticisi
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Görüntülenme
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Beğeni
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Yorum
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Paylaşım
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kaydetme
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tarih
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {contents.map((content) => {
+                    const contentType = content.type === 'shorts' ? 'Shorts' : content.type === 'reel' ? 'Reels' : content.type === 'post' ? 'Gönderi' : 'Video'
+                    const formatNumber = (num: number) => {
+                      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+                      if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+                      return num.toString()
+                    }
 
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500 mb-1">Yayın Tarihi</p>
-                        <p className="text-sm font-medium text-gray-700">
-                          {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
-                        </p>
-                      </div>
-
-                      {/* İstatistikler - Büyük ve Belirgin */}
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Eye className="w-4 h-4" style={{ color: '#08d9d6' }} />
-                            <span className="text-xs text-gray-500">Görüntülenme</span>
+                    return (
+                      <tr
+                        key={content.id}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/content/${content.id}`)}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={content.title}>
+                            {content.title}
                           </div>
-                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
-                            {formatNumber(content.views || 0)}
-                          </p>
-                        </div>
-                        <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-3 border border-red-100">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Heart className="w-4 h-4" style={{ color: '#ff2e63' }} />
-                            <span className="text-xs text-gray-500">Beğeni</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                            content.platform === 'YouTube' 
+                              ? 'bg-red-50 text-red-700 border-red-200' 
+                              : 'bg-purple-50 text-purple-700 border-purple-200'
+                          }`}>
+                            {content.platform}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                            content.type === 'shorts' || content.type === 'reel'
+                              ? 'bg-orange-50 text-orange-700 border-orange-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            {contentType}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {content.creator?.name || content.creatorName || '-'}
                           </div>
-                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
-                            {formatNumber(content.likes || 0)}
-                          </p>
-                        </div>
-                        <div className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-lg p-3 border border-cyan-100">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <MessageCircle className="w-4 h-4" style={{ color: '#08d9d6' }} />
-                            <span className="text-xs text-gray-500">Yorum</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatNumber(content.views || 0)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatNumber(content.likes || 0)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatNumber(content.comments || 0)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatNumber(content.shares || 0)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{formatNumber(content.saves || 0)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
                           </div>
-                          <p className="text-lg font-bold" style={{ color: '#252a34' }}>
-                            {formatNumber(content.comments || 0)}
-                          </p>
-                        </div>
-                        {content.platform === 'Instagram' ? (
-                          <>
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 border border-green-100">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <Share2 className="w-4 h-4" style={{ color: '#08d9d6' }} />
-                                <span className="text-xs text-gray-500">Paylaşım</span>
-                              </div>
-                              <p className="text-lg font-bold" style={{ color: '#252a34' }}>
-                                {formatNumber(content.shares || 0)}
-                              </p>
-                            </div>
-                            <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-3 border border-purple-100">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <Bookmark className="w-4 h-4" style={{ color: '#ff2e63' }} />
-                                <span className="text-xs text-gray-500">Kaydetme</span>
-                              </div>
-                              <p className="text-lg font-bold" style={{ color: '#252a34' }}>
-                                {formatNumber(content.saves || 0)}
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-3 border border-gray-100">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span className="text-xs text-gray-500">Son Güncelleme</span>
-                            </div>
-                            <p className="text-xs font-medium text-gray-600">
-                              {format(new Date(content.updatedAt), 'dd MMM yyyy', { locale: tr })}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

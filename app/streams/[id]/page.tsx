@@ -65,27 +65,68 @@ export default async function StreamDetailPage({
                   {stream?.duration || 0} saat
                 </dd>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dt className="text-sm font-medium text-gray-500">Maliyet</dt>
-                <dd className="mt-1 text-lg font-semibold text-red-600">
-                  {(stream?.cost || 0).toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                  })}
-                </dd>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <dt className="text-sm font-medium text-gray-500">Saatlik Maliyet</dt>
-                <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stream?.duration && stream.duration > 0
-                    ? ((stream.cost || 0) / stream.duration).toLocaleString('tr-TR', {
-                        style: 'currency',
-                        currency: 'TRY',
-                      })
-                    : '0 ₺'}
-                  /saat
-                </dd>
-              </div>
+              {(stream?.cost || stream?.totalRevenue || stream?.streamerEarning || stream?.arhavalProfit) && (
+                <>
+                  {stream?.cost > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <dt className="text-sm font-medium text-gray-500">Maliyet</dt>
+                      <dd className="mt-1 text-lg font-semibold text-red-600">
+                        {(stream.cost || 0).toLocaleString('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {stream?.totalRevenue > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <dt className="text-sm font-medium text-gray-500">Toplam Gelir</dt>
+                      <dd className="mt-1 text-lg font-semibold text-green-600">
+                        {(stream.totalRevenue || 0).toLocaleString('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {stream?.streamerEarning > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <dt className="text-sm font-medium text-gray-500">Yayıncı Kazancı</dt>
+                      <dd className="mt-1 text-lg font-semibold text-blue-600">
+                        {(stream.streamerEarning || 0).toLocaleString('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {stream?.arhavalProfit > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <dt className="text-sm font-medium text-gray-500">Arhaval Karı</dt>
+                      <dd className="mt-1 text-lg font-semibold text-purple-600">
+                        {(stream.arhavalProfit || 0).toLocaleString('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {stream?.duration && stream.duration > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <dt className="text-sm font-medium text-gray-500">Saatlik Maliyet</dt>
+                      <dd className="mt-1 text-lg font-semibold text-gray-900">
+                        {stream.cost && stream.cost > 0
+                          ? (stream.cost / stream.duration).toLocaleString('tr-TR', {
+                              style: 'currency',
+                              currency: 'TRY',
+                            })
+                          : '0 ₺'}
+                        /saat
+                      </dd>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="border-t pt-6 space-y-4">

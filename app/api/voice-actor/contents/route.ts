@@ -17,30 +17,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Seslendirmenin atandığı scriptleri getir
-    const scripts = await prisma.voiceoverScript.findMany({
-      where: {
-        voiceActorId: voiceActorId,
-      },
-      select: {
-        creatorId: true,
-      },
-    })
-
-    // Unique creator ID'leri al (null değerleri filtrele)
-    const creatorIds = [...new Set(scripts.map(s => s.creatorId).filter((id): id is string => id !== null))]
-
-    if (creatorIds.length === 0) {
-      return NextResponse.json([])
-    }
-
-    // Bu creator'ların içeriklerini getir
+    // Tüm içerikleri getir (sadece atandığı scriptlerin creator'larının içerikleri değil)
     const contents = await prisma.content.findMany({
-      where: {
-        creatorId: {
-          in: creatorIds,
-        },
-      },
       include: {
         creator: {
           select: {

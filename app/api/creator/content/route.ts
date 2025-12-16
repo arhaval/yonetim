@@ -15,9 +15,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Tüm içerikleri getir (sadece creator'a ait olanlar değil)
     const contents = await prisma.content.findMany({
-      where: { creatorId },
-      orderBy: { publishDate: 'asc' },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { publishDate: 'desc' },
     })
 
     return NextResponse.json(contents)
