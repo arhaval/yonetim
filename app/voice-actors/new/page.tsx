@@ -13,6 +13,7 @@ export default function NewVoiceActorPage() {
     email: '',
     password: '',
     phone: '',
+    iban: '',
     profilePhoto: '',
     notes: '',
   })
@@ -79,6 +80,7 @@ export default function NewVoiceActorPage() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone || null,
+          iban: formData.iban?.trim() || null,
           profilePhoto: formData.profilePhoto || null,
           notes: formData.notes || null,
         }),
@@ -207,6 +209,20 @@ export default function NewVoiceActorPage() {
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="+90 555 123 45 67"
+            />
+          </div>
+
+          {/* IBAN */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              IBAN
+            </label>
+            <input
+              type="text"
+              value={formData.iban}
+              onChange={(e) => setFormData({ ...formData, iban: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="TR00 0000 0000 0000 0000 0000 00"
             />
           </div>
 

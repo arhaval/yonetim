@@ -12,6 +12,7 @@ export default function NewContentCreatorPage() {
     email: '',
     password: '',
     phone: '',
+    iban: '',
     platform: '',
     channelUrl: '',
     profilePhoto: '',
@@ -90,6 +91,7 @@ export default function NewContentCreatorPage() {
           email: formData.email.trim(),
           password: formData.password.trim(),
           phone: formData.phone?.trim() || null,
+          iban: formData.iban?.trim() || null,
           platform: formData.platform || null,
           channelUrl: formData.channelUrl?.trim() || null,
           profilePhoto: formData.profilePhoto || null,
@@ -227,6 +229,21 @@ export default function NewContentCreatorPage() {
                       setFormData({ ...formData, phone: e.target.value })
                     }
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    IBAN
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.iban}
+                    onChange={(e) =>
+                      setFormData({ ...formData, iban: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm font-medium bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="TR00 0000 0000 0000 0000 0000 00"
                   />
                 </div>
 

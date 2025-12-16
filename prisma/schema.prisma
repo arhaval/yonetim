@@ -95,6 +95,7 @@ model ContentCreator {
   profilePhoto    String?   // Profil fotoğrafı URL'si
   email           String?   @unique // İçerik üreticisi login için email
   phone           String?
+  iban            String?   // IBAN bilgisi
   password        String?   // İçerik üreticisi login için şifre (hash'lenmiş)
   loginToken      String?   @unique // İçerik üreticisi login için token (opsiyonel)
   platform        String?   // YouTube, Instagram, TikTok, etc.
@@ -137,6 +138,7 @@ model VoiceActor {
   profilePhoto    String?   // Profil fotoğrafı URL'si
   email           String?   @unique // Seslendirmen login için email
   phone           String?
+  iban            String?   // IBAN bilgisi
   password        String?   // Seslendirmen login için şifre (hash'lenmiş)
   loginToken      String?   @unique // Seslendirmen login için token (opsiyonel)
   isActive        Boolean   @default(true)

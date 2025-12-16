@@ -147,6 +147,17 @@ export default async function TeamMemberDetailPage({
                     {voiceActor.phone && (
                       <p className="mt-2 text-sm text-gray-600">{voiceActor.phone}</p>
                     )}
+                    {voiceActor.iban && (
+                      <div className="mt-3 inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                        <div>
+                          <p className="text-xs text-blue-600 font-medium">IBAN</p>
+                          <p className="text-sm text-gray-900 font-mono font-semibold">
+                            {voiceActor.iban}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : member ? (

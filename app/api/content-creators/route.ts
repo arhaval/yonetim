@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
           password: hashedPassword, // Şifreyi her zaman güncelle (yeni kayıt için zorunlu)
           profilePhoto: data.profilePhoto || existingCreator.profilePhoto,
           phone: data.phone?.trim() || existingCreator.phone,
+          iban: data.iban?.trim() || existingCreator.iban,
           platform: data.platform || existingCreator.platform,
           channelUrl: data.channelUrl?.trim() || existingCreator.channelUrl,
           isActive: data.isActive !== undefined ? data.isActive : existingCreator.isActive,
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         profilePhoto: data.profilePhoto || null,
         phone: data.phone?.trim() || null,
+        iban: data.iban?.trim() || null,
         platform: data.platform || null,
         channelUrl: data.channelUrl?.trim() || null,
         isActive: data.isActive !== undefined ? data.isActive : true,

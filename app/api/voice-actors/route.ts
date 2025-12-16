@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-    const { name, email, password, phone, profilePhoto, notes } = data
+    const { name, email, password, phone, iban, profilePhoto, notes } = data
 
     if (!name) {
       return NextResponse.json(
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         password: hashedPassword,
         phone: phone || null,
+        iban: iban?.trim() || null,
         profilePhoto: profilePhoto || null,
         notes: notes || null,
         isActive: true,

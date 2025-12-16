@@ -2,7 +2,7 @@ import Layout from '@/components/Layout'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Video, FileText, Mail, Phone, Globe, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark } from 'lucide-react'
+import { ArrowLeft, User, Video, FileText, Mail, Phone, Globe, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark, CreditCard } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import CreateScriptButton from './CreateScriptButton'
@@ -115,6 +115,12 @@ export default async function ContentCreatorDetailPage({
                     <span className="flex items-center">
                       <Phone className="w-4 h-4 mr-1" />
                       {creator.phone}
+                    </span>
+                  )}
+                  {creator.iban && (
+                    <span className="flex items-center">
+                      <CreditCard className="w-4 h-4 mr-1" />
+                      IBAN: {creator.iban}
                     </span>
                   )}
                 </div>
