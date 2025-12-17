@@ -23,28 +23,24 @@ Bu migration, sosyal medya takibi için haftalık takip özelliği ekler. `Socia
 ### Adım 3: Yeni Query Oluştur
 
 1. **"New query"** veya **"+"** butonuna tıklayın
-2. Aşağıdaki SQL kodunu yapıştırın:
+2. **SADECE AŞAĞIDAKİ SQL KODUNU** yapıştırın (markdown işaretleri olmadan):
 
 ```sql
--- Migration: Add week field to SocialMediaStats table for weekly tracking
-
--- Step 1: Make month field nullable (if not already)
 ALTER TABLE "SocialMediaStats" 
 ALTER COLUMN "month" DROP NOT NULL;
 
--- Step 2: Add week field
 ALTER TABLE "SocialMediaStats" 
 ADD COLUMN IF NOT EXISTS "week" TEXT;
 
--- Step 3: Drop the old unique constraint
 ALTER TABLE "SocialMediaStats" 
 DROP CONSTRAINT IF EXISTS "SocialMediaStats_month_platform_key";
 
--- Step 4: Add new unique constraint for month, week, and platform combination
 ALTER TABLE "SocialMediaStats" 
 ADD CONSTRAINT "SocialMediaStats_month_week_platform_key" 
 UNIQUE ("month", "week", "platform");
 ```
+
+**ÖNEMLİ:** Sadece SQL komutlarını kopyalayın, markdown başlıklarını (# işaretli satırları) kopyalamayın!
 
 ### Adım 4: Query'yi Çalıştır
 
