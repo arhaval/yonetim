@@ -50,6 +50,7 @@ export default function LoginPage() {
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
                 onError={(e) => {
                   // Fallback: Eğer logo yüklenemezse profesyonel görünümü göster
                   const target = e.target as HTMLImageElement

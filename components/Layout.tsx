@@ -92,6 +92,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     src="/arhaval-logo.png" 
                     alt="Arhaval Logo" 
                     className="w-full h-full object-contain"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
