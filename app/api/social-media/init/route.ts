@@ -12,15 +12,24 @@ const initialValues = [
 
 export async function POST(request: NextRequest) {
   try {
-    const { month } = await request.json()
-    const targetMonth = month || '2024-12'
+    const { month, week } = await request.json()
+    const targetMonth = month || null
+    const targetWeek = week || null
+
+    if (!targetMonth && !targetWeek) {
+      return NextResponse.json(
+        { error: 'Ay veya hafta belirtilmedi' },
+        { status: 400 }
+      )
+    }
 
     const stats = await Promise.all(
       initialValues.map((value) =>
         prisma.socialMediaStats.upsert({
           where: {
-            month_platform: {
+            month_week_platform: {
               month: targetMonth,
+              week: targetWeek,
               platform: value.platform,
             },
           },
@@ -29,6 +38,7 @@ export async function POST(request: NextRequest) {
           },
           create: {
             month: targetMonth,
+            week: targetWeek,
             platform: value.platform,
             followerCount: value.followerCount,
             target: null,
@@ -37,9 +47,10 @@ export async function POST(request: NextRequest) {
       )
     )
 
+    const periodLabel = targetMonth || targetWeek
     return NextResponse.json({
       success: true,
-      message: `${targetMonth} ayı için başlangıç değerleri eklendi`,
+      message: `${periodLabel} ${targetMonth ? 'ayı' : 'haftası'} için başlangıç değerleri eklendi`,
       stats,
     })
   } catch (error) {
@@ -50,6 +61,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
 
 
 

@@ -266,12 +266,13 @@ model YearlyGoal {
 
 model SocialMediaStats {
   id            String    @id @default(cuid())
-  month         String    // 2024-12 gibi (YYYY-MM)
+  month         String?   // 2024-12 gibi (YYYY-MM) - aylık takip için
+  week          String?   // 2024-W01 gibi (YYYY-Www) - haftalık takip için
   platform      String    // Instagram, YouTube, X, Twitch, TikTok
   followerCount Int       // Takipçi sayısı
   target        Int?      // Hedef takipçi sayısı (opsiyonel)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
-  @@unique([month, platform]) // Aynı ay ve platform için tek kayıt
+  @@unique([month, week, platform]) // Aynı ay/hafta ve platform için tek kayıt
 }
