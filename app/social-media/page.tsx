@@ -246,7 +246,7 @@ export default function SocialMediaPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
               Sosyal Medya Takibi
             </h1>
             <p className="mt-2 text-sm text-gray-600">
@@ -332,7 +332,7 @@ export default function SocialMediaPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center px-6 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50"
+              className="inline-flex items-center px-6 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-600 transition-all disabled:opacity-50"
             >
               <Save className="w-4 h-4 mr-2" />
               {saving ? 'Kaydediliyor...' : 'Kaydet'}
@@ -465,7 +465,7 @@ export default function SocialMediaPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Platform</th>
                     {platforms.map((platform) => (

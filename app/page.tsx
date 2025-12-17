@@ -337,7 +337,7 @@ export default async function DashboardPage() {
     <Layout>
       <div className="space-y-8">
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-2xl shadow-2xl p-8 md:p-12 text-white" style={{ background: 'linear-gradient(135deg, #252a34 0%, #08d9d6 50%, #ff2e63 100%)' }}>
+        <div className="relative overflow-hidden rounded-2xl shadow-2xl p-8 md:p-12 text-white" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #2563eb 100%)' }}>
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0">
@@ -358,10 +358,10 @@ export default async function DashboardPage() {
         {/* Main Stats */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100">
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.1) 0%, rgba(255, 46, 99, 0.1) 100%)' }}></div>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)' }}></div>
             <div className="relative p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                   <Users className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-right">
@@ -467,9 +467,9 @@ export default async function DashboardPage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.1) 0%, rgba(255, 46, 99, 0.1) 100%)', borderColor: '#08d9d6' + '40' }}>
+            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)', borderColor: '#3b82f6' + '40' }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -484,9 +484,9 @@ export default async function DashboardPage() {
               <p className="text-xs text-gray-500 mt-2">Yayıncılara ödenecek toplam tutar</p>
             </div>
 
-            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.1) 0%, rgba(255, 46, 99, 0.1) 100%)', borderColor: '#08d9d6' + '40' }}>
+            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)', borderColor: '#3b82f6' + '40' }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                   <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -501,14 +501,14 @@ export default async function DashboardPage() {
               <p className="text-xs text-gray-500 mt-2">Toplam ödenen tutar</p>
             </div>
 
-            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(255, 46, 99, 0.1) 0%, rgba(233, 30, 99, 0.1) 100%)', borderColor: '#ff2e63' + '40' }}>
+            <div className="rounded-xl p-6 border" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)', borderColor: '#ef4444' + '40' }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #ff2e63 0%, #e91e63 100%)' }}>
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
               </div>
               <p className="text-sm font-medium text-gray-600 mb-1">Ödenmemiş</p>
-              <p className="text-2xl font-bold" style={{ color: '#ff2e63' }}>
+              <p className="text-2xl font-bold" style={{ color: '#ef4444' }}>
                 {stats.totalUnpaid.toLocaleString('tr-TR', {
                   style: 'currency',
                   currency: 'TRY',
@@ -533,7 +533,7 @@ export default async function DashboardPage() {
                   className="h-full transition-all duration-500"
                   style={{ 
                     width: `${(stats.totalPaid / stats.totalDue) * 100}%`,
-                    background: 'linear-gradient(135deg, #08d9d6 0%, #06b8b5 100%)'
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                   }}
                 ></div>
               </div>

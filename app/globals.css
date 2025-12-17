@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #eaeaea;
-  --foreground: #252a34;
-  --primary: #08d9d6;
-  --primary-dark: #06b8b5;
-  --secondary: #ff2e63;
-  --accent: #ff2e63;
+  --background: #f8fafc;
+  --foreground: #1e293b;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary: #2563eb;
+  --accent: #f59e0b;
 }
 
 body {
@@ -24,19 +24,23 @@ body {
   }
   
   .gradient-primary {
-    background: linear-gradient(135deg, #08d9d6 0%, #06b8b5 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   }
   
   .gradient-secondary {
-    background: linear-gradient(135deg, #ff2e63 0%, #e91e63 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   }
   
   .gradient-success {
-    background: linear-gradient(135deg, #08d9d6 0%, #06b8b5 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   }
   
   .gradient-warning {
-    background: linear-gradient(135deg, #ff2e63 0%, #e91e63 100%);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   }
   
   .card-hover {
@@ -105,9 +109,9 @@ select:focus,
 textarea:focus {
   outline: none;
   ring: 2px;
-  ring-color: #08d9d6;
-  border-color: #08d9d6;
-  box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+  ring-color: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 select {
@@ -123,11 +127,11 @@ select {
 select:focus {
   outline: none;
   ring: 2px;
-  ring-color: #08d9d6;
-  border-color: #08d9d6;
+  ring-color: #3b82f6;
+  border-color: #3b82f6;
   background-color: white !important;
-  color: #252a34 !important;
-  box-shadow: 0 0 0 3px rgba(8, 217, 214, 0.1);
+  color: #1e293b !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 select option {
@@ -169,12 +173,12 @@ textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #ff2e63 0%, #08d9d6 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
 /* Modern Button Styles */
@@ -183,7 +187,7 @@ textarea:focus {
 }
 
 .btn-primary {
-  @apply bg-gradient-to-r from-[#08d9d6] to-[#06b8b5] text-white shadow-lg hover:shadow-xl hover:from-[#06b8b5] hover:to-[#05a09d] focus:ring-[#08d9d6];
+  @apply bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-lg hover:shadow-xl hover:from-[#2563eb] hover:to-[#1d4ed8] focus:ring-[#3b82f6];
 }
 
 .btn-secondary {
@@ -195,7 +199,7 @@ textarea:focus {
 }
 
 .btn-danger {
-  @apply bg-gradient-to-r from-[#ff2e63] to-[#e91e63] text-white shadow-lg hover:shadow-xl hover:from-[#e91e63] hover:to-[#d81b60] focus:ring-[#ff2e63];
+  @apply bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white shadow-lg hover:shadow-xl hover:from-[#dc2626] hover:to-[#b91c1c] focus:ring-[#ef4444];
 }
 
 .btn-outline {
@@ -234,7 +238,7 @@ textarea:focus {
 
 /* Modern Input Styles */
 .input {
-  @apply block w-full px-4 py-2.5 border border-gray-300 rounded-xl text-[#252a34] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#08d9d6] focus:border-transparent transition-all duration-200;
+  @apply block w-full px-4 py-2.5 border border-gray-300 rounded-xl text-[#1e293b] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent transition-all duration-200;
 }
 
 .input:focus {

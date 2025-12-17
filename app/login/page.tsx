@@ -40,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#252a34' }}>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#1e293b' }}>
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
           {/* Logo & Header */}
@@ -51,17 +51,17 @@ export default function LoginPage() {
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  // Fallback: Eğer logo yüklenemezse eski görünümü göster
+                  // Fallback: Eğer logo yüklenemezse profesyonel görünümü göster
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
                   if (target.parentElement) {
-                    target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-2xl">A</span>'
-                    target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                    target.parentElement.innerHTML = '<span class="text-white font-bold text-2xl">A</span>'
+                    target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                   }
                 }}
               />
             </div>
-            <h2 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <h2 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Arhaval Denetim Merkezi
             </h2>
             <p className="mt-2 text-sm text-gray-600">

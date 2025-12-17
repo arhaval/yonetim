@@ -64,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#eaeaea' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#f8fafc' }}>
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
@@ -79,8 +79,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           sidebarOpen && mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
           !sidebarOpen ? 'lg:w-20' : 'lg:w-72'
-        } w-72 shadow-2xl border-r border-[#252a34]/20`}
-        style={{ backgroundColor: '#252a34' }}
+        } w-72 shadow-2xl border-r border-slate-700/20`}
+        style={{ backgroundColor: '#1e293b' }}
       >
         <div className="flex flex-col h-full">
           {/* Logo & Header */}
@@ -96,8 +96,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       if (target.parentElement) {
-                        target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
-                        target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                        target.parentElement.innerHTML = '<span class="text-white font-bold text-xl">A</span>'
+                        target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                       }
                     }}
                   />
@@ -142,9 +142,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className={`group relative flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
                       ? 'text-white shadow-lg'
-                      : 'text-gray-400 hover:bg-[#252a34]/80 hover:text-white'
+                      : 'text-gray-400 hover:bg-slate-700/50 hover:text-white'
                   }`}
-                  style={isActive ? { background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' } : {}}
+                  style={isActive ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : {}}
                 >
                   <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center lg:w-full'}`}>
                     <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
@@ -170,7 +170,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="p-4 border-t border-slate-700/50">
             {user && (
               <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                   <span className="text-white text-sm font-medium">
                     {user.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
@@ -188,9 +188,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className={`mt-3 w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 ${
                 !sidebarOpen && 'lg:px-2'
               }`}
-              style={{ background: 'linear-gradient(135deg, #ff2e63 0%, #e91e63 100%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #e91e63 0%, #d81b60 100%)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ff2e63 0%, #e91e63 100%)'}
+              style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}
             >
               <LogOut className="w-4 h-4" />
               {sidebarOpen && <span className="ml-2">Çıkış Yap</span>}
@@ -202,7 +202,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 backdrop-blur-lg border-b shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderColor: '#252a34' + '20' }}>
+        <header className="sticky top-0 z-30 backdrop-blur-lg border-b shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderColor: '#1e293b' + '20' }}>
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <button
@@ -218,8 +218,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
               {user && (
                 <div className="flex items-center space-x-3">
-                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'rgba(8, 217, 214, 0.1)', borderColor: '#08d9d6' + '40' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6' + '40' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                       <span className="text-white text-xs font-medium">
                         {user.name?.charAt(0).toUpperCase() || 'U'}
                       </span>
@@ -233,7 +233,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#eaeaea' }}>
+        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f8fafc' }}>
           <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div className="fade-in">
               {children}
