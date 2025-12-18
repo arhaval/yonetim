@@ -53,13 +53,11 @@ export default function AdminLoginPage() {
           {/* Logo & Header */}
           <div className="text-center mb-8">
             <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center">
-              <Image 
+              <img 
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
-                width={64}
-                height={64}
                 className="w-full h-full object-contain"
-                priority
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
               />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-1">
