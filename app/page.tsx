@@ -349,8 +349,20 @@ export default async function DashboardPage() {
                 {currentMonth} - Genel Bakış
               </p>
             </div>
-            <div className="hidden md:flex items-center justify-center w-16 h-16 bg-white/20 rounded-xl backdrop-blur-md border border-white/30 shadow-lg">
-              <span className="text-3xl font-bold">A</span>
+            <div className="hidden md:flex items-center justify-center w-20 h-20 bg-white/20 rounded-xl backdrop-blur-md border border-white/30 shadow-lg p-3">
+              <img 
+                src="/arhaval-logo.png?v=1.0.0"
+                alt="Arhaval Logo" 
+                className="w-full h-full object-contain"
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = '<span class="text-3xl font-bold text-white">A</span>'
+                  }
+                }}
+              />
             </div>
           </div>
         </div>
