@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
                   autoComplete="email"
                   required
                   className="input w-full"
-                  placeholder="hamitkulya3@icloud.com"
+                  placeholder="admin@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />

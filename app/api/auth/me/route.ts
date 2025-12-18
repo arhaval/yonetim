@@ -26,6 +26,11 @@ export async function GET() {
 
       return NextResponse.json({ user })
     } catch (dbError: any) {
+      // Database bağlantı hatası durumunda null döndür
+      if (dbError.message?.includes('Tenant') || dbError.message?.includes('user not found') || dbError.message?.includes('FATAL')) {
+        console.error('Database connection error:', dbError.message)
+        return NextResponse.json({ user: null })
+      }
       console.error('Database error in /api/auth/me:', dbError)
       // Database hatası olsa bile null döndür, sayfa çökmesin
       return NextResponse.json({ user: null })
