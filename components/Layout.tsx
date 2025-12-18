@@ -78,16 +78,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={`fixed lg:sticky top-0 left-0 h-screen z-50 transition-all duration-300 ease-in-out ${
           sidebarOpen && mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
-          !sidebarOpen ? 'lg:w-24' : 'lg:w-64'
+          !sidebarOpen ? 'lg:w-28' : 'lg:w-72'
         } w-72 shadow-2xl border-r border-slate-700/20`}
         style={{ backgroundColor: '#1e293b' }}
       >
         <div className="flex flex-col h-full">
-          {/* Logo & Header - Orantılı */}
-          <div className="p-4 border-b border-slate-700/50">
+          {/* Logo & Header - Büyütülmüş */}
+          <div className="p-5 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-1.5">
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2">
                   <img 
                     src="/arhaval-logo.png" 
                     alt="Arhaval Logo" 
@@ -97,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       if (target.parentElement) {
-                        target.parentElement.innerHTML = '<span class="text-white font-bold text-base">A</span>'
+                        target.parentElement.innerHTML = '<span class="text-white font-bold text-lg">A</span>'
                         target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                       }
                     }}
@@ -105,10 +105,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 {sidebarOpen && (
                   <div className="lg:block hidden">
-                    <h1 className="text-base font-semibold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                    <h1 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
                       Arhaval
                     </h1>
-                    <p className="text-xs text-slate-400">Denetim Merkezi</p>
+                    <p className="text-sm text-slate-400">Denetim Merkezi</p>
                   </div>
                 )}
               </div>
@@ -130,8 +130,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Navigation - Orantılı */}
-          <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+          {/* Navigation - Büyütülmüş */}
+          <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-1.5">
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -140,7 +140,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`group relative flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`group relative flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'text-white shadow-md'
                       : 'text-gray-400 hover:bg-slate-700/50 hover:text-white'
@@ -150,7 +150,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center lg:w-full'}`}>
                     <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                     {sidebarOpen && (
-                      <span className="ml-3 font-medium text-sm">{item.name}</span>
+                      <span className="ml-3 font-medium text-base">{item.name}</span>
                     )}
                     {isActive && sidebarOpen && (
                       <ChevronRight className="w-4 h-4 ml-auto" />
@@ -167,26 +167,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* User Section - Orantılı */}
-          <div className="p-4 border-t border-slate-700/50">
+          {/* User Section - Büyütülmüş */}
+          <div className="p-5 border-t border-slate-700/50">
             {user && (
               <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <span className="text-white text-base font-medium">
                     {user.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 {sidebarOpen && (
                   <div className="ml-3 flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                    <p className="text-xs text-slate-400 truncate">Yönetici</p>
+                    <p className="text-base font-medium text-white truncate">{user.name}</p>
+                    <p className="text-sm text-slate-400 truncate">Yönetici</p>
                   </div>
                 )}
               </div>
             )}
             <button
               onClick={handleLogout}
-              className={`mt-3 w-full flex items-center justify-center px-3 py-2 rounded-lg text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
+              className={`mt-4 w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-white text-base font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
                 !sidebarOpen && 'lg:px-2'
               }`}
               style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
@@ -202,30 +202,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar - Orantılı */}
+        {/* Top Bar - Büyütülmüş */}
         <header className="sticky top-0 z-30 backdrop-blur-lg border-b shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderColor: '#1e293b' + '20' }}>
-          <div className="px-4 sm:px-5 lg:px-6">
-            <div className="flex items-center justify-between h-14">
+          <div className="px-5 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-6 h-6" />
               </button>
               <div className="flex-1 lg:ml-0 ml-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h2>
               </div>
               {user && (
                 <div className="flex items-center space-x-3">
                   <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-md border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6' + '40' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                      <span className="text-white text-xs font-medium">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                      <span className="text-white text-sm font-medium">
                         {user.name?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                    <span className="text-base font-medium text-gray-700">{user.name}</span>
                   </div>
                 </div>
               )}
@@ -233,9 +233,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Page Content - Orantılı */}
+        {/* Page Content - Büyütülmüş */}
         <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f8fafc' }}>
-          <div className="max-w-7xl mx-auto py-5 px-4 sm:px-5 lg:px-6">
+          <div className="max-w-7xl mx-auto py-6 px-5 sm:px-6 lg:px-8">
             <div className="fade-in">
               {children}
             </div>

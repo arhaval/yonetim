@@ -335,102 +335,102 @@ export default async function DashboardPage() {
 
   return (
     <Layout>
-      <div className="space-y-5">
-        {/* Hero Section - Orantılı */}
-        <div className="relative overflow-hidden rounded-lg shadow-md p-5 md:p-6 text-white" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #2563eb 100%)' }}>
+      <div className="space-y-6">
+        {/* Hero Section - Büyütülmüş */}
+        <div className="relative overflow-hidden rounded-xl shadow-lg p-6 md:p-8 text-white" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #2563eb 100%)' }}>
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-3 md:mb-0">
-              <h1 className="text-2xl md:text-3xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
+            <div className="mb-4 md:mb-0">
+              <h1 className="text-3xl md:text-4xl font-semibold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
                 Arhaval Denetim Merkezi
               </h1>
-              <p className="text-sm md:text-base text-blue-100 flex items-center">
-                <Calendar className="w-4 h-4 mr-2" />
+              <p className="text-base md:text-lg text-blue-100 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
                 {currentMonth} - Genel Bakış
               </p>
             </div>
-            <div className="hidden md:flex items-center justify-center w-14 h-14 bg-white/20 rounded-lg backdrop-blur-md border border-white/30 shadow-md">
-              <span className="text-2xl font-bold">A</span>
+            <div className="hidden md:flex items-center justify-center w-16 h-16 bg-white/20 rounded-xl backdrop-blur-md border border-white/30 shadow-lg">
+              <span className="text-3xl font-bold">A</span>
             </div>
           </div>
         </div>
 
-        {/* Main Stats - Orantılı */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200">
+        {/* Main Stats - Büyütülmüş */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}></div>
-            <div className="relative p-5">
+            <div className="relative p-6">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <Users className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                  <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalStreamers}</p>
-                  <p className="text-xs text-gray-500 mt-1">Toplam Yayıncı</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalStreamers}</p>
+                  <p className="text-sm text-gray-500 mt-1.5">Toplam Yayıncı</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
-            <div className="relative p-5">
+            <div className="relative p-6">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                  <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeStreamers}</p>
-                  <p className="text-xs text-gray-500 mt-1">Aktif Yayıncı</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.activeStreamers}</p>
+                  <p className="text-sm text-gray-500 mt-1.5">Aktif Yayıncı</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
-            <div className="relative p-5">
+            <div className="relative p-6">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-                  <Video className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
+                  <Video className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalContent}</p>
-                  <p className="text-xs text-gray-500 mt-1">Toplam İçerik</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats.totalContent}</p>
+                  <p className="text-sm text-gray-500 mt-1.5">Toplam İçerik</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="relative p-5">
+            <div className="relative p-6">
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
-                  <DollarSign className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
+                  <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900">
                     {stats.monthlyRevenue.toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                       maximumFractionDigits: 0,
                     })}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Aylık Gelir</p>
+                  <p className="text-sm text-gray-500 mt-1.5">Aylık Gelir</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Financial Overview - Orantılı */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className={`bg-white rounded-lg shadow-sm p-5 border-l-4 ${
+        {/* Financial Overview - Büyütülmüş */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${
             stats.monthlyRevenue - stats.monthlyExpense >= 0 ? 'border-green-500' : 'border-red-500'
-          } hover:shadow-md transition-all`}>
-            <p className="text-sm font-medium text-gray-500 mb-2">Aylık Net Gelir</p>
-            <p className={`text-2xl font-bold ${
+          } hover:shadow-lg transition-all`}>
+            <p className="text-base font-medium text-gray-500 mb-3">Aylık Net Gelir</p>
+            <p className={`text-3xl font-bold ${
               stats.monthlyRevenue - stats.monthlyExpense >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
               {(stats.monthlyRevenue - stats.monthlyExpense).toLocaleString('tr-TR', {
@@ -440,9 +440,9 @@ export default async function DashboardPage() {
               })}
             </p>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-orange-500 hover:shadow-md transition-all">
-            <p className="text-sm font-medium text-gray-500 mb-2">Aylık Gider</p>
-            <p className="text-2xl font-bold text-orange-600">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-all">
+            <p className="text-base font-medium text-gray-500 mb-3">Aylık Gider</p>
+            <p className="text-3xl font-bold text-orange-600">
               {stats.monthlyExpense.toLocaleString('tr-TR', {
                 style: 'currency',
                 currency: 'TRY',
@@ -452,29 +452,29 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Ödeme Özeti - Orantılı */}
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-gray-900 flex items-center">
-              <CreditCard className="w-5 h-5 mr-2 text-indigo-600" />
+        {/* Ödeme Özeti - Büyütülmüş */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <CreditCard className="w-6 h-6 mr-2 text-indigo-600" />
               Ödeme Özeti
             </h2>
             <Link
               href="/payments"
-              className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+              className="text-indigo-600 hover:text-indigo-700 font-medium text-base"
             >
               Detaylı Görüntüle →
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-lg p-4 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <DollarSign className="w-5 h-5 text-white" />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div className="rounded-xl p-5 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                  <DollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Toplam Borç</p>
-              <p className="text-xl font-bold text-gray-900">
+              <p className="text-base font-medium text-gray-600 mb-2">Toplam Borç</p>
+              <p className="text-2xl font-bold text-gray-900">
                 {stats.totalDue.toLocaleString('tr-TR', {
                   style: 'currency',
                   currency: 'TRY',
@@ -483,14 +483,14 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-lg p-4 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+            <div className="rounded-xl p-5 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                  <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Ödenen</p>
-              <p className="text-xl font-bold text-green-600">
+              <p className="text-base font-medium text-gray-600 mb-2">Ödenen</p>
+              <p className="text-2xl font-bold text-green-600">
                 {stats.totalPaid.toLocaleString('tr-TR', {
                   style: 'currency',
                   currency: 'TRY',
@@ -499,14 +499,14 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-lg p-4 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
-                  <AlertCircle className="w-5 h-5 text-white" />
+            <div className="rounded-xl p-5 border border-gray-200" style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
+                  <AlertCircle className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Ödenmemiş</p>
-              <p className="text-xl font-bold" style={{ color: '#ef4444' }}>
+              <p className="text-base font-medium text-gray-600 mb-2">Ödenmemiş</p>
+              <p className="text-2xl font-bold" style={{ color: '#ef4444' }}>
                 {stats.totalUnpaid.toLocaleString('tr-TR', {
                   style: 'currency',
                   currency: 'TRY',
@@ -518,14 +518,14 @@ export default async function DashboardPage() {
           
           {/* Ödeme İlerleme Çubuğu */}
           {stats.totalDue > 0 && (
-            <div className="mt-5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Ödeme İlerlemesi</span>
-                <span className="text-sm font-semibold text-gray-900">
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-base font-medium text-gray-700">Ödeme İlerlemesi</span>
+                <span className="text-base font-semibold text-gray-900">
                   {((stats.totalPaid / stats.totalDue) * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                 <div
                   className="h-full transition-all duration-500"
                   style={{ 
@@ -534,7 +534,7 @@ export default async function DashboardPage() {
                   }}
                 ></div>
               </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+              <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
                 <span>Ödenen: {stats.totalPaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
                 <span>Kalan: {stats.totalUnpaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
               </div>
@@ -542,21 +542,21 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Sosyal Medya Takibi - Orantılı */}
-        <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-900 flex items-center">
-              <Target className="w-5 h-5 mr-2 text-indigo-600" />
+        {/* Sosyal Medya Takibi - Büyütülmüş */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <Target className="w-6 h-6 mr-2 text-indigo-600" />
               Sosyal Medya
             </h2>
             <Link
               href="/social-media"
-              className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+              className="text-indigo-600 hover:text-indigo-700 font-medium text-base"
             >
               Güncelle →
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {socialMediaPlatforms.map((platform) => {
               const Icon = platform.icon
               const currentStat = currentSocialMedia.find(s => s.platform === platform.name)
@@ -565,14 +565,14 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={platform.name}
-                  className="flex items-center space-x-2.5 p-3 rounded-lg border border-gray-200 hover:shadow-sm transition-all"
+                  className="flex items-center space-x-3 p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all"
                 >
-                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center shadow-sm`}>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center shadow-md`}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-0.5">{platform.name}</p>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-xs text-gray-500 mb-1">{platform.name}</p>
+                    <p className="text-base font-bold text-gray-900">
                       {current.toLocaleString('tr-TR')}
                     </p>
                   </div>
@@ -582,39 +582,39 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Links - Orantılı */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Quick Links - Büyütülmüş */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           <Link
             href="/streams"
-            className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md hover:border-indigo-300 transition-all group"
+            className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-indigo-300 transition-all group"
           >
-            <Video className="w-6 h-6 text-indigo-600 mb-3 group-hover:scale-110 transition-transform" />
-            <p className="font-semibold text-sm text-gray-900">Yayınlar</p>
-            <p className="text-xs text-gray-500 mt-1">Yönet</p>
+            <Video className="w-7 h-7 text-indigo-600 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="font-semibold text-base text-gray-900">Yayınlar</p>
+            <p className="text-sm text-gray-500 mt-1.5">Yönet</p>
           </Link>
           <Link
             href="/content"
-            className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md hover:border-purple-300 transition-all group"
+            className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-purple-300 transition-all group"
           >
-            <Video className="w-6 h-6 text-purple-600 mb-3 group-hover:scale-110 transition-transform" />
-            <p className="font-semibold text-sm text-gray-900">İçerikler</p>
-            <p className="text-xs text-gray-500 mt-1">Takip Et</p>
+            <Video className="w-7 h-7 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="font-semibold text-base text-gray-900">İçerikler</p>
+            <p className="text-sm text-gray-500 mt-1.5">Takip Et</p>
           </Link>
           <Link
             href="/payments"
-            className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md hover:border-green-300 transition-all group"
+            className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-green-300 transition-all group"
           >
-            <DollarSign className="w-6 h-6 text-green-600 mb-3 group-hover:scale-110 transition-transform" />
-            <p className="font-semibold text-sm text-gray-900">Ödemeler</p>
-            <p className="text-xs text-gray-500 mt-1">Yönet</p>
+            <DollarSign className="w-7 h-7 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="font-semibold text-base text-gray-900">Ödemeler</p>
+            <p className="text-sm text-gray-500 mt-1.5">Yönet</p>
           </Link>
           <Link
             href="/reports"
-            className="bg-white rounded-lg shadow-sm p-5 border border-gray-200 hover:shadow-md hover:border-amber-300 transition-all group"
+            className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg hover:border-amber-300 transition-all group"
           >
-            <BarChart3 className="w-6 h-6 text-amber-600 mb-3 group-hover:scale-110 transition-transform" />
-            <p className="font-semibold text-sm text-gray-900">Raporlar</p>
-            <p className="text-xs text-gray-500 mt-1">İncele</p>
+            <BarChart3 className="w-7 h-7 text-amber-600 mb-4 group-hover:scale-110 transition-transform" />
+            <p className="font-semibold text-base text-gray-900">Raporlar</p>
+            <p className="text-sm text-gray-500 mt-1.5">İncele</p>
           </Link>
         </div>
       </div>
