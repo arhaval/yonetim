@@ -122,6 +122,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
+  // Login sayfasına her zaman izin ver (yayıncı, seslendirmen, ekip üyesi girişleri için)
+  if (isAuthPage) {
+    return NextResponse.next()
+  }
+
   // Admin sayfalarına erişim kontrolü - sadece admin role'üne sahip kullanıcılar erişebilir
   const isAdminPage = !isAuthPage && 
                       !isAdminLoginPage &&
