@@ -6,9 +6,9 @@ import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, T
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Cache ayarları - 60 saniye cache (performans için)
+// Cache ayarları - 300 saniye cache (performans için)
 export const dynamic = 'force-dynamic'
-export const revalidate = 60 // 60 saniye cache
+export const revalidate = 300 // 5 dakika cache - daha uzun cache = daha hızlı
 
 async function getStats() {
   try {

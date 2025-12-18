@@ -16,6 +16,8 @@ export const prisma =
         url: process.env.DATABASE_URL,
       },
     },
+    // Performans optimizasyonları
+    errorFormat: 'minimal',
   })
 
 // Her zaman singleton kullan (Vercel serverless için)
