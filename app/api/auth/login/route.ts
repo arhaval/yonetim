@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
     // 1. ADIM: Admin/User Kontrolü
     const user = await getUserByEmail(normalizedEmail)
     if (user) {
-      // Admin login için sadece admin@arhaval.com email'i kabul edilir
-      if (normalizedEmail === 'admin@arhaval.com') {
+      // Admin login için sadece hamitkulya3@icloud.com email'i kabul edilir
+      if (normalizedEmail === 'hamitkulya3@icloud.com') {
         // Admin email kontrolü - sadece admin role'üne sahip olmalı
         if (user.role !== 'admin' && user.role !== 'ADMIN') {
           return NextResponse.json(

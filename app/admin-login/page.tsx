@@ -16,8 +16,8 @@ export default function AdminLoginPage() {
     setError('')
     setLoading(true)
 
-    // Sadece admin@arhaval.com ile giriş yapılabilir
-    if (email.toLowerCase().trim() !== 'admin@arhaval.com') {
+    // Sadece hamitkulya3@icloud.com ile giriş yapılabilir
+    if (email.toLowerCase().trim() !== 'hamitkulya3@icloud.com') {
       setError('Geçersiz admin email adresi')
       setLoading(false)
       return
@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
                   autoComplete="email"
                   required
                   className="input w-full"
-                  placeholder="admin@arhaval.com"
+                  placeholder="hamitkulya3@icloud.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
