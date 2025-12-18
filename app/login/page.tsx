@@ -46,12 +46,15 @@ export default function LoginPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-10">
           {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center bg-white rounded-lg p-2">
               <img 
-                src="/arhaval-logo.png" 
+                src="/arhaval-logo.png?v=2" 
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                }}
               />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-1">

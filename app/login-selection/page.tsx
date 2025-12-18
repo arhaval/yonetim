@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Video, Mic, UserCheck, Shield } from 'lucide-react'
+import { Video, Mic, UserCheck } from 'lucide-react'
 
 export default function LoginSelectionPage() {
   return (
@@ -10,12 +10,15 @@ export default function LoginSelectionPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-10">
           {/* Logo & Header */}
           <div className="text-center mb-10">
-            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center bg-white rounded-lg p-2">
               <img 
-                src="/arhaval-logo.png" 
+                src="/arhaval-logo.png?v=2" 
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                }}
               />
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -28,22 +31,6 @@ export default function LoginSelectionPage() {
 
           {/* Login Options Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Admin Login */}
-            <Link
-              href="/admin-login"
-              className="group relative flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                <Shield className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-gray-900">Admin Girişi</h3>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-
             {/* Streamer Login */}
             <Link
               href="/streamer-login"
