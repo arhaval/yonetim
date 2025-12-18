@@ -74,6 +74,11 @@ model Stream {
   notes               String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  
+  @@index([streamerId]) // Performans için index
+  @@index([date]) // Tarih sorguları için index
+  @@index([teamName]) // Takım sorguları için index
+  @@index([status]) // Durum sorguları için index
 }
 
 model ExternalStream {
@@ -178,6 +183,10 @@ model FinancialRecord {
   streamId    String?   // Hangi yayından gelen kar (opsiyonel)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  
+  @@index([date]) // Tarih sorguları için index
+  @@index([type]) // Tip sorguları için index
+  @@index([streamerId]) // Streamer sorguları için index
 }
 
 model Payment {

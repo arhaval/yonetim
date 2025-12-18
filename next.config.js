@@ -9,6 +9,12 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Production'da console.log'ları kaldır (performans için)
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'], // Error ve warn'ları tut
+    } : false,
+  },
 }
 
 module.exports = nextConfig

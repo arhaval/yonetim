@@ -25,7 +25,8 @@ export default async function StreamerDetailPage({
       where: { id },
       include: {
         streams: {
-          orderBy: { date: 'asc' },
+          take: 50, // İlk 50 stream (pagination için)
+          orderBy: { date: 'desc' }, // En yeni önce
         },
         externalStreams: {
           take: 10,
