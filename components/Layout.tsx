@@ -83,11 +83,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         style={{ backgroundColor: '#1e293b' }}
       >
         <div className="flex flex-col h-full">
-          {/* Logo & Header */}
-          <div className="p-6 border-b border-slate-700/50">
+          {/* Logo & Header - Kompakt */}
+          <div className="p-3 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
-              <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-1.5">
+              <div className={`flex items-center space-x-2 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-1">
                   <img 
                     src="/arhaval-logo.png" 
                     alt="Arhaval Logo" 
@@ -97,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       if (target.parentElement) {
-                        target.parentElement.innerHTML = '<span class="text-white font-bold text-xl">A</span>'
+                        target.parentElement.innerHTML = '<span class="text-white font-bold text-sm">A</span>'
                         target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                       }
                     }}
@@ -105,10 +105,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 {sidebarOpen && (
                   <div className="lg:block hidden">
-                    <h1 className="text-lg font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                    <h1 className="text-sm font-semibold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
                       Arhaval
                     </h1>
-                    <p className="text-xs text-slate-400">Denetim Merkezi</p>
+                    <p className="text-xs text-slate-400">Denetim</p>
                   </div>
                 )}
               </div>
@@ -117,21 +117,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   setSidebarOpen(!sidebarOpen)
                   setMobileMenuOpen(false)
                 }}
-                className="lg:flex hidden items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="lg:flex hidden items-center justify-center w-7 h-7 rounded-md bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               >
-                {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                {sidebarOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
               </button>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          {/* Navigation - Kompakt */}
+          <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -140,24 +140,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`group relative flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`group relative flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'text-white shadow-lg'
+                      ? 'text-white shadow-md'
                       : 'text-gray-400 hover:bg-slate-700/50 hover:text-white'
                   }`}
                   style={isActive ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : {}}
                 >
                   <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center lg:w-full'}`}>
-                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                     {sidebarOpen && (
-                      <span className="ml-3 font-medium text-sm">{item.name}</span>
+                      <span className="ml-2.5 font-medium text-xs">{item.name}</span>
                     )}
                     {isActive && sidebarOpen && (
-                      <ChevronRight className="w-4 h-4 ml-auto" />
+                      <ChevronRight className="w-3 h-3 ml-auto" />
                     )}
                   </div>
                   {!sidebarOpen && (
-                    <div className="absolute left-full ml-2 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg border border-slate-700 z-50">
+                    <div className="absolute left-full ml-2 px-2 py-1.5 bg-slate-800 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg border border-slate-700 z-50">
                       {item.name}
                       <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
                     </div>
@@ -167,18 +167,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* User Section */}
-          <div className="p-4 border-t border-slate-700/50">
+          {/* User Section - Kompakt */}
+          <div className="p-3 border-t border-slate-700/50">
             {user && (
               <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <span className="text-white text-sm font-medium">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <span className="text-white text-xs font-medium">
                     {user.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 {sidebarOpen && (
-                  <div className="ml-3 flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                  <div className="ml-2 flex-1 min-w-0">
+                    <p className="text-xs font-medium text-white truncate">{user.name}</p>
                     <p className="text-xs text-slate-400 truncate">Yönetici</p>
                   </div>
                 )}
@@ -186,15 +186,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             <button
               onClick={handleLogout}
-              className={`mt-3 w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 ${
+              className={`mt-2 w-full flex items-center justify-center px-3 py-2 rounded-lg text-white text-xs font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
                 !sidebarOpen && 'lg:px-2'
               }`}
               style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
               onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}
             >
-              <LogOut className="w-4 h-4" />
-              {sidebarOpen && <span className="ml-2">Çıkış Yap</span>}
+              <LogOut className="w-3.5 h-3.5" />
+              {sidebarOpen && <span className="ml-1.5">Çıkış</span>}
             </button>
           </div>
         </div>
@@ -202,30 +202,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
+        {/* Top Bar - Kompakt */}
         <header className="sticky top-0 z-30 backdrop-blur-lg border-b shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderColor: '#1e293b' + '20' }}>
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+          <div className="px-3 sm:px-4 lg:px-6">
+            <div className="flex items-center justify-between h-12">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="lg:hidden p-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               </button>
-              <div className="flex-1 lg:ml-0 ml-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+              <div className="flex-1 lg:ml-0 ml-3">
+                <h2 className="text-base font-semibold text-gray-900">
                   {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h2>
               </div>
               {user && (
-                <div className="flex items-center space-x-3">
-                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6' + '40' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                <div className="flex items-center space-x-2">
+                  <div className="hidden sm:flex items-center space-x-1.5 px-2 py-1 rounded-md border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6' + '40' }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                       <span className="text-white text-xs font-medium">
                         {user.name?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                    <span className="text-xs font-medium text-gray-700">{user.name}</span>
                   </div>
                 </div>
               )}
@@ -233,9 +233,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content - Kompakt */}
         <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f8fafc' }}>
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto py-4 px-3 sm:px-4 lg:px-6">
             <div className="fade-in">
               {children}
             </div>
