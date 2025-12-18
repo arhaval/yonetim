@@ -135,7 +135,8 @@ export function middleware(request: NextRequest) {
 
   // Ana sayfa (/) - giriş yapmamışsa login selection'a yönlendir
   if (request.nextUrl.pathname === '/') {
-    if (!userId) {
+    // Cookie kontrolü - userId yoksa veya boşsa login selection'a yönlendir
+    if (!userId || userId.value === '' || userId.value === undefined) {
       return NextResponse.redirect(new URL('/login-selection', request.url))
     }
     // Giriş yapmışsa dashboard'a devam et
