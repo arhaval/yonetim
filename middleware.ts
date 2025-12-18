@@ -127,9 +127,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Login selection sayfasına her zaman izin ver
+  const isLoginSelectionPage = request.nextUrl.pathname === '/login-selection'
+  if (isLoginSelectionPage) {
+    return NextResponse.next()
+  }
+
+  // Ana sayfa (/) - giriş yapmamışsa login selection'a yönlendir
+  if (request.nextUrl.pathname === '/') {
+    if (!userId) {
+      return NextResponse.redirect(new URL('/login-selection', request.url))
+    }
+    // Giriş yapmışsa dashboard'a devam et
+    return NextResponse.next()
+  }
+
   // Admin sayfalarına erişim kontrolü - sadece admin role'üne sahip kullanıcılar erişebilir
   const isAdminPage = !isAuthPage && 
                       !isAdminLoginPage &&
+                      !isLoginSelectionPage &&
                       !isStreamerLoginPage && 
                       !isStreamerDashboard && 
                       !isCreatorLoginPage && 
@@ -141,9 +157,9 @@ export function middleware(request: NextRequest) {
                       !request.nextUrl.pathname.startsWith('/api')
   
   if (isAdminPage) {
-    // Giriş yapmamışsa admin login'e yönlendir
+    // Giriş yapmamışsa login selection'a yönlendir
     if (!userId) {
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      return NextResponse.redirect(new URL('/login-selection', request.url))
     }
     
     // Admin role'üne sahip değilse erişim reddedilir
