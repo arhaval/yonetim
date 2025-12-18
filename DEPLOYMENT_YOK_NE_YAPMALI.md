@@ -89,3 +89,4 @@ Environment variables ekledikten sonra, projeyi deploy ettiğinde bu variables o
 
 
 
+

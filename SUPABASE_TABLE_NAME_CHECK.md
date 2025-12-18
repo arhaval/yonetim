@@ -36,3 +36,4 @@ Bu, script veya voice içeren tüm tabloları ve kolonlarını gösterecek.
 
 
 
+
