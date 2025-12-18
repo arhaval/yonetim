@@ -311,19 +311,37 @@ export default async function DashboardPage() {
   let previousSocialMedia: any[] = []
   
   try {
-    [currentSocialMedia, previousSocialMedia] = await Promise.all([
+    const results = await Promise.all([
       prisma.socialMediaStats.findMany({
         where: { month: currentMonthKey },
         orderBy: { platform: 'asc' },
-      }),
+      }).catch(() => []),
       prisma.socialMediaStats.findMany({
         where: { month: previousMonthKey },
         orderBy: { platform: 'asc' },
-      }),
+      }).catch(() => []),
     ])
+    currentSocialMedia = Array.isArray(results[0]) ? results[0] : []
+    previousSocialMedia = Array.isArray(results[1]) ? results[1] : []
   } catch (error) {
     console.error('Social media stats not available yet. Please run: npx prisma generate')
     // Model henüz generate edilmemiş, boş array döndür
+    currentSocialMedia = []
+    previousSocialMedia = []
+  }
+  
+  // Güvenlik kontrolü - her zaman array olduğundan emin ol
+  if (!Array.isArray(currentSocialMedia)) {
+    currentSocialMedia = []
+  }
+  if (!Array.isArray(previousSocialMedia)) {
+    previousSocialMedia = []
+  }
+  if (!Array.isArray(recentStreams)) {
+    recentStreams = []
+  }
+  if (!Array.isArray(recentContent)) {
+    recentContent = []
   }
 
   const socialMediaPlatforms = [
