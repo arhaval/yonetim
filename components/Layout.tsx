@@ -5,6 +5,9 @@ import { usePathname } from 'next/navigation'
 import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+// Logo version - logo dosyası değiştiğinde bu numarayı artırın
+const LOGO_VERSION = '1.0.0'
+
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Yayıncılar', href: '/streamers', icon: Users },
@@ -89,7 +92,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2">
                   <img 
-                    src="/arhaval-logo.png" 
+                    src={`/arhaval-logo.png?v=${LOGO_VERSION}`}
                     alt="Arhaval Logo" 
                     className="w-full h-full object-contain"
                     style={{ maxWidth: '100%', maxHeight: '100%' }}
@@ -217,8 +220,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h2>
               </div>
-              {user && (
-                <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3">
+                {/* Logo - Sağ tarafta */}
+                <div className="hidden sm:flex items-center">
+                  <img 
+                    src={`/arhaval-logo.png?v=${LOGO_VERSION}`}
+                    alt="Arhaval Logo" 
+                    className="h-10 w-auto object-contain"
+                    style={{ maxHeight: '40px' }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                    }}
+                  />
+                </div>
+                {user && (
                   <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-md border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6' + '40' }}>
                     <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                       <span className="text-white text-sm font-medium">
@@ -227,8 +243,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                     <span className="text-base font-medium text-gray-700">{user.name}</span>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </header>
