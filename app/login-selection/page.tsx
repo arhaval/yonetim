@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Video, Mic, UserCheck, Shield } from 'lucide-react'
 
 export default function LoginSelectionPage() {
