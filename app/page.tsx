@@ -4,6 +4,7 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, Twitter, Twitch, Music, Target, BarChart3, AlertCircle, CreditCard } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 // Cache ayarları - 60 saniye cache (performans için)
 export const dynamic = 'force-dynamic'
@@ -350,18 +351,13 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="hidden md:flex items-center justify-center w-20 h-20 bg-white/20 rounded-xl backdrop-blur-md border border-white/30 shadow-lg p-3">
-              <img 
-                src="/arhaval-logo.png?v=1.0.0"
+              <Image 
+                src="/arhaval-logo.png"
                 alt="Arhaval Logo" 
+                width={64}
+                height={64}
                 className="w-full h-full object-contain"
                 style={{ maxWidth: '100%', maxHeight: '100%' }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  if (target.parentElement) {
-                    target.parentElement.innerHTML = '<span class="text-3xl font-bold text-white">A</span>'
-                  }
-                }}
               />
             </div>
           </div>
