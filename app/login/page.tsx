@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -45,28 +46,22 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
           {/* Logo & Header */}
           <div className="text-center">
-            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-white p-3">
-              <img 
+            <div className="mx-auto w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl mb-6 bg-white p-4 ring-4 ring-blue-100">
+              <Image 
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
+                width={96}
+                height={96}
                 className="w-full h-full object-contain"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
-                onError={(e) => {
-                  // Fallback: Eğer logo yüklenemezse profesyonel görünümü göster
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  if (target.parentElement) {
-                    target.parentElement.innerHTML = '<span class="text-white font-bold text-2xl">A</span>'
-                    target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                  }
-                }}
+                priority
+                unoptimized
               />
             </div>
-            <h2 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
               Arhaval Denetim Merkezi
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Hesabınıza giriş yapın
+            <p className="mt-2 text-base text-gray-500">
+              
             </p>
           </div>
 

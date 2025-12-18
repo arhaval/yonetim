@@ -52,21 +52,22 @@ export default function AdminLoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
           {/* Logo & Header */}
           <div className="text-center">
-            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-white p-3">
+            <div className="mx-auto w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl mb-6 bg-white p-4 ring-4 ring-indigo-100">
               <Image 
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
-                width={80}
-                height={80}
+                width={96}
+                height={96}
                 className="w-full h-full object-contain"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                priority
+                unoptimized
               />
             </div>
-            <h2 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
               Admin Girişi
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Yönetici hesabınıza giriş yapın
+            <p className="mt-2 text-base text-gray-500">
+              
             </p>
           </div>
 
