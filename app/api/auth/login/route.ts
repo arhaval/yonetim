@@ -9,11 +9,33 @@ import {
   getTeamMemberByEmail 
 } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - IP bazlı
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    const rateLimitResult = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000) // 15 dakikada 5 deneme
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'Çok fazla giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin.',
+          resetTime: rateLimitResult.resetTime
+        },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+          }
+        }
+      )
+    }
+
     const { email, password } = await request.json()
 
     if (!email || !password) {

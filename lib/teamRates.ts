@@ -44,3 +44,4 @@ export function calculateStreamEarnings(teamName: TeamName, duration: number) {
 
 
 
+

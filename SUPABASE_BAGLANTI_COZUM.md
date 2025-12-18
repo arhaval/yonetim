@@ -86,3 +86,4 @@ Vercel Environment Variables'da DATABASE_URL doğru mu kontrol edin:
 
 
 
+

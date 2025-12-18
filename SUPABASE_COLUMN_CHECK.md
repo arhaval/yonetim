@@ -49,3 +49,4 @@ Bu, tüm tabloları ve kolonlarını gösterecek.
 
 
 
+
