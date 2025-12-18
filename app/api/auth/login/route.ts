@@ -34,8 +34,15 @@ export async function POST(request: NextRequest) {
     // 1. ADIM: Admin/User Kontrolü
     const user = await getUserByEmail(normalizedEmail)
     if (user) {
+      // Sadece admin role'üne sahip kullanıcılar giriş yapabilir
+      if (user.role !== 'admin' && user.role !== 'ADMIN') {
+        return NextResponse.json(
+          { error: 'Bu hesap ile giriş yapma yetkiniz bulunmamaktadır. Sadece admin kullanıcıları giriş yapabilir.' },
+          { status: 403 }
+        )
+      }
       account = user
-      role = user.role // 'ADMIN' vb.
+      role = user.role // 'admin' vb.
       type = 'user'
       checkActive = false // User tablosunda isActive yoksa false
     }
@@ -135,6 +142,14 @@ export async function POST(request: NextRequest) {
 
     // User Type çerezi (Bunu da ekledim ki sistem kimin girdiğini bilsin)
     cookieStore.set('user-type', type, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+
+    // User Role çerezi (Admin kontrolü için)
+    cookieStore.set('user-role', role.toLowerCase(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

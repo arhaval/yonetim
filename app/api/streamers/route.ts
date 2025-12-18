@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { requireAdmin } from '@/lib/admin-check'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  // Admin kontrolü
+  const adminCheck = await requireAdmin()
+  if (adminCheck) return adminCheck
   try {
     const streamers = await prisma.streamer.findMany({
       include: {
@@ -29,6 +33,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Admin kontrolü
+  const adminCheck = await requireAdmin()
+  if (adminCheck) return adminCheck
+
   try {
     const data = await request.json()
     

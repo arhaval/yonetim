@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const userId = request.cookies.get('user-id')
+  const userRole = request.cookies.get('user-role')?.value
   const streamerId = request.cookies.get('streamer-id')
   const creatorId = request.cookies.get('creator-id')
   const voiceActorId = request.cookies.get('voice-actor-id')
@@ -111,10 +112,28 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Admin login sayfası değilse ve giriş yapmamışsa login'e yönlendir
-  // Streamer, Creator, Voice Actor ve Team Member sayfalarına izin ver
-  if (!isAuthPage && !isStreamerLoginPage && !isStreamerDashboard && !isCreatorLoginPage && !isCreatorDashboard && !isVoiceActorLoginPage && !isVoiceActorDashboard && !isTeamLoginPage && !isTeamDashboard && !userId && !request.nextUrl.pathname.startsWith('/api')) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Admin sayfalarına erişim kontrolü - sadece admin role'üne sahip kullanıcılar erişebilir
+  const isAdminPage = !isAuthPage && 
+                      !isStreamerLoginPage && 
+                      !isStreamerDashboard && 
+                      !isCreatorLoginPage && 
+                      !isCreatorDashboard && 
+                      !isVoiceActorLoginPage && 
+                      !isVoiceActorDashboard && 
+                      !isTeamLoginPage && 
+                      !isTeamDashboard && 
+                      !request.nextUrl.pathname.startsWith('/api')
+  
+  if (isAdminPage) {
+    // Giriş yapmamışsa login'e yönlendir
+    if (!userId) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    // Admin role'üne sahip değilse erişim reddedilir
+    if (userRole !== 'admin' && userRole !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
   }
 
   return NextResponse.next()
