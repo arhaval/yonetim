@@ -11,13 +11,11 @@ export default function LoginSelectionPage() {
           {/* Logo & Header */}
           <div className="text-center mb-10">
             <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center">
-              <Image 
+              <img 
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
-                width={64}
-                height={64}
                 className="w-full h-full object-contain"
-                priority
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
               />
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
