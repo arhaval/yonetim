@@ -107,13 +107,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Admin login sayfasındaysa ve zaten giriş yapmışsa dashboard'a yönlendir
+  // Admin login sayfası kontrolü
+  const isAdminLoginPage = request.nextUrl.pathname.startsWith('/admin-login')
+  if (isAdminLoginPage) {
+    // Eğer zaten giriş yapmışsa dashboard'a yönlendir
+    if (userId && userRole === 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  // Normal login sayfasındaysa ve zaten giriş yapmışsa dashboard'a yönlendir
   if (isAuthPage && userId) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
   // Admin sayfalarına erişim kontrolü - sadece admin role'üne sahip kullanıcılar erişebilir
   const isAdminPage = !isAuthPage && 
+                      !isAdminLoginPage &&
                       !isStreamerLoginPage && 
                       !isStreamerDashboard && 
                       !isCreatorLoginPage && 
@@ -125,14 +136,14 @@ export function middleware(request: NextRequest) {
                       !request.nextUrl.pathname.startsWith('/api')
   
   if (isAdminPage) {
-    // Giriş yapmamışsa login'e yönlendir
+    // Giriş yapmamışsa admin login'e yönlendir
     if (!userId) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL('/admin-login', request.url))
     }
     
     // Admin role'üne sahip değilse erişim reddedilir
     if (userRole !== 'admin' && userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL('/admin-login', request.url))
     }
   }
 

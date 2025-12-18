@@ -119,3 +119,5 @@ Environment variables eklendikten sonra:
 
 
 
+
+

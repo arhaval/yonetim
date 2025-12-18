@@ -34,17 +34,26 @@ export async function POST(request: NextRequest) {
     // 1. ADIM: Admin/User Kontrolü
     const user = await getUserByEmail(normalizedEmail)
     if (user) {
-      // Sadece admin role'üne sahip kullanıcılar giriş yapabilir
-      if (user.role !== 'admin' && user.role !== 'ADMIN') {
-        return NextResponse.json(
-          { error: 'Bu hesap ile giriş yapma yetkiniz bulunmamaktadır. Sadece admin kullanıcıları giriş yapabilir.' },
-          { status: 403 }
-        )
+      // Admin login için sadece admin@arhaval.com email'i kabul edilir
+      if (normalizedEmail === 'admin@arhaval.com') {
+        // Admin email kontrolü - sadece admin role'üne sahip olmalı
+        if (user.role !== 'admin' && user.role !== 'ADMIN') {
+          return NextResponse.json(
+            { error: 'Bu email adresi admin yetkisine sahip değil' },
+            { status: 403 }
+          )
+        }
+        account = user
+        role = user.role
+        type = 'user'
+        checkActive = false
+      } else {
+        // Normal kullanıcılar için (ekip üyeleri) - admin olmayanlar da giriş yapabilir
+        account = user
+        role = user.role
+        type = 'user'
+        checkActive = false
       }
-      account = user
-      role = user.role // 'admin' vb.
-      type = 'user'
-      checkActive = false // User tablosunda isActive yoksa false
     }
 
     // 2. ADIM: Eğer Admin değilse, Yayıncı mı diye bak

@@ -1,0 +1,10 @@
+# Instagram Gönderi Linkleri
+# Her satıra bir link yazın
+# Boş satırlar ve # ile başlayan satırlar yok sayılır
+#
+# Örnek:
+# https://www.instagram.com/p/ABC123/
+# https://www.instagram.com/reel/XYZ789/
+
+https://www.instagram.com/reel/DSSpIC8Ajje/
+
