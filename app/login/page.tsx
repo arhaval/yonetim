@@ -41,26 +41,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#1e293b' }}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 sm:p-10 space-y-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-10">
           {/* Logo & Header */}
-          <div className="text-center">
-            <div className="mx-auto w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl mb-6 bg-white p-4 ring-4 ring-blue-100">
+          <div className="text-center mb-8">
+            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center">
               <Image 
                 src="/arhaval-logo.png" 
                 alt="Arhaval Logo" 
-                width={96}
-                height={96}
+                width={64}
+                height={64}
                 className="w-full h-full object-contain"
                 priority
-                unoptimized
               />
             </div>
-            <h2 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">
               Arhaval Denetim Merkezi
             </h2>
-            <p className="mt-2 text-base text-gray-500">
+            <p className="text-sm text-gray-500">
               
             </p>
           </div>
@@ -73,10 +72,10 @@ export default function LoginPage() {
               </div>
             )}
             
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Adresi
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email
                 </label>
                 <input
                   id="email"
@@ -84,14 +83,14 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="input w-full"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                   placeholder="ornek@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Şifre
                 </label>
                 <input
@@ -100,7 +99,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="input w-full"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,11 +110,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full text-base py-3"
+              className="w-full mt-6 py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Giriş yapılıyor...
                 </span>
               ) : (
