@@ -45,6 +45,8 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
         method: 'DELETE',
       })
 
+      const responseData = await res.json()
+
       if (res.ok) {
         if (onDelete) {
           onDelete()
@@ -53,12 +55,17 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
           window.location.reload()
         }
       } else {
-        const errorData = await res.json()
-        alert(`Hata: ${errorData.error || 'Silme işlemi başarısız oldu'}`)
+        const errorMsg = responseData.error || 'Silme işlemi başarısız oldu'
+        console.error('Delete error:', {
+          status: res.status,
+          error: errorMsg,
+          details: responseData.details,
+        })
+        alert(`Hata: ${errorMsg}`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Silme hatası:', error)
-      alert('Bir hata oluştu.')
+      alert(`Bir hata oluştu: ${error?.message || 'Bilinmeyen hata'}`)
     } finally {
       setLoading(false)
     }

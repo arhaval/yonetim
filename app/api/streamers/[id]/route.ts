@@ -118,16 +118,27 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  // Admin kontrolü
-  const adminCheck = await requireAdmin()
-  if (adminCheck) return adminCheck
-
   try {
+    // Admin kontrolü
+    const adminCheck = await requireAdmin()
+    if (adminCheck) {
+      console.error('Admin check failed:', adminCheck.status)
+      return adminCheck
+    }
+
     const resolvedParams = await Promise.resolve(params)
+    console.log('Deleting streamer with ID:', resolvedParams.id)
     
-    // Yayıncıyı bul
+    // Yayıncıyı bul ve ilişkili verileri kontrol et
     const streamer = await prisma.streamer.findUnique({
       where: { id: resolvedParams.id },
+      include: {
+        streams: { take: 1 },
+        payments: { take: 1 },
+        externalStreams: { take: 1 },
+        financialRecords: { take: 1 },
+        teamRates: true,
+      },
     })
 
     if (!streamer) {
@@ -136,19 +147,63 @@ export async function DELETE(
         { status: 404 }
       )
     }
+
+    console.log('Streamer found:', {
+      id: streamer.id,
+      name: streamer.name,
+      streamsCount: streamer.streams.length,
+      paymentsCount: streamer.payments.length,
+      externalStreamsCount: streamer.externalStreams.length,
+      financialRecordsCount: streamer.financialRecords.length,
+    })
+    
+    // Önce teamRates'i sil (cascade olmayabilir)
+    try {
+      await prisma.streamerTeamRate.deleteMany({
+        where: { streamerId: resolvedParams.id },
+      })
+      console.log('Team rates deleted')
+    } catch (teamRateError: any) {
+      console.warn('Team rates deletion warning:', teamRateError.message)
+    }
     
     // Yayıncıyı sil (ilişkili yayınlar, ödemeler cascade ile silinecek)
     await prisma.streamer.delete({
       where: { id: resolvedParams.id },
     })
 
+    console.log('Streamer deleted successfully')
     return NextResponse.json({
       message: 'Yayıncı başarıyla silindi',
     })
   } catch (error: any) {
-    console.error('Error deleting streamer:', error)
+    console.error('Error deleting streamer:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    })
+    
+    // Daha açıklayıcı hata mesajları
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Yayıncı silinemedi: Bu yayıncıya bağlı kayıtlar var. Lütfen önce ilişkili kayıtları silin.' },
+        { status: 400 }
+      )
+    }
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Yayıncı bulunamadı veya zaten silinmiş' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json(
-      { error: `Yayıncı silinemedi: ${error.message}` },
+      { 
+        error: `Yayıncı silinemedi: ${error.message || 'Bilinmeyen bir hata oluştu'}`,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }
