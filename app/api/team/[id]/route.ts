@@ -4,6 +4,44 @@ import { hashPassword } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+// Ekip üyesi getir
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await Promise.resolve(params)
+    
+    const member = await prisma.teamMember.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        tasks: {
+          orderBy: { createdAt: 'asc' },
+        },
+        payments: {
+          orderBy: { paidAt: 'asc' },
+        },
+      },
+    })
+
+    if (!member) {
+      return NextResponse.json(
+        { error: 'Ekip üyesi bulunamadı' },
+        { status: 404 }
+      )
+    }
+
+    const { password, ...memberWithoutPassword } = member
+    return NextResponse.json(memberWithoutPassword)
+  } catch (error: any) {
+    console.error('Error fetching team member:', error)
+    return NextResponse.json(
+      { error: `Ekip üyesi getirilemedi: ${error.message}` },
+      { status: 500 }
+    )
+  }
+}
+
 // Ekip üyesi güncelle
 export async function PUT(
   request: NextRequest,
