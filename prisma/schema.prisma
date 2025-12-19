@@ -205,18 +205,19 @@ model Payment {
 }
 
 model TeamMember {
-  id         String   @id @default(cuid())
-  name       String
-  email      String?  @unique
-  phone      String?
-  password   String?
-  iban       String?
-  role       String
-  baseSalary Float    @default(0)
-  isActive   Boolean  @default(true)
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  avatar       String?  // Profil fotoğrafı URL'si
+  email        String?  @unique
+  phone        String?
+  password     String?
+  iban         String?
+  role         String
+  baseSalary   Float    @default(0)
+  isActive     Boolean  @default(true)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   tasks    Task[]
   payments TeamPayment[]

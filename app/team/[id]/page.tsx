@@ -162,6 +162,21 @@ export default async function TeamMemberDetailPage({
                 </>
               ) : member ? (
                 <>
+                  {member.avatar ? (
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-2 ring-blue-200">
+                      <img
+                        src={member.avatar}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg ring-2 ring-blue-200">
+                      <span className="text-white font-bold text-2xl">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-gray-900">{member.name}</h1>
                     <p className="mt-2 text-sm text-gray-600">{member.role}</p>

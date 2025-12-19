@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const member = await prisma.teamMember.create({
       data: {
         name: data.name,
+        avatar: data.avatar || null,
         email: normalizedEmail,
         password: hashedPassword, // Artık zorunlu, null olamaz
         phone: data.phone || null,

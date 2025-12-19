@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 export default function NewTeamMemberPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,7 +18,51 @@ export default function NewTeamMemberPage() {
     role: 'editor',
     baseSalary: '',
     notes: '',
+    avatar: '',
   })
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Dosya tipini kontrol et
+    if (!file.type.startsWith('image/')) {
+      alert('Lütfen bir resim dosyası seçin')
+      return
+    }
+
+    // Dosya boyutunu kontrol et (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Dosya boyutu 5MB\'dan büyük olamaz')
+      return
+    }
+
+    setUploadingPhoto(true)
+
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.url) {
+        setFormData({ ...formData, avatar: data.url })
+        setPhotoPreview(data.url)
+      } else {
+        alert(data.error || 'Fotoğraf yüklenirken bir hata oluştu')
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error)
+      alert('Fotoğraf yüklenirken bir hata oluştu')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +75,7 @@ export default function NewTeamMemberPage() {
         body: JSON.stringify({
           ...formData,
           baseSalary: parseFloat(formData.baseSalary) || 0,
+          avatar: formData.avatar || null,
         }),
       })
 
@@ -91,6 +138,43 @@ export default function NewTeamMemberPage() {
                     <option value="content">İçerik Üreticisi</option>
                     <option value="other">Diğer</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Profil Fotoğrafı */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profil Fotoğrafı
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Preview"
+                        className="h-20 w-20 rounded-full object-cover border-2 border-gray-300"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                        <span className="text-gray-400 text-sm">Fotoğraf</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      disabled={uploadingPhoto}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
+                    />
+                    {uploadingPhoto && (
+                      <p className="mt-2 text-sm text-gray-500">Yükleniyor...</p>
+                    )}
+                    {formData.avatar && !uploadingPhoto && (
+                      <p className="mt-2 text-sm text-green-600">✓ Fotoğraf yüklendi</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
