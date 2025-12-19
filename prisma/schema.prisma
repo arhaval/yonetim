@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -37,11 +38,11 @@ model Streamer {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   
-  streams         Stream[]
-  externalStreams ExternalStream[]
-  payments        Payment[]
+  streams          Stream[]
+  externalStreams  ExternalStream[]
+  payments         Payment[]
   financialRecords FinancialRecord[]
-  teamRates       StreamerTeamRate[] // Takım bazlı saatlik ücretler
+  teamRates        StreamerTeamRate[] // Takım bazlı saatlik ücretler
 }
 
 model StreamerTeamRate {
@@ -64,31 +65,31 @@ model Stream {
   duration        Int      // Saat cinsinden (sadece tam saatler: 1, 2, 3, 4, 5...)
   matchInfo       String?  // Hangi maç olduğu
   teamName        String?  // Sangal, Eternal Fire, Arhaval - hangi takıma gittiği
-  totalRevenue    Float    @default(0) // Takımdan alınan toplam ücret (Sangal: 400₺/saat, EF: 500₺/saat)
-  streamerEarning Float    @default(0) // Yayıncının alacağı ücret (300₺/saat)
-  arhavalProfit   Float    @default(0) // Arhaval'ın karı (Sangal: 100₺/saat, EF: 200₺/saat)
-  teams           String?  // JSON array: ["Eternal Fire", "Arhaval", "Sangal"] - eski sistem için
-  cost            Float    @default(0) // Hesaplanan maliyet (saat x ücret) - eski sistem için
+  totalRevenue    Float    @default(0)
+  streamerEarning Float    @default(0)
+  arhavalProfit   Float    @default(0)
+  teams           String?  // JSON array (eski sistem)
+  cost            Float    @default(0) // eski sistem
   status          String   @default("pending") // pending, approved, rejected
-  paymentStatus   String   @default("pending") // pending, paid - ödeme durumu
+  paymentStatus   String   @default("pending") // pending, paid
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  @@index([streamerId]) // Performans için index
-  @@index([date]) // Tarih sorguları için index
-  @@index([teamName]) // Takım sorguları için index
-  @@index([status]) // Durum sorguları için index
+  @@index([streamerId])
+  @@index([date])
+  @@index([teamName])
+  @@index([status])
 }
 
 model ExternalStream {
   id         String   @id @default(cuid())
   streamerId String
   streamer   Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
-  teamName   String   // Başka takımın adı
+  teamName   String
   date       DateTime
-  duration   Int      // Dakika cinsinden
-  payment    Float    // Ödenen ücret
+  duration   Int
+  payment    Float
   notes      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -97,75 +98,74 @@ model ExternalStream {
 model ContentCreator {
   id           String   @id @default(cuid())
   name         String
-  profilePhoto String?  // Profil fotoğrafı URL'si
-  email        String?  @unique // İçerik üreticisi login için email
+  profilePhoto String?
+  email        String?  @unique
   phone        String?
-  iban         String?  // IBAN bilgisi
-  password     String?  // İçerik üreticisi login için şifre (hash'lenmiş)
-  loginToken   String?  @unique // İçerik üreticisi login için token (opsiyonel)
-  platform     String?  // YouTube, Instagram, TikTok, etc.
+  iban         String?
+  password     String?
+  loginToken   String?  @unique
+  platform     String?
   channelUrl   String?
   isActive     Boolean  @default(true)
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
-  contents     Content[] // İçerik üreticisinin içerikleri
-  scripts      VoiceoverScript[] // İçerik üreticisinin oluşturduğu metinler
+  contents Content[]
+  scripts  VoiceoverScript[]
 }
 
 model Content {
   id          String   @id @default(cuid())
   title       String
-  type        String   // video, post, reel, story, etc.
-  platform    String   // Instagram, TikTok, YouTube, etc.
+  type        String
+  platform    String
   url         String?
   publishDate DateTime
   creatorId   String?
   creator     ContentCreator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorName String?
   
-  // Etkileşim metrikleri
-  views       Int      @default(0)
-  likes       Int      @default(0)
-  comments    Int      @default(0)
-  shares      Int      @default(0)
-  saves       Int      @default(0)
+  views    Int @default(0)
+  likes    Int @default(0)
+  comments Int @default(0)
+  shares   Int @default(0)
+  saves    Int @default(0)
   
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VoiceActor {
   id           String   @id @default(cuid())
   name         String
-  profilePhoto String?  // Profil fotoğrafı URL'si
-  email        String?  @unique // Seslendirmen login için email
+  profilePhoto String?
+  email        String?  @unique
   phone        String?
-  iban         String?  // IBAN bilgisi
-  password     String?  // Seslendirmen login için şifre (hash'lenmiş)
-  loginToken   String?  @unique // Seslendirmen login için token (opsiyonel)
+  iban         String?
+  password     String?
+  loginToken   String?  @unique
   isActive     Boolean  @default(true)
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
-  scripts      VoiceoverScript[] // Seslendirmenin seslendireceği metinler
+  scripts VoiceoverScript[]
 }
 
 model VoiceoverScript {
   id           String   @id @default(cuid())
-  title        String   // Metin başlığı
-  text         String   // Seslendirme metni
-  creatorId    String?  // İçerik üreticisi ID (null ise admin oluşturmuştur)
+  title        String
+  text         String
+  creatorId    String?
   creator      ContentCreator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
-  voiceActorId String?  // Hangi seslendirmen bu metni seslendirecek
+  voiceActorId String?
   voiceActor   VoiceActor? @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
-  status       String   @default("pending") // pending, creator-approved, approved, paid
-  audioFile    String?  // Ses dosyası URL'si
-  price        Float    @default(0) // Seslendirmen ücreti
-  contentType  String?  // uzun, kısa, reels - İçerik tipi (seslendirmen görecek)
+  status       String @default("pending")
+  audioFile    String?
+  price        Float @default(0)
+  contentType  String?
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -173,20 +173,20 @@ model VoiceoverScript {
 
 model FinancialRecord {
   id          String   @id @default(cuid())
-  type        String   // income, expense
-  category    String   // salary, content, sponsorship, equipment, etc.
+  type        String
+  category    String
   amount      Float
   description String?
   date        DateTime
   streamerId  String?
   streamer    Streamer? @relation(fields: [streamerId], references: [id])
-  streamId    String?   // Hangi yayından gelen kar (opsiyonel)
+  streamId    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  @@index([date]) // Tarih sorguları için index
-  @@index([type]) // Tip sorguları için index
-  @@index([streamerId]) // Streamer sorguları için index
+  @@index([date])
+  @@index([type])
+  @@index([streamerId])
 }
 
 model Payment {
@@ -194,8 +194,8 @@ model Payment {
   streamerId  String
   streamer    Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
   amount      Float
-  type        String   // salary, commission, bonus
-  period      String   // 2024-01 gibi (YYYY-MM)
+  type        String
+  period      String
   description String?
   paidAt      DateTime?
   createdAt   DateTime @default(now())
@@ -205,19 +205,19 @@ model Payment {
 model TeamMember {
   id         String   @id @default(cuid())
   name       String
-  email      String?  @unique // Ekip üyesi login için email
+  email      String?  @unique
   phone      String?
-  password   String?  // Ekip üyesi login için şifre (hash'lenmiş)
-  iban       String?  // IBAN bilgisi
-  role       String   // editor, designer, manager, etc.
-  baseSalary Float    @default(0)
-  isActive   Boolean  @default(true)
+  password   String?
+  iban       String?
+  role       String
+  baseSalary Float   @default(0)
+  isActive   Boolean @default(true)
   notes      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   
-  tasks      Task[]
-  payments   TeamPayment[]
+  tasks    Task[]
+  payments TeamPayment[]
 }
 
 model Task {
@@ -226,12 +226,12 @@ model Task {
   teamMember   TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
   title        String
   description  String?
-  status       String     @default("pending") // pending, in_progress, completed
-  priority     String     @default("medium") // low, medium, high
+  status       String @default("pending")
+  priority     String @default("medium")
   dueDate      DateTime?
   completedAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model TeamPayment {
@@ -239,49 +239,49 @@ model TeamPayment {
   teamMemberId String
   teamMember   TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
   amount       Float
-  type         String     // salary, bonus, commission
-  period       String     // 2024-01 gibi (YYYY-MM)
+  type         String
+  period       String
   description  String?
   paidAt       DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model MonthlyPlan {
   id        String   @id @default(cuid())
-  title     String   // Yayın Sayısı, İçerik Üretimi, vb.
-  target    Float    // Hedef değer
-  month     String   // 2024-12 gibi (YYYY-MM)
-  type      String   // stream_count, content_count, revenue, streamer_count
+  title     String
+  target    Float
+  month     String
+  type      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  @@unique([type, month]) // Aynı tip ve ay için tek plan
+  @@unique([type, month])
 }
 
 model YearlyGoal {
   id           String   @id @default(cuid())
-  title        String   // Toplam Yayıncı Sayısı, vb.
-  target       Float    // Hedef değer
-  year         Int      // 2026
-  type         String   // total_streamers, monthly_revenue, total_content, active_rate
-  isCurrency   Boolean  @default(false)
-  isPercentage Boolean  @default(false)
+  title        String
+  target       Float
+  year         Int
+  type         String
+  isCurrency   Boolean @default(false)
+  isPercentage Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   
-  @@unique([type, year]) // Aynı tip ve yıl için tek hedef
+  @@unique([type, year])
 }
 
 model SocialMediaStats {
   id            String   @id @default(cuid())
-  month         String?  // 2024-12 gibi (YYYY-MM) - aylık takip için
-  week          String?  // 2024-W01 gibi (YYYY-Www) - haftalık takip için
-  platform      String   // Instagram, YouTube, X, Twitch, TikTok
-  followerCount Int      // Takipçi sayısı
-  target        Int?     // Hedef takipçi sayısı (opsiyonel)
+  month         String?
+  week          String?
+  platform      String
+  followerCount Int
+  target        Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  @@unique([month, week, platform]) // Aynı ay/hafta ve platform için tek kayıt
+  @@unique([month, week, platform])
 }

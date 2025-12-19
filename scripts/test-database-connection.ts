@@ -58,8 +58,47 @@ async function testConnection() {
     
     if (error.message.includes('Tenant or user not found')) {
       console.error('\n🔧 ÇÖZÜM:')
-      console.error('Username formatı yanlış! Şu formatta olmalı:')
-      console.error('postgres.kwrbcwspdjlgixjkplzq (proje referansı ile)')
+      console.error('"Tenant or user not found" hatası alıyorsunuz.')
+      console.error('\n📋 Kontrol listesi:')
+      
+      // URL'i parse et
+      try {
+        const url = new URL(dbUrl)
+        const username = url.username
+        const hostname = url.hostname
+        const port = url.port
+        
+        console.error(`\n1. Username: ${username}`)
+        console.error(`   ✅ Doğru format: postgres.kwrbcwspdjlgixjkplzq`)
+        console.error(`   ${username === 'postgres.kwrbcwspdjlgixjkplzq' ? '✅' : '❌'} Format kontrolü`)
+        
+        console.error(`\n2. Hostname: ${hostname}`)
+        console.error(`   ✅ Doğru format: aws-0-eu-north-1.pooler.supabase.com (Stockholm)`)
+        console.error(`   ${hostname.includes('eu-north-1') ? '✅' : '❌'} Region kontrolü`)
+        
+        console.error(`\n3. Port: ${port}`)
+        console.error(`   ✅ Doğru port: 6543 (Pooler)`)
+        console.error(`   ${port === '6543' ? '✅' : '❌'} Port kontrolü`)
+        
+        console.error(`\n4. Şifre kontrolü:`)
+        console.error(`   - Supabase Dashboard → Settings → Database → Database password`)
+        console.error(`   - Şifrenin doğru olduğundan emin olun`)
+        console.error(`   - Şifre büyük/küçük harf duyarlıdır!`)
+        
+        console.error(`\n5. Region kontrolü:`)
+        console.error(`   - Supabase Dashboard → Settings → General → Region`)
+        console.error(`   - Region: Stockholm (eu-north-1) olmalı`)
+        console.error(`   - Pooler host: aws-0-eu-north-1.pooler.supabase.com olmalı`)
+        
+      } catch (e) {
+        console.error('URL parse edilemedi')
+      }
+      
+      console.error('\n💡 ÖNERİLER:')
+      console.error('1. Supabase Dashboard\'dan Connection String\'i tekrar kopyalayın')
+      console.error('2. Session Pooler (port 6543) seçeneğini kullanın')
+      console.error('3. Şifreyi reset edip tekrar deneyin')
+      console.error('4. Region\'un Stockholm (eu-north-1) olduğundan emin olun')
     }
     
     process.exit(1)

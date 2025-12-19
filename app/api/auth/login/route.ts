@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { NextRequest, NextResponse } from 'next/server'
 // Diğer yardımcı fonksiyonları da buraya ekledik:
 import { 
