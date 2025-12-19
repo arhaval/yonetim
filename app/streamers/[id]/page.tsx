@@ -33,46 +33,22 @@ export default async function StreamerDetailPage({
       notFound()
     }
 
-    // Sonra yayınları ayrı çek (approved ve null status)
-    let approvedStreams: any[] = []
-    let nullStatusStreams: any[] = []
+    // Sadece onaylanmış yayınları çek (status: 'approved')
+    let allStreams: any[] = []
     
     try {
-      approvedStreams = await prisma.stream.findMany({
+      allStreams = await prisma.stream.findMany({
         where: {
           streamerId: id,
-          status: 'approved'
+          status: 'approved' // Sadece onaylanmış yayınlar
         },
         take: 50,
         orderBy: { date: 'desc' },
       })
     } catch (error: any) {
       console.warn('Approved streams çekilemedi:', error.message)
+      allStreams = []
     }
-
-    try {
-      nullStatusStreams = await prisma.stream.findMany({
-        where: {
-          streamerId: id,
-          status: null as any
-        },
-        take: 50,
-        orderBy: { date: 'desc' },
-      })
-    } catch (error: any) {
-      // Null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
-      const allStreams = await prisma.stream.findMany({
-        where: { streamerId: id },
-        take: 50,
-        orderBy: { date: 'desc' },
-      })
-      nullStatusStreams = allStreams.filter((s: any) => !s.status || s.status === null)
-    }
-
-    // Streams'i birleştir
-    const allStreams = [...approvedStreams, ...nullStatusStreams]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 50)
 
     // Diğer verileri çek
     const streamerWithRelations = await prisma.streamer.findUnique({

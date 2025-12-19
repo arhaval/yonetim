@@ -3,72 +3,25 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // Önce approved yayınları göster, eğer status alanı yoksa tüm yayınları göster
-    let streams: any[] = []
-    try {
-      // Önce approved olanları çek
-      const approvedStreams = await prisma.stream.findMany({
-        where: { 
-          status: 'approved'
-        },
-        include: {
-          streamer: true,
-        },
-        orderBy: { date: 'desc' },
-      })
-      
-      // Status null olanları da çek (eski yayınlar)
-      let nullStatusStreams: any[] = []
-      try {
-        nullStatusStreams = await prisma.stream.findMany({
-          where: { 
-            status: null as any // Type assertion - Prisma nullable field için
-          },
-          include: {
-            streamer: true,
-          },
-          orderBy: { date: 'desc' },
-        })
-      } catch (error: any) {
-        // Eğer null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
-        console.warn('Null status kontrolü başarısız, alternatif yöntem kullanılıyor')
-        const allStreams = await prisma.stream.findMany({
-          include: {
-            streamer: true,
-          },
-          orderBy: { date: 'desc' },
-        })
-        nullStatusStreams = allStreams.filter(s => !s.status || s.status === null)
-      }
-      
-      // İkisini birleştir ve tarihe göre sırala
-      streams = [...approvedStreams, ...nullStatusStreams].sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-    } catch (error: any) {
-      // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
-      if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
-        console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
-        streams = await prisma.stream.findMany({
-          include: {
-            streamer: true,
-          },
-          orderBy: { date: 'desc' },
-        })
-      } else {
-        // Başka bir hata varsa, tüm yayınları göster
-        console.warn('Status kontrolü başarısız, tüm yayınlar gösteriliyor:', error.message)
-        streams = await prisma.stream.findMany({
-          include: {
-            streamer: true,
-          },
-          orderBy: { date: 'desc' },
-        })
-      }
-    }
+    // SADECE onaylanmış yayınları göster (status: 'approved')
+    const streams = await prisma.stream.findMany({
+      where: { 
+        status: 'approved' // Sadece onaylanmış yayınlar
+      },
+      include: {
+        streamer: true,
+      },
+      orderBy: { date: 'desc' },
+    })
+    
     return NextResponse.json(streams)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching streams:', error)
+    // Eğer status alanı henüz tanınmıyorsa, boş array döndür
+    if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
+      console.warn('Status alanı henüz tanınmıyor. Boş liste döndürülüyor.')
+      return NextResponse.json([])
+    }
     return NextResponse.json(
       { error: 'Yayınlar getirilemedi' },
       { status: 500 }

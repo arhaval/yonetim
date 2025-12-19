@@ -25,51 +25,16 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Approved ve null status olan yayınları göster
-    let approvedStreams: any[] = []
-    let nullStatusStreams: any[] = []
-    
-    try {
-      approvedStreams = await prisma.stream.findMany({
-        where: {
-          ...whereClause,
-          status: 'approved',
-        },
-        include: {
-          streamer: true,
-        },
-        orderBy: { date: 'asc' },
-      })
-    } catch (error: any) {
-      console.warn('Approved streams çekilemedi:', error.message)
-    }
-
-    try {
-      nullStatusStreams = await prisma.stream.findMany({
-        where: {
-          ...whereClause,
-          status: null as any,
-        },
-        include: {
-          streamer: true,
-        },
-        orderBy: { date: 'asc' },
-      })
-    } catch (error: any) {
-      // Null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
-      const allStreams = await prisma.stream.findMany({
-        where: whereClause,
-        include: {
-          streamer: true,
-        },
-        orderBy: { date: 'asc' },
-      })
-      nullStatusStreams = allStreams.filter((s: any) => !s.status || s.status === null)
-    }
-
-    // İkisini birleştir ve tarihe göre sırala
-    const streams = [...approvedStreams, ...nullStatusStreams].sort((a, b) => {
-      return new Date(a.date).getTime() - new Date(b.date).getTime()
+    // SADECE onaylanmış yayınları göster (status: 'approved')
+    const streams = await prisma.stream.findMany({
+      where: {
+        ...whereClause,
+        status: 'approved', // Sadece onaylanmış yayınlar
+      },
+      include: {
+        streamer: true,
+      },
+      orderBy: { date: 'asc' },
     })
 
     const response = NextResponse.json(streams || [])
