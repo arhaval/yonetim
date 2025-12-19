@@ -10,15 +10,12 @@ export default function LoginSelectionPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 sm:p-10">
           {/* Logo & Header */}
           <div className="text-center mb-10">
-            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center bg-white rounded-lg p-2">
+            <div className="mx-auto w-24 h-24 mb-6 flex items-center justify-center bg-white rounded-xl p-3 shadow-lg border border-gray-100">
               <img 
-                src="/arhaval-logo.png?v=2" 
+                src="/arhaval-logo.png?v=3" 
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                }}
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
               />
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
