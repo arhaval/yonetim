@@ -98,7 +98,7 @@ export default function PendingStreamsPage() {
                                 href={`/streamers/${stream.streamerId}`}
                                 className="text-blue-600 hover:text-blue-800"
                               >
-                                {stream.streamer.name}
+                                {stream.streamer?.name || 'Bilinmeyen'}
                               </Link>
                             </span>
                             <span>
@@ -132,6 +132,7 @@ export default function PendingStreamsPage() {
               ))}
             </ul>
           )}
+        </div>
 
         {selectedStream && (
           <StreamCostModal
@@ -148,4 +149,3 @@ export default function PendingStreamsPage() {
     </Layout>
   )
 }
-
