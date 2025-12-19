@@ -19,8 +19,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    // Optimize CSS loading
-    optimizeCss: true,
+    // optimizeCss kaldırıldı - critters modülü eksik
   },
   // Bundle size optimizasyonu
   swcMinify: true,
