@@ -440,70 +440,105 @@ export default function StreamerDashboardPage() {
         )}
 
         {/* Streams List */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">Yayınlarım</h2>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+              <Video className="w-6 h-6 mr-2 text-indigo-600" />
+              Yayınlarım ({streams.length})
+            </h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="p-6">
             {streams.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-gray-500">Henüz yayın eklenmemiş</p>
+              <div className="text-center py-12">
+                <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg mb-2">Henüz yayın eklenmemiş</p>
+                <p className="text-sm text-gray-400">Yukarıdaki "Yeni Yayın Ekle" butonuna tıklayarak ilk yayınınızı ekleyebilirsiniz</p>
               </div>
             ) : (
-              streams.map((stream) => (
-                <div key={stream.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0">
-                          <Calendar className="w-5 h-5 text-indigo-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-lg font-semibold text-gray-900">
+              <div className="space-y-4">
+                {streams.map((stream) => (
+                  <div
+                    key={stream.id}
+                    className="bg-gradient-to-r from-gray-50 to-indigo-50 rounded-xl p-5 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        {/* Başlık ve Durum */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
+                            <Calendar className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-gray-900 truncate">
                               {stream.matchInfo || 'Yayın'}
-                            </p>
-                            {stream.status === 'pending' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Onay Bekleniyor
-                              </span>
-                            )}
-                            {stream.status === 'approved' && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                Onaylandı
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                            <span>{format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}</span>
-                            <span>•</span>
-                            <span>{stream.duration} saat</span>
-                            {stream.teamName && (
-                              <>
-                                <span>•</span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                  {stream.teamName}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              {stream.status === 'pending' && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                  ⏳ Onay Bekleniyor
                                 </span>
-                              </>
+                              )}
+                              {stream.status === 'approved' && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                                  ✅ Onaylandı
+                                </span>
+                              )}
+                              {(!stream.status || stream.status === null) && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                                  📋 İşleniyor
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Detaylar */}
+                        <div className="ml-14 space-y-2">
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span className="flex items-center font-medium">
+                              <Calendar className="w-4 h-4 mr-1.5" />
+                              {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
+                            </span>
+                            <span className="flex items-center font-medium">
+                              <Clock className="w-4 h-4 mr-1.5" />
+                              {stream.duration} saat
+                            </span>
+                            {stream.teamName && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                {stream.teamName}
+                              </span>
                             )}
                           </div>
+
+                          {/* Ödeme Bilgisi */}
                           {stream.status === 'approved' && stream.streamerEarning > 0 && (
-                            <div className="mt-2">
-                              <p className="text-sm font-medium text-green-600">
-                                Ödeme: {stream.streamerEarning.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                  maximumFractionDigits: 0,
-                                })}
-                              </p>
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-600">Ödeme Tutarı:</span>
+                                <span className="text-lg font-bold text-green-600">
+                                  {stream.streamerEarning.toLocaleString('tr-TR', {
+                                    style: 'currency',
+                                    currency: 'TRY',
+                                    maximumFractionDigits: 0,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          {stream.status === 'approved' && stream.streamerEarning === 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4 text-orange-500" />
+                                <span className="text-sm text-orange-600 font-medium">Maliyet henüz girilmemiş</span>
+                              </div>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
