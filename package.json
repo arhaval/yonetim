@@ -17,7 +17,11 @@
     "create-creator": "tsx scripts/create-creator.ts",
     "create-voice-actor": "tsx scripts/create-voice-actor.ts",
     "create-streamer": "tsx scripts/create-streamer.ts",
-    "add-contenttype": "tsx scripts/add-contenttype-column.ts"
+    "add-contenttype": "tsx scripts/add-contenttype-column.ts",
+    "test-db": "tsx scripts/test-database-connection.ts",
+    "test-regions": "tsx scripts/test-all-regions.ts",
+    "check-db": "tsx scripts/check-supabase-status.ts",
+    "test-direct": "tsx scripts/test-direct-connection.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
