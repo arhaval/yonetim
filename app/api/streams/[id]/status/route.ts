@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma'
 // Yayın durumunu güncelle (onayla/reddet)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params)
     const data = await request.json()
     const { status } = data
 
@@ -21,13 +22,13 @@ export async function PUT(
     let updatedStream
     try {
       updatedStream = await prisma.stream.update({
-        where: { id: params.id },
+        where: { id: resolvedParams.id },
         data: { status },
         include: {
           streamer: true,
         },
       })
-      console.log('Stream status updated:', { id: params.id, status, updatedStream })
+      console.log('Stream status updated:', { id: resolvedParams.id, status, updatedStream })
     } catch (error: any) {
       console.error('Error updating stream status:', error)
       // Eğer status alanı henüz tanınmıyorsa, raw SQL kullan
@@ -37,12 +38,12 @@ export async function PUT(
         await prisma.$executeRawUnsafe(
           `UPDATE "Stream" SET status = $1, "updatedAt" = NOW() WHERE id = $2`,
           status,
-          params.id
+          resolvedParams.id
         )
         
         // Güncellenmiş stream'i çek
         updatedStream = await prisma.stream.findUnique({
-          where: { id: params.id },
+          where: { id: resolvedParams.id },
           include: {
             streamer: true,
           },
