@@ -46,14 +46,25 @@ export async function GET(request: NextRequest) {
         orderBy: { date: 'desc' },
       })
       
-      // Status null olanları da çek (eski yayınlar)
-      const nullStatusStreams = await prisma.stream.findMany({
-        where: { 
-          streamerId,
-          status: { is: null }
-        },
-        orderBy: { date: 'desc' },
-      })
+      // Status null olanları da çek (eski yayınlar) - Prisma'da null kontrolü için equals kullan
+      let nullStatusStreams: any[] = []
+      try {
+        nullStatusStreams = await prisma.stream.findMany({
+          where: { 
+            streamerId,
+            status: null as any // Type assertion - Prisma nullable field için
+          },
+          orderBy: { date: 'desc' },
+        })
+      } catch (error: any) {
+        // Eğer null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
+        console.warn('Null status kontrolü başarısız, alternatif yöntem kullanılıyor')
+        const allStreams = await prisma.stream.findMany({
+          where: { streamerId },
+          orderBy: { date: 'desc' },
+        })
+        nullStatusStreams = allStreams.filter(s => !s.status || s.status === null)
+      }
       
       // Hepsini birleştir ve tarihe göre sırala
       streams = [...approvedStreams, ...pendingStreams, ...nullStatusStreams].sort((a, b) => {
