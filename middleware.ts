@@ -107,13 +107,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Admin login sayfası kontrolü
+  // Admin login sayfası kontrolü - HER ZAMAN İZİN VER
   const isAdminLoginPage = request.nextUrl.pathname.startsWith('/admin-login')
   if (isAdminLoginPage) {
-    // Eğer zaten giriş yapmışsa dashboard'a yönlendir
-    if (userId && userRole === 'admin') {
+    // Eğer zaten admin olarak giriş yapmışsa dashboard'a yönlendir
+    if (userId && (userRole === 'admin' || userRole === 'ADMIN')) {
       return NextResponse.redirect(new URL('/', request.url))
     }
+    // Admin login sayfasına her zaman izin ver
     return NextResponse.next()
   }
 
