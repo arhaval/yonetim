@@ -1,41 +1,58 @@
+'use client'
+
 import Layout from '@/components/Layout'
-import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { Check, X, DollarSign } from 'lucide-react'
+import { DollarSign } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import StreamCostModal from '@/components/StreamCostModal'
 import ApproveStreamButton from '@/components/ApproveStreamButton'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export default function PendingStreamsPage() {
+  const [pendingStreams, setPendingStreams] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedStream, setSelectedStream] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-export default async function PendingStreamsPage() {
-  // Prisma Client güncellenene kadar geçici çözüm
-  let pendingStreams: any[] = []
-  try {
-    pendingStreams = await prisma.stream.findMany({
-      where: { status: 'pending' },
-      include: {
-        streamer: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-  } catch (error: any) {
-    // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
-    if (error.message?.includes('status')) {
-      console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
-      pendingStreams = await prisma.stream.findMany({
-        include: {
-          streamer: true,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10, // Son 10 yayını göster
-      })
-    } else {
-      throw error
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/streams/pending')
+      const data = await res.json()
+      setPendingStreams(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error fetching pending streams:', error)
+      setPendingStreams([])
+    } finally {
+      setLoading(false)
     }
+  }
+
+  const handleCostClick = (stream: any, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedStream(stream)
+    setIsModalOpen(true)
+  }
+
+  const handleUpdate = () => {
+    fetchData()
+    setIsModalOpen(false)
+    setSelectedStream(null)
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="px-4 py-6 sm:px-0">
+          <p>Yükleniyor...</p>
+        </div>
+      </Layout>
+    )
   }
 
   return (
@@ -101,14 +118,32 @@ export default async function PendingStreamsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <ApproveStreamButton streamId={stream.id} />
+                      <button
+                        onClick={(e) => handleCostClick(stream, e)}
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        title="Maliyet Bilgileri"
+                      >
+                        <DollarSign className="w-4 h-4" />
+                      </button>
+                      <ApproveStreamButton streamId={stream.id} onUpdate={fetchData} />
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
           )}
-        </div>
+
+        {selectedStream && (
+          <StreamCostModal
+            stream={selectedStream}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false)
+              setSelectedStream(null)
+            }}
+            onUpdate={handleUpdate}
+          />
+        )}
       </div>
     </Layout>
   )

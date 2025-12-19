@@ -38,14 +38,9 @@ export default function NewStreamPage() {
     e.preventDefault()
     setLoading(true)
 
-    const streamerEarning = parseFloat(formData.streamerEarning) || 0
+    // Yayıncı maliyet girmeden yayın ekleyebilir - admin sonra maliyet girecek
     const totalRevenue = parseFloat(formData.totalRevenue) || 0
-
-    if (streamerEarning <= 0) {
-      alert('Yayıncıya ödenecek miktar 0\'dan büyük olmalıdır')
-      setLoading(false)
-      return
-    }
+    const streamerEarning = parseFloat(formData.streamerEarning) || 0
 
     try {
       const res = await fetch('/api/streams', {
@@ -58,8 +53,8 @@ export default function NewStreamPage() {
           matchInfo: formData.matchInfo,
           teamName: formData.teamName || null,
           totalRevenue: totalRevenue,
-          streamerEarning: streamerEarning,
-          arhavalProfit: 0, // Artık kullanılmıyor
+          streamerEarning: streamerEarning, // 0 olabilir - admin sonra girecek
+          arhavalProfit: 0,
           notes: formData.notes || null,
         }),
       })
@@ -168,18 +163,17 @@ export default function NewStreamPage() {
             </div>
 
             <div className="border-t pt-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Ödeme Bilgileri</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Ödeme Bilgileri <span className="text-sm font-normal text-gray-500">(Opsiyonel - Admin sonra girebilir)</span></h3>
               
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Yayıncıya Ödenecek Miktar (₺) *
+                    Yayıncıya Ödenecek Miktar (₺) <span className="text-gray-400">(Opsiyonel)</span>
                   </label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
-                    required
                     value={formData.streamerEarning}
                     onChange={(e) =>
                       setFormData({ ...formData, streamerEarning: e.target.value })
@@ -188,7 +182,7 @@ export default function NewStreamPage() {
                     placeholder="0.00"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Bu yayın için yayıncıya ödenecek toplam tutar
+                    Bu yayın için yayıncıya ödenecek toplam tutar (Admin onay sayfasından da girilebilir)
                   </p>
                 </div>
 
@@ -280,7 +274,7 @@ export default function NewStreamPage() {
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.streamerEarning || parseFloat(formData.streamerEarning) <= 0}
+              disabled={loading}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? 'Kaydediliyor...' : 'Kaydet'}

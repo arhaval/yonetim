@@ -3,12 +3,30 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const streams = await prisma.stream.findMany({
-      include: {
-        streamer: true,
-      },
-      orderBy: { date: 'asc' },
-    })
+    // Sadece onaylanmış yayınları göster
+    let streams: any[] = []
+    try {
+      streams = await prisma.stream.findMany({
+        where: { status: 'approved' },
+        include: {
+          streamer: true,
+        },
+        orderBy: { date: 'desc' },
+      })
+    } catch (error: any) {
+      // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
+      if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
+        console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
+        streams = await prisma.stream.findMany({
+          include: {
+            streamer: true,
+          },
+          orderBy: { date: 'desc' },
+        })
+      } else {
+        throw error
+      }
+    }
     return NextResponse.json(streams)
   } catch (error) {
     console.error('Error fetching streams:', error)
@@ -23,7 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Stream oluştur
+    // Stream oluştur - status: "pending" olarak başlar (admin onaylayacak)
     const stream = await prisma.stream.create({
       data: {
         streamerId: data.streamerId,
@@ -32,15 +50,17 @@ export async function POST(request: NextRequest) {
         matchInfo: data.matchInfo || null,
         teamName: data.teamName || null,
         totalRevenue: data.totalRevenue || 0,
-        streamerEarning: data.streamerEarning || 0,
+        streamerEarning: data.streamerEarning || 0, // 0 olabilir - admin sonra girecek
         arhavalProfit: data.arhavalProfit || 0,
         teams: data.teams || null, // Eski sistem için
         cost: data.cost || 0, // Eski sistem için
         notes: data.notes || null,
+        status: 'pending', // Admin onaylayacak
       },
     })
 
-    // Yayıncıya ödenecek ücreti gider olarak ekle
+    // Eğer yayıncı maliyet girdiyse finansal kayıt oluştur
+    // Ama genelde admin onay sayfasından girilecek
     if (data.streamerEarning > 0) {
       await prisma.financialRecord.create({
         data: {
