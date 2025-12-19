@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Yayıncılar', href: '/streamers', icon: Users },
   { name: 'Yayınlar', href: '/streams', icon: Video },
+  { name: 'Onay Bekleyen Yayınlar', href: '/streams/pending', icon: Video },
   { name: 'İçerikler', href: '/content', icon: Video },
   { name: 'İçerik Üreticileri', href: '/content-creators', icon: UserCircle },
   { name: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: FileText },
