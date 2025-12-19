@@ -51,11 +51,14 @@ export default function NewVoiceActorPage() {
         setFormData({ ...formData, profilePhoto: data.url })
         setPhotoPreview(data.url)
       } else {
-        alert(data.error || 'Fotoğraf yüklenirken bir hata oluştu')
+        const errorMsg = data.error || 'Fotoğraf yüklenirken bir hata oluştu'
+        console.error('Upload error:', errorMsg)
+        alert(errorMsg)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photo:', error)
-      alert('Fotoğraf yüklenirken bir hata oluştu')
+      const errorMsg = error?.message || 'Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.'
+      alert(errorMsg)
     } finally {
       setUploadingPhoto(false)
     }
@@ -130,7 +133,7 @@ export default function NewVoiceActorPage() {
                 </div>
               )}
               <div>
-                <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <label htmlFor="photo-upload" className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                   <Upload className="w-4 h-4 mr-2" />
                   {uploadingPhoto ? 'Yükleniyor...' : 'Fotoğraf Yükle'}
                 </label>
@@ -140,7 +143,14 @@ export default function NewVoiceActorPage() {
                   onChange={handlePhotoUpload}
                   className="hidden"
                   id="photo-upload"
+                  disabled={uploadingPhoto}
                 />
+                {uploadingPhoto && (
+                  <p className="mt-2 text-xs text-gray-500">Fotoğraf yükleniyor...</p>
+                )}
+                {formData.profilePhoto && !uploadingPhoto && (
+                  <p className="mt-2 text-xs text-green-600">✓ Fotoğraf yüklendi</p>
+                )}
               </div>
             </div>
           </div>

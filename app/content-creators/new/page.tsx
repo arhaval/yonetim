@@ -55,11 +55,14 @@ export default function NewContentCreatorPage() {
         setFormData({ ...formData, profilePhoto: data.url })
         setPhotoPreview(data.url)
       } else {
-        alert(data.error || 'Fotoğraf yüklenirken bir hata oluştu')
+        const errorMsg = data.error || 'Fotoğraf yüklenirken bir hata oluştu'
+        console.error('Upload error:', errorMsg)
+        alert(errorMsg)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photo:', error)
-      alert('Fotoğraf yüklenirken bir hata oluştu')
+      const errorMsg = error?.message || 'Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.'
+      alert(errorMsg)
     } finally {
       setUploadingPhoto(false)
     }
@@ -161,8 +164,12 @@ export default function NewContentCreatorPage() {
                     />
                   </label>
                   {uploadingPhoto && (
-                    <p className="mt-2 text-sm text-gray-500">Yükleniyor...</p>
+                    <p className="mt-2 text-sm text-blue-600">Yükleniyor...</p>
                   )}
+                  {formData.profilePhoto && !uploadingPhoto && (
+                    <p className="mt-2 text-sm text-green-600">✓ Fotoğraf yüklendi</p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">PNG, JPG, GIF (max. 5MB)</p>
                 </div>
               </div>
             </div>
