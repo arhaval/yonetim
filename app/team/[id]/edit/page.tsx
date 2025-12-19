@@ -58,11 +58,14 @@ export default function EditTeamMemberPage() {
         setFormData({ ...formData, avatar: data.url })
         setPhotoPreview(data.url)
       } else {
-        alert(data.error || 'Fotoğraf yüklenirken bir hata oluştu')
+        const errorMsg = data.error || 'Fotoğraf yüklenirken bir hata oluştu'
+        console.error('Upload error:', errorMsg)
+        alert(errorMsg)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading photo:', error)
-      alert('Fotoğraf yüklenirken bir hata oluştu')
+      const errorMsg = error?.message || 'Fotoğraf yüklenirken bir hata oluştu. Lütfen tekrar deneyin.'
+      alert(errorMsg)
     } finally {
       setUploadingPhoto(false)
     }

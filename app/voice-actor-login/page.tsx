@@ -45,19 +45,12 @@ export default function VoiceActorLoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="text-center mb-6">
-            <div className="mx-auto w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-white p-3">
+            <div className="mx-auto w-24 h-24 rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-white p-3 border border-gray-100">
               <img 
-                src="/arhaval-logo.png" 
+                src="/arhaval-logo.png?v=4" 
                 alt="Arhaval Logo" 
                 className="w-full h-full object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.style.display = 'none'
-                  if (target.parentElement) {
-                    target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-2xl">A</span>'
-                    target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
-                  }
-                }}
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
               />
             </div>
           </div>

@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Dosya boyutunu kontrol et (max 2MB - base64 için daha küçük limit)
-    if (file.size > 2 * 1024 * 1024) {
+    // Dosya boyutunu kontrol et (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'Dosya boyutu 2MB\'dan büyük olamaz' },
+        { error: 'Dosya boyutu 5MB\'dan büyük olamaz' },
         { status: 400 }
       )
     }
@@ -41,10 +41,11 @@ export async function POST(request: NextRequest) {
       url: dataUrl,
       fileName: file.name,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading file:', error)
+    const errorMessage = error?.message || 'Dosya yüklenirken bir hata oluştu'
     return NextResponse.json(
-      { error: 'Dosya yüklenirken bir hata oluştu' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
