@@ -5,13 +5,15 @@ import Link from 'next/link'
 import { Plus, Calendar, Clock, DollarSign, User, ExternalLink } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-// İŞTE EKSİK OLAN IMPORT BU:
 import DeleteButton from '@/components/DeleteButton'
+import StreamCostModal from '@/components/StreamCostModal'
 
 export default function StreamsPage() {
   const router = useRouter()
   const [streams, setStreams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedStream, setSelectedStream] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -42,12 +44,23 @@ export default function StreamsPage() {
     })
   }
 
-  // Süre formatlama (dakika -> saat:dakika)
-  const formatDuration = (minutes: number) => {
-    const h = Math.floor(minutes / 60)
-    const m = minutes % 60
-    if (h > 0) return `${h}sa ${m}dk`
-    return `${m}dk`
+  // Süre formatlama (saat cinsinden)
+  const formatDuration = (hours: number) => {
+    if (!hours || hours === 0) return '0 saat'
+    return `${hours} saat`
+  }
+
+  const handleCostClick = (stream: any, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedStream(stream)
+    setIsModalOpen(true)
+  }
+
+  const handleUpdate = () => {
+    fetchData()
+    setIsModalOpen(false)
+    setSelectedStream(null)
   }
 
   if (loading) {
@@ -160,11 +173,24 @@ export default function StreamsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900 flex items-center">
                           <DollarSign className="w-4 h-4 mr-1 text-green-500" />
-                          {(stream.cost || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                          {stream.streamerEarning > 0 ? (
+                            <span className="text-red-600">
+                              {stream.streamerEarning.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">Maliyet girilmemiş</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-3">
+                          <button
+                            onClick={(e) => handleCostClick(stream, e)}
+                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            title="Maliyet Bilgileri"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                          </button>
                           <Link 
                             href={`/streams/${stream.id}`}
                             className="text-indigo-600 hover:text-indigo-900 flex items-center"
@@ -173,7 +199,6 @@ export default function StreamsPage() {
                             Detay
                           </Link>
                           
-                          {/* SİLME BUTONU BURADA */}
                           <DeleteButton 
                             id={stream.id} 
                             type="stream" 
@@ -188,6 +213,18 @@ export default function StreamsPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {selectedStream && (
+          <StreamCostModal
+            stream={selectedStream}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false)
+              setSelectedStream(null)
+            }}
+            onUpdate={handleUpdate}
+          />
         )}
       </div>
     </Layout>
