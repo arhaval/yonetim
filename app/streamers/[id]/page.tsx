@@ -28,7 +28,7 @@ export default async function StreamerDetailPage({
           where: {
             OR: [
               { status: 'approved' },
-              { status: { is: null } }, // Eski yayınlar için
+              { status: null as any }, // Eski yayınlar için - type assertion
             ]
           },
           take: 50, // İlk 50 stream (pagination için)
