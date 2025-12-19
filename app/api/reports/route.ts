@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-// Cache API responses for 2 minutes
-export const revalidate = 120
+// searchParams kullandığı için dynamic olmalı
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       stats: {
         streamCount,
         externalStreamCount,
@@ -175,6 +175,9 @@ export async function GET(request: NextRequest) {
       contentByPlatform,
       contentByType,
     })
+    // Cache için header ekle (2 dakika)
+    response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')
+    return response
   } catch (error: any) {
     console.error('Error fetching reports:', error)
     console.error('Error details:', {

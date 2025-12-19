@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-// Cache GET requests for 1 minute
-export const revalidate = 60
+// searchParams kullandığı için dynamic olmalı
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,7 +54,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(streams || [])
+    const response = NextResponse.json(streams || [])
+    // Cache için header ekle (1 dakika)
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
+    return response
   } catch (error) {
     console.error('Error fetching streams:', error)
     return NextResponse.json([], { status: 200 }) // Boş array döndür
