@@ -4,28 +4,30 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function logPrismaDbInfo() {
-  const raw = process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL?.trim();
 
-  if (!raw) {
+function logPrismaDbInfo() {
+  if (!DATABASE_URL) {
     console.log("PRISMA_DB_INFO", { error: "DATABASE_URL is missing" });
     return;
   }
 
   try {
-    const u = new URL(raw);
+    const u = new URL(DATABASE_URL);
     console.log("PRISMA_DB_INFO", {
       host: u.hostname,
       port: u.port,
       user: u.username,
       db: u.pathname,
+      trimmed: process.env.DATABASE_URL === DATABASE_URL,
+      rawLen: process.env.DATABASE_URL?.length,
+      trimmedLen: DATABASE_URL.length,
     });
-  } catch (e) {
+  } catch {
     console.log("PRISMA_DB_INFO", { error: "DATABASE_URL is not a valid URL" });
   }
 }
 
-// sadece ilk oluşturulurken logla (log spam olmasın)
 if (!globalForPrisma.prisma) {
   logPrismaDbInfo();
 }
@@ -36,7 +38,7 @@ export const prisma =
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL, // burada kalsın
+        url: DATABASE_URL,
       },
     },
     errorFormat: "minimal",
