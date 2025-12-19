@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Plus, Calendar, Clock, DollarSign, User, ExternalLink } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale/tr'
 import DeleteButton from '@/components/DeleteButton'
 import StreamCostModal from '@/components/StreamCostModal'
 
@@ -32,23 +34,6 @@ export default function StreamsPage() {
     }
   }
 
-  // Tarih formatlama yardımcı fonksiyonu
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  // Süre formatlama (saat cinsinden)
-  const formatDuration = (hours: number) => {
-    if (!hours || hours === 0) return '0 saat'
-    return `${hours} saat`
-  }
 
   const handleCostClick = (stream: any, e: React.MouseEvent) => {
     e.preventDefault()
@@ -114,104 +99,114 @@ export default function StreamsPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Yayıncı / Platform
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tarih
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Süre
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {streams.map((stream) => (
+              <div
+                key={stream.id}
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden"
+              >
+                <div className="p-5">
+                  {/* Yayıncı Bilgisi */}
+                  <div className="flex items-center mb-4">
+                    <div className="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-md">
+                      {stream.streamer?.profilePhoto ? (
+                        <img
+                          src={stream.streamer.profilePhoto}
+                          alt={stream.streamer.name}
+                          className="h-12 w-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-6 w-6 text-white" />
+                      )}
+                    </div>
+                    <div className="ml-3 flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {stream.streamer?.name || 'Bilinmeyen Yayıncı'}
+                      </p>
+                      {stream.teamName && (
+                        <p className="text-xs text-blue-600 font-medium">{stream.teamName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Maç Bilgisi */}
+                  {stream.matchInfo && (
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                        {stream.matchInfo}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Tarih ve Süre */}
+                  <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {format(new Date(stream.date).toISOString().split('T')[0], 'dd MMM yyyy', { locale: tr })}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {stream.duration} saat
+                    </div>
+                  </div>
+
+                  {/* Maliyet */}
+                  <div className="border-t pt-3 mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Maliyet:</span>
+                      {stream.streamerEarning > 0 ? (
+                        <span className="text-base font-bold text-red-600">
+                          {stream.streamerEarning.toLocaleString('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY',
+                            maximumFractionDigits: 0,
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">Girilmemiş</span>
+                      )}
+                    </div>
+                    {stream.totalRevenue > 0 && (
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-gray-500">Gelir:</span>
+                        <span className="text-sm font-semibold text-green-600">
+                          {stream.totalRevenue.toLocaleString('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY',
+                            maximumFractionDigits: 0,
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* İşlem Butonları */}
+                  <div className="flex items-center gap-2 pt-3 border-t">
+                    <button
+                      onClick={(e) => handleCostClick(stream, e)}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      title="Maliyet Bilgileri"
+                    >
+                      <DollarSign className="w-4 h-4 mr-1" />
                       Maliyet
-                    </th>
-                    <th scope="col" className="relative px-6 py-3">
-                      <span className="sr-only">İşlemler</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {streams.map((stream) => (
-                    <tr key={stream.id} className="hover:bg-gray-50 group">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
-                             {stream.streamer?.profilePhoto ? (
-                                <img src={stream.streamer.profilePhoto} alt="" className="h-10 w-10 rounded-full object-cover"/>
-                             ) : (
-                                <User className="h-5 w-5 text-gray-500" />
-                             )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {stream.streamer?.name || 'Bilinmeyen Yayıncı'}
-                            </div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              {stream.platform || 'Platform Yok'}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 flex items-center">
-                          <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          {formatDate(stream.date)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 flex items-center">
-                          <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                          {formatDuration(stream.duration)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900 flex items-center">
-                          <DollarSign className="w-4 h-4 mr-1 text-green-500" />
-                          {stream.streamerEarning > 0 ? (
-                            <span className="text-red-600">
-                              {stream.streamerEarning.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">Maliyet girilmemiş</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-3">
-                          <button
-                            onClick={(e) => handleCostClick(stream, e)}
-                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            title="Maliyet Bilgileri"
-                          >
-                            <DollarSign className="w-4 h-4" />
-                          </button>
-                          <Link 
-                            href={`/streams/${stream.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 flex items-center"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            Detay
-                          </Link>
-                          
-                          <DeleteButton 
-                            id={stream.id} 
-                            type="stream" 
-                            onDelete={fetchData} 
-                            compact={true} 
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </button>
+                    <Link
+                      href={`/streams/${stream.id}`}
+                      className="flex-1 inline-flex items-center justify-center px-3 py-2 border border-indigo-300 text-xs font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Detay
+                    </Link>
+                    <DeleteButton
+                      id={stream.id}
+                      type="stream"
+                      onDelete={fetchData}
+                      compact={true}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

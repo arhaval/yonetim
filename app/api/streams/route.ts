@@ -3,11 +3,16 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // Sadece onaylanmış yayınları göster
+    // Önce approved yayınları göster, eğer status alanı yoksa tüm yayınları göster
     let streams: any[] = []
     try {
       streams = await prisma.stream.findMany({
-        where: { status: 'approved' },
+        where: { 
+          OR: [
+            { status: 'approved' },
+            { status: null }, // Eski yayınlar için
+          ]
+        },
         include: {
           streamer: true,
         },
@@ -24,7 +29,13 @@ export async function GET() {
           orderBy: { date: 'desc' },
         })
       } else {
-        throw error
+        // Başka bir hata varsa, tüm yayınları göster
+        streams = await prisma.stream.findMany({
+          include: {
+            streamer: true,
+          },
+          orderBy: { date: 'desc' },
+        })
       }
     }
     return NextResponse.json(streams)
