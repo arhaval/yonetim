@@ -17,27 +17,35 @@ export async function PUT(
       )
     }
 
-    // Prisma Client güncellenene kadar geçici çözüm
+    // Stream'i güncelle
     let updatedStream
     try {
       updatedStream = await prisma.stream.update({
         where: { id: params.id },
         data: { status },
+        include: {
+          streamer: true,
+        },
       })
+      console.log('Stream status updated:', { id: params.id, status, updatedStream })
     } catch (error: any) {
+      console.error('Error updating stream status:', error)
       // Eğer status alanı henüz tanınmıyorsa, raw SQL kullan
       if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
         console.warn('Status alanı henüz tanınmıyor, raw SQL kullanılıyor')
-        // SQLite için raw query
-        const result = await prisma.$executeRaw`
-          UPDATE Stream 
-          SET status = ${status}, updatedAt = CURRENT_TIMESTAMP
-          WHERE id = ${params.id}
-        `
+        // PostgreSQL için raw query
+        await prisma.$executeRawUnsafe(
+          `UPDATE "Stream" SET status = $1, "updatedAt" = NOW() WHERE id = $2`,
+          status,
+          params.id
+        )
         
         // Güncellenmiş stream'i çek
         updatedStream = await prisma.stream.findUnique({
           where: { id: params.id },
+          include: {
+            streamer: true,
+          },
         })
         
         if (!updatedStream) {
