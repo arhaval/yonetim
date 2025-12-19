@@ -19,6 +19,8 @@ model User {
   role      String   @default("admin") // admin, manager, viewer
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("users")
 }
 
 model Streamer {
@@ -37,7 +39,7 @@ model Streamer {
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   streams          Stream[]
   externalStreams  ExternalStream[]
   payments         Payment[]
@@ -53,7 +55,7 @@ model StreamerTeamRate {
   hourlyRate Float    // Bu takım için saat başı ücret
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
+
   @@unique([streamerId, teamName]) // Aynı yayıncı için aynı takım iki kez eklenemez
 }
 
@@ -75,7 +77,7 @@ model Stream {
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([streamerId])
   @@index([date])
   @@index([teamName])
@@ -99,10 +101,10 @@ model ContentCreator {
   id           String   @id @default(cuid())
   name         String
   profilePhoto String?
-  email        String?  @unique
+  email        String?  @unique // İçerik üreticisi login için email
   phone        String?
-  iban         String?
-  password     String?
+  iban         String?  // IBAN bilgisi
+  password     String?  // (hash'lenmiş)
   loginToken   String?  @unique
   platform     String?
   channelUrl   String?
@@ -110,7 +112,7 @@ model ContentCreator {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   contents Content[]
   scripts  VoiceoverScript[]
 }
@@ -118,20 +120,20 @@ model ContentCreator {
 model Content {
   id          String   @id @default(cuid())
   title       String
-  type        String
-  platform    String
+  type        String   // video, post, reel, story, etc.
+  platform    String   // Instagram, TikTok, YouTube, etc.
   url         String?
   publishDate DateTime
   creatorId   String?
   creator     ContentCreator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorName String?
-  
+
   views    Int @default(0)
   likes    Int @default(0)
   comments Int @default(0)
   shares   Int @default(0)
   saves    Int @default(0)
-  
+
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -150,7 +152,7 @@ model VoiceActor {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   scripts VoiceoverScript[]
 }
 
@@ -162,9 +164,9 @@ model VoiceoverScript {
   creator      ContentCreator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   voiceActorId String?
   voiceActor   VoiceActor? @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
-  status       String @default("pending")
+  status       String   @default("pending") // pending, creator-approved, approved, paid
   audioFile    String?
-  price        Float @default(0)
+  price        Float    @default(0)
   contentType  String?
   notes        String?
   createdAt    DateTime @default(now())
@@ -173,8 +175,8 @@ model VoiceoverScript {
 
 model FinancialRecord {
   id          String   @id @default(cuid())
-  type        String
-  category    String
+  type        String   // income, expense
+  category    String   // salary, content, sponsorship, equipment, etc.
   amount      Float
   description String?
   date        DateTime
@@ -183,7 +185,7 @@ model FinancialRecord {
   streamId    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([date])
   @@index([type])
   @@index([streamerId])
@@ -194,8 +196,8 @@ model Payment {
   streamerId  String
   streamer    Streamer @relation(fields: [streamerId], references: [id], onDelete: Cascade)
   amount      Float
-  type        String
-  period      String
+  type        String   // salary, commission, bonus
+  period      String   // YYYY-MM
   description String?
   paidAt      DateTime?
   createdAt   DateTime @default(now())
@@ -210,12 +212,12 @@ model TeamMember {
   password   String?
   iban       String?
   role       String
-  baseSalary Float   @default(0)
-  isActive   Boolean @default(true)
+  baseSalary Float    @default(0)
+  isActive   Boolean  @default(true)
   notes      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
+
   tasks    Task[]
   payments TeamPayment[]
 }
@@ -226,12 +228,12 @@ model Task {
   teamMember   TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
   title        String
   description  String?
-  status       String @default("pending")
-  priority     String @default("medium")
+  status       String     @default("pending")
+  priority     String     @default("medium")
   dueDate      DateTime?
   completedAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model TeamPayment {
@@ -239,23 +241,23 @@ model TeamPayment {
   teamMemberId String
   teamMember   TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
   amount       Float
-  type         String
-  period       String
+  type         String     // salary, bonus, commission
+  period       String     // YYYY-MM
   description  String?
   paidAt       DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model MonthlyPlan {
   id        String   @id @default(cuid())
   title     String
   target    Float
-  month     String
+  month     String   // YYYY-MM
   type      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([type, month])
 }
 
@@ -265,11 +267,11 @@ model YearlyGoal {
   target       Float
   year         Int
   type         String
-  isCurrency   Boolean @default(false)
-  isPercentage Boolean @default(false)
+  isCurrency   Boolean  @default(false)
+  isPercentage Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   @@unique([type, year])
 }
 
@@ -282,6 +284,6 @@ model SocialMediaStats {
   target        Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   @@unique([month, week, platform])
 }
