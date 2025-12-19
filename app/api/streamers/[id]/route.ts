@@ -157,17 +157,58 @@ export async function DELETE(
       financialRecordsCount: streamer.financialRecords.length,
     })
     
-    // Önce teamRates'i sil (cascade olmayabilir)
+    // İlişkili tüm kayıtları manuel olarak sil (cascade güvenilir olmayabilir)
     try {
+      // 1. Financial Records'u sil
+      await prisma.financialRecord.deleteMany({
+        where: { streamerId: resolvedParams.id },
+      })
+      console.log('Financial records deleted')
+    } catch (error: any) {
+      console.warn('Financial records deletion warning:', error.message)
+    }
+
+    try {
+      // 2. Payments'ı sil
+      await prisma.payment.deleteMany({
+        where: { streamerId: resolvedParams.id },
+      })
+      console.log('Payments deleted')
+    } catch (error: any) {
+      console.warn('Payments deletion warning:', error.message)
+    }
+
+    try {
+      // 3. External Streams'i sil
+      await prisma.externalStream.deleteMany({
+        where: { streamerId: resolvedParams.id },
+      })
+      console.log('External streams deleted')
+    } catch (error: any) {
+      console.warn('External streams deletion warning:', error.message)
+    }
+
+    try {
+      // 4. Streams'i sil
+      await prisma.stream.deleteMany({
+        where: { streamerId: resolvedParams.id },
+      })
+      console.log('Streams deleted')
+    } catch (error: any) {
+      console.warn('Streams deletion warning:', error.message)
+    }
+
+    try {
+      // 5. Team Rates'i sil
       await prisma.streamerTeamRate.deleteMany({
         where: { streamerId: resolvedParams.id },
       })
       console.log('Team rates deleted')
-    } catch (teamRateError: any) {
-      console.warn('Team rates deletion warning:', teamRateError.message)
+    } catch (error: any) {
+      console.warn('Team rates deletion warning:', error.message)
     }
     
-    // Yayıncıyı sil (ilişkili yayınlar, ödemeler cascade ile silinecek)
+    // Son olarak yayıncıyı sil
     await prisma.streamer.delete({
       where: { id: resolvedParams.id },
     })
