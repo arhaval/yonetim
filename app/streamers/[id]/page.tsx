@@ -21,19 +21,63 @@ export default async function StreamerDetailPage({
   let totalCost = { _sum: { cost: null as number | null } }
   
   try {
+    // Önce streamer'ı çek
     streamer = await prisma.streamer.findUnique({
       where: { id },
       include: {
-        streams: {
-          where: {
-            OR: [
-              { status: 'approved' },
-              { status: null as any }, // Eski yayınlar için - type assertion
-            ]
-          },
-          take: 50, // İlk 50 stream (pagination için)
-          orderBy: { date: 'desc' }, // En yeni önce
+        teamRates: true,
+      },
+    })
+
+    if (!streamer) {
+      notFound()
+    }
+
+    // Sonra yayınları ayrı çek (approved ve null status)
+    let approvedStreams: any[] = []
+    let nullStatusStreams: any[] = []
+    
+    try {
+      approvedStreams = await prisma.stream.findMany({
+        where: {
+          streamerId: id,
+          status: 'approved'
         },
+        take: 50,
+        orderBy: { date: 'desc' },
+      })
+    } catch (error: any) {
+      console.warn('Approved streams çekilemedi:', error.message)
+    }
+
+    try {
+      nullStatusStreams = await prisma.stream.findMany({
+        where: {
+          streamerId: id,
+          status: null as any
+        },
+        take: 50,
+        orderBy: { date: 'desc' },
+      })
+    } catch (error: any) {
+      // Null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
+      const allStreams = await prisma.stream.findMany({
+        where: { streamerId: id },
+        take: 50,
+        orderBy: { date: 'desc' },
+      })
+      nullStatusStreams = allStreams.filter((s: any) => !s.status || s.status === null)
+    }
+
+    // Streams'i birleştir
+    const allStreams = [...approvedStreams, ...nullStatusStreams]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 50)
+
+    // Diğer verileri çek
+    const streamerWithRelations = await prisma.streamer.findUnique({
+      where: { id },
+      include: {
         externalStreams: {
           take: 10,
           orderBy: { date: 'asc' },
@@ -45,8 +89,14 @@ export default async function StreamerDetailPage({
       },
     })
 
-    if (!streamer) {
+    if (!streamerWithRelations) {
       notFound()
+    }
+
+    // Streams'i manuel olarak ekle
+    streamer = {
+      ...streamerWithRelations,
+      streams: allStreams,
     }
 
     totalStreams = await prisma.stream.count({
