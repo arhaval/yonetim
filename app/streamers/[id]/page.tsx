@@ -2,7 +2,7 @@ import Layout from '@/components/Layout'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, ExternalLink, CreditCard, AlertCircle } from 'lucide-react'
+import { Plus, ExternalLink, CreditCard, AlertCircle, Video, Calendar, Clock } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import StreamList from './StreamList'
@@ -25,6 +25,12 @@ export default async function StreamerDetailPage({
       where: { id },
       include: {
         streams: {
+          where: {
+            OR: [
+              { status: 'approved' },
+              { status: { is: null } }, // Eski yayınlar için
+            ]
+          },
           take: 50, // İlk 50 stream (pagination için)
           orderBy: { date: 'desc' }, // En yeni önce
         },
@@ -313,62 +319,79 @@ export default async function StreamerDetailPage({
         )}
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Tüm Yayınlar ({streamer.streams.length})
+          <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <Video className="w-5 h-5 mr-2 text-indigo-600" />
+                  Yayınlar ({streamer.streams.length})
                 </h3>
                 <Link
-                  href="/streams/new"
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  href={`/streams/new`}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all"
                 >
-                  + Yeni Yayın Ekle
+                  <Plus className="w-4 h-4 mr-1" />
+                  Yeni Ekle
                 </Link>
               </div>
+            </div>
+            <div className="p-6">
               <StreamList streams={streamer.streams} streamerId={streamer.id} />
             </div>
           </div>
 
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                Dış Yayınlar (Başka Firmalar)
+          <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <ExternalLink className="w-5 h-5 mr-2 text-blue-600" />
+                Dış Yayınlar ({streamer.externalStreams.length})
               </h3>
-              <div className="flow-root">
-                <ul className="-my-5 divide-y divide-gray-200">
+            </div>
+            <div className="p-6">
+              {streamer.externalStreams.length === 0 ? (
+                <div className="text-center py-8">
+                  <ExternalLink className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">Henüz dış yayın eklenmemiş</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
                   {streamer.externalStreams.map((ext) => (
-                    <li key={ext.id} className="py-4">
+                    <div
+                      key={ext.id}
+                      className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
+                    >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {ext.teamName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {format(new Date(ext.date), 'dd MMM yyyy', {
-                              locale: tr,
-                            })}{' '}
-                            - {ext.duration} dakika
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                              {ext.teamName}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <span className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {format(new Date(ext.date), 'dd MMM yyyy', { locale: tr })}
+                            </span>
+                            <span className="flex items-center">
+                              <Clock className="w-4 h-4 mr-1" />
+                              {ext.duration} dakika
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">
+                        <div className="text-right ml-4">
+                          <p className="text-lg font-bold text-green-600">
                             {ext.payment.toLocaleString('tr-TR', {
                               style: 'currency',
                               currency: 'TRY',
+                              maximumFractionDigits: 0,
                             })}
                           </p>
                         </div>
                       </div>
-                    </li>
+                    </div>
                   ))}
-                </ul>
-                {streamer.externalStreams.length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Henüz dış yayın eklenmemiş
-                  </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

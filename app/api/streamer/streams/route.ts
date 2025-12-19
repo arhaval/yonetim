@@ -26,15 +26,38 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Prisma Client güncellenene kadar geçici çözüm
+    // Yayıncı kendi yayınlarını görür (onaylanmış ve bekleyen)
     let streams: any[] = []
     try {
-      streams = await prisma.stream.findMany({
+      // Önce approved ve pending olanları çek
+      const approvedStreams = await prisma.stream.findMany({
         where: { 
           streamerId,
-          status: { in: ['approved', 'pending'] }, // Onaylanmış ve bekleyen yayınları göster
+          status: 'approved'
         },
-        orderBy: { date: 'asc' },
+        orderBy: { date: 'desc' },
+      })
+      
+      const pendingStreams = await prisma.stream.findMany({
+        where: { 
+          streamerId,
+          status: 'pending'
+        },
+        orderBy: { date: 'desc' },
+      })
+      
+      // Status null olanları da çek (eski yayınlar)
+      const nullStatusStreams = await prisma.stream.findMany({
+        where: { 
+          streamerId,
+          status: { is: null }
+        },
+        orderBy: { date: 'desc' },
+      })
+      
+      // Hepsini birleştir ve tarihe göre sırala
+      streams = [...approvedStreams, ...pendingStreams, ...nullStatusStreams].sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime()
       })
     } catch (error: any) {
       // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
@@ -42,7 +65,7 @@ export async function GET(request: NextRequest) {
         console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
         streams = await prisma.stream.findMany({
           where: { streamerId },
-          orderBy: { date: 'asc' },
+          orderBy: { date: 'desc' },
         })
       } else {
         throw error

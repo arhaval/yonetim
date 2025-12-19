@@ -17,10 +17,10 @@ export async function GET() {
         orderBy: { date: 'desc' },
       })
       
-      // Status null olanları da çek (eski yayınlar)
+      // Status null olanları da çek (eski yayınlar) - Prisma'da null kontrolü için is: null kullan
       const nullStatusStreams = await prisma.stream.findMany({
         where: { 
-          status: null
+          status: { is: null }
         },
         include: {
           streamer: true,
