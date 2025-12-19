@@ -6,8 +6,8 @@ import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, T
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Cache ayarları - 300 saniye cache (performans için)
-export const dynamic = 'force-dynamic'
+// Cache ayarları - 5 dakika cache (performans için)
+// force-dynamic kaldırıldı - revalidate ile çelişiyordu
 export const revalidate = 300 // 5 dakika cache - daha uzun cache = daha hızlı
 
 async function getStats() {
@@ -376,6 +376,8 @@ export default async function DashboardPage() {
                 height={64}
                 className="w-full h-full object-contain"
                 style={{ maxWidth: '100%', maxHeight: '100%' }}
+                loading="lazy"
+                priority={false}
               />
             </div>
           </div>

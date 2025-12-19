@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-export const dynamic = 'force-dynamic'
+// Cache API responses for 2 minutes
+export const revalidate = 120
 
 export async function GET(request: NextRequest) {
   try {

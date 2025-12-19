@@ -3,19 +3,29 @@ const nextConfig = {
   reactStrictMode: true,
   // Build sırasında static generation yapma - tüm sayfalar dynamic
   output: 'standalone',
-  // Image optimization ayarları
+  // Image optimization ayarları - performans için optimize edildi
   images: {
     unoptimized: false,
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60, // 60 saniye cache
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Experimental: Dynamic rendering için
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Optimize CSS loading
+    optimizeCss: true,
   },
+  // Bundle size optimizasyonu
+  swcMinify: true,
+  // Compression
+  compress: true,
   // Production'da console.log'ları kaldır (performans için)
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {

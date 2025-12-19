@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { requireAdmin } from '@/lib/admin-check'
 
-export const dynamic = 'force-dynamic'
+// Cache GET requests for 1 minute
+export const revalidate = 60
 
 export async function GET() {
   // Admin kontrolü
