@@ -57,3 +57,4 @@ Bu işlem şu değerleri ekleyecek:
 
 
 
+

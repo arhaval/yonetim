@@ -123,3 +123,4 @@ Environment variables eklendikten sonra:
 
 
 
+
