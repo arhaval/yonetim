@@ -455,89 +455,97 @@ export default function StreamerDashboardPage() {
                 <p className="text-sm text-gray-400">Yukarıdaki "Yeni Yayın Ekle" butonuna tıklayarak ilk yayınınızı ekleyebilirsiniz</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {streams.map((stream) => (
-                  <div
-                    key={stream.id}
-                    className="bg-gradient-to-r from-gray-50 to-indigo-50 rounded-xl p-5 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        {/* Başlık ve Durum */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
-                            <Calendar className="w-5 h-5 text-white" />
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tarih
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Maç Bilgisi
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Firma
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Süre
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Durum
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ödeme Tutarı
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {streams.map((stream) => (
+                      <tr key={stream.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-gray-900 truncate">
-                              {stream.matchInfo || 'Yayın'}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              {stream.status === 'pending' && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
-                                  ⏳ Onay Bekleniyor
-                                </span>
-                              )}
-                              {stream.status === 'approved' && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                                  ✅ Onaylandı
-                                </span>
-                              )}
-                              {(!stream.status || stream.status === null) && (
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
-                                  📋 İşleniyor
-                                </span>
-                              )}
-                            </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={stream.matchInfo || ''}>
+                            {stream.matchInfo || 'Yayın'}
                           </div>
-                        </div>
-
-                        {/* Detaylar */}
-                        <div className="ml-14 space-y-2">
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <span className="flex items-center font-medium">
-                              <Calendar className="w-4 h-4 mr-1.5" />
-                              {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {stream.teamName ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {stream.teamName}
                             </span>
-                            <span className="flex items-center font-medium">
-                              <Clock className="w-4 h-4 mr-1.5" />
-                              {stream.duration} saat
-                            </span>
-                            {stream.teamName && (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                                {stream.teamName}
-                              </span>
-                            )}
+                          ) : (
+                            <span className="text-sm text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 flex items-center">
+                            <Clock className="w-4 h-4 mr-1 text-gray-400" />
+                            {stream.duration} saat
                           </div>
-
-                          {/* Ödeme Bilgisi */}
-                          {stream.status === 'approved' && stream.streamerEarning > 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-600">Ödeme Tutarı:</span>
-                                <span className="text-lg font-bold text-green-600">
-                                  {stream.streamerEarning.toLocaleString('tr-TR', {
-                                    style: 'currency',
-                                    currency: 'TRY',
-                                    maximumFractionDigits: 0,
-                                  })}
-                                </span>
-                              </div>
-                            </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {stream.status === 'pending' && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              ⏳ Onay Bekleniyor
+                            </span>
                           )}
-                          {stream.status === 'approved' && stream.streamerEarning === 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 text-orange-500" />
-                                <span className="text-sm text-orange-600 font-medium">Maliyet henüz girilmemiş</span>
-                              </div>
-                            </div>
+                          {stream.status === 'approved' && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✅ Onaylandı
+                            </span>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                          {(!stream.status || stream.status === null) && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              📋 İşleniyor
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {stream.status === 'approved' && stream.streamerEarning > 0 ? (
+                            <span className="text-sm font-bold text-green-600">
+                              {stream.streamerEarning.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                                maximumFractionDigits: 0,
+                              })}
+                            </span>
+                          ) : stream.status === 'approved' ? (
+                            <span className="text-xs text-orange-600 flex items-center">
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              Maliyet girilmemiş
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

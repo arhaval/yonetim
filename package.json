@@ -21,7 +21,8 @@
     "test-db": "tsx scripts/test-database-connection.ts",
     "test-regions": "tsx scripts/test-all-regions.ts",
     "check-db": "tsx scripts/check-supabase-status.ts",
-    "test-direct": "tsx scripts/test-direct-connection.ts"
+    "test-direct": "tsx scripts/test-direct-connection.ts",
+    "reset-all-data": "tsx scripts/reset-all-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
