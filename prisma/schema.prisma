@@ -175,21 +175,24 @@ model VoiceoverScript {
 }
 
 model FinancialRecord {
-  id          String   @id @default(cuid())
-  type        String   // income, expense
-  category    String   // salary, content, sponsorship, equipment, etc.
-  amount      Float
-  description String?
-  date        DateTime
-  streamerId  String?
-  streamer    Streamer? @relation(fields: [streamerId], references: [id])
-  streamId    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String      @id @default(cuid())
+  type         String      // income, expense
+  category     String      // salary, content, sponsorship, equipment, etc.
+  amount       Float
+  description  String?
+  date         DateTime
+  streamerId   String?
+  streamer     Streamer?   @relation(fields: [streamerId], references: [id])
+  teamMemberId String?
+  teamMember   TeamMember? @relation(fields: [teamMemberId], references: [id])
+  streamId     String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   @@index([date])
   @@index([type])
   @@index([streamerId])
+  @@index([teamMemberId])
 }
 
 model Payment {
@@ -206,22 +209,23 @@ model Payment {
 }
 
 model TeamMember {
-  id           String   @id @default(cuid())
+  id           String            @id @default(cuid())
   name         String
-  avatar       String?  // Profil fotoğrafı URL'si
-  email        String?  @unique
+  avatar       String?           // Profil fotoğrafı URL'si
+  email        String?           @unique
   phone        String?
   password     String?
   iban         String?
   role         String
-  baseSalary   Float    @default(0)
-  isActive     Boolean  @default(true)
+  baseSalary   Float             @default(0)
+  isActive     Boolean            @default(true)
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
-  tasks    Task[]
-  payments TeamPayment[]
+  tasks            Task[]
+  payments         TeamPayment[]
+  financialRecords FinancialRecord[]
 }
 
 model Task {

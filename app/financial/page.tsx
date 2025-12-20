@@ -370,14 +370,26 @@ export default function FinancialPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-800">
-                        {record.category}
-                      </span>
-                      {record.streamer && (
-                        <span className="ml-2 text-sm text-gray-600">
-                          ({record.streamer.name})
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-800">
+                          {record.category}
                         </span>
-                      )}
+                        {record.streamer && (
+                          <span className="text-xs text-gray-600">
+                            👤 {record.streamer.name}
+                          </span>
+                        )}
+                        {record.teamMember && (
+                          <span className="text-xs text-gray-600">
+                            👥 {record.teamMember.name} ({record.teamMember.role})
+                          </span>
+                        )}
+                        {record.isPayment && record.paidAt && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 mt-1">
+                            ✅ Ödenmiş
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm font-medium text-gray-900">
@@ -407,7 +419,9 @@ export default function FinancialPage() {
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {!record.id.startsWith('stream-') && (
+                      {!record.id.startsWith('stream-') && 
+                       !record.id.startsWith('payment-') && 
+                       !record.id.startsWith('team-payment-') && (
                         <button
                           onClick={() => handleDeleteRecord(record.id)}
                           className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"

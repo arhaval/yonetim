@@ -8,6 +8,7 @@ export default function NewFinancialPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [streamers, setStreamers] = useState<any[]>([])
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [formData, setFormData] = useState({
     type: 'income',
     category: '',
@@ -15,12 +16,17 @@ export default function NewFinancialPage() {
     description: '',
     date: new Date().toISOString().split('T')[0],
     streamerId: '',
+    teamMemberId: '',
   })
 
   useEffect(() => {
-    fetch('/api/streamers')
-      .then((res) => res.json())
-      .then((data) => setStreamers(data))
+    Promise.all([
+      fetch('/api/streamers').then((res) => res.json()),
+      fetch('/api/team').then((res) => res.json()),
+    ]).then(([streamersData, teamData]) => {
+      setStreamers(Array.isArray(streamersData) ? streamersData : [])
+      setTeamMembers(Array.isArray(teamData) ? teamData : [])
+    })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +41,7 @@ export default function NewFinancialPage() {
           ...formData,
           amount: parseFloat(formData.amount),
           streamerId: formData.streamerId || null,
+          teamMemberId: formData.teamMemberId || null,
         }),
       })
 
@@ -158,7 +165,7 @@ export default function NewFinancialPage() {
                 <select
                   value={formData.streamerId}
                   onChange={(e) =>
-                    setFormData({ ...formData, streamerId: e.target.value })
+                    setFormData({ ...formData, streamerId: e.target.value, teamMemberId: '' })
                   }
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
                 >
@@ -166,6 +173,26 @@ export default function NewFinancialPage() {
                   {streamers.map((streamer) => (
                     <option key={streamer.id} value={streamer.id}>
                       {streamer.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Ekip Üyesi (Opsiyonel)
+                </label>
+                <select
+                  value={formData.teamMemberId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, teamMemberId: e.target.value, streamerId: '' })
+                  }
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                >
+                  <option value="">Yok</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} ({member.role})
                     </option>
                   ))}
                 </select>
