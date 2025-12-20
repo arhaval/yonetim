@@ -37,7 +37,7 @@ export default function NewFinancialPage() {
 
         // JSON parse hatalarını yakala
         let streamersData: any[] = []
-        let teamData: any[] = []
+        let teamDataRaw: any = null
         
         try {
           const streamersText = await streamersRes.text()
@@ -49,22 +49,22 @@ export default function NewFinancialPage() {
         
         try {
           const teamText = await teamRes.text()
-          teamData = teamText ? JSON.parse(teamText) : []
+          teamDataRaw = teamText ? JSON.parse(teamText) : null
         } catch (e) {
           console.error('Team JSON parse hatası:', e)
-          teamData = []
+          teamDataRaw = null
         }
 
         const streamersArray = Array.isArray(streamersData) ? streamersData : []
         let teamArray: any[] = []
         
-        if (Array.isArray(teamData)) {
-          teamArray = teamData
-        } else if (teamData && typeof teamData === 'object') {
-          if (Array.isArray(teamData.members)) {
-            teamArray = teamData.members
-          } else if (Array.isArray(teamData.data)) {
-            teamArray = teamData.data
+        if (Array.isArray(teamDataRaw)) {
+          teamArray = teamDataRaw
+        } else if (teamDataRaw && typeof teamDataRaw === 'object') {
+          if (Array.isArray((teamDataRaw as any).members)) {
+            teamArray = (teamDataRaw as any).members
+          } else if (Array.isArray((teamDataRaw as any).data)) {
+            teamArray = (teamDataRaw as any).data
           }
         }
 
