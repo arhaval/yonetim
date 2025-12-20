@@ -209,7 +209,13 @@ export async function POST(request: NextRequest) {
         },
       })
       
-      console.log('Financial record created successfully:', record.id)
+      console.log('Financial record created successfully:', {
+        id: record.id,
+        streamerId: record.streamerId,
+        teamMemberId: record.teamMemberId,
+        contentCreatorId: record.contentCreatorId,
+        voiceActorId: record.voiceActorId,
+      })
       return NextResponse.json(record)
     } catch (prismaError: any) {
       console.error('Prisma create error:', {
