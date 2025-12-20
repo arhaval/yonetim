@@ -187,17 +187,6 @@ export async function POST(request: NextRequest) {
       streamId: null, // streamId opsiyonel
     }
 
-    console.log('Creating financial record with data:', {
-      type: prismaData.type,
-      category: prismaData.category,
-      amount: prismaData.amount,
-      date: prismaData.date,
-      streamerId: prismaData.streamerId,
-      teamMemberId: prismaData.teamMemberId,
-      contentCreatorId: prismaData.contentCreatorId,
-      voiceActorId: prismaData.voiceActorId,
-    })
-
     try {
       const record = await prisma.financialRecord.create({
         data: prismaData,
@@ -209,13 +198,6 @@ export async function POST(request: NextRequest) {
         },
       })
       
-      console.log('Financial record created successfully:', {
-        id: record.id,
-        streamerId: record.streamerId,
-        teamMemberId: record.teamMemberId,
-        contentCreatorId: record.contentCreatorId,
-        voiceActorId: record.voiceActorId,
-      })
       return NextResponse.json(record)
     } catch (prismaError: any) {
       console.error('Prisma create error:', {
