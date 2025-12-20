@@ -22,32 +22,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // teamMember include'u schema'da yoksa hata vermesin
-    let records: any[] = []
-    try {
-      records = await prisma.financialRecord.findMany({
-        where: whereClause,
-        include: {
-          streamer: true,
-          teamMember: true,
-        },
-        orderBy: { date: 'asc' },
-      })
-    } catch (error: any) {
-      // teamMember include hatası varsa, sadece streamer ile dene
-      if (error.message?.includes('teamMember') || error.message?.includes('Unknown argument')) {
-        console.warn('teamMember include hatası, sadece streamer ile devam ediliyor...')
-        records = await prisma.financialRecord.findMany({
-          where: whereClause,
-          include: {
-            streamer: true,
-          },
-          orderBy: { date: 'asc' },
-        })
-      } else {
-        throw error
-      }
-    }
+    // Finansal kayıtları getir
+    const records = await prisma.financialRecord.findMany({
+      where: whereClause,
+      include: {
+        streamer: true,
+        teamMember: true,
+      },
+      orderBy: { date: 'asc' },
+    }).catch(() => [])
 
     // Payment ve TeamPayment kayıtlarını da ekle
     const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
@@ -138,8 +121,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prisma data objesi oluştur - sadece mevcut alanlar
-    const prismaData = {
+    // Prisma data objesi oluştur
+    const prismaData: any = {
       type: data.type,
       category: data.category,
       amount: parseFloat(data.amount),
@@ -149,12 +132,18 @@ export async function POST(request: NextRequest) {
       streamId: null, // streamId opsiyonel
     }
 
+    // teamMemberId varsa ekle
+    if (data.teamMemberId) {
+      prismaData.teamMemberId = data.teamMemberId
+    }
+
     console.log('Creating financial record with data:', {
       type: prismaData.type,
       category: prismaData.category,
       amount: prismaData.amount,
       date: prismaData.date,
       streamerId: prismaData.streamerId,
+      teamMemberId: prismaData.teamMemberId,
     })
 
     try {
@@ -162,6 +151,7 @@ export async function POST(request: NextRequest) {
         data: prismaData,
         include: {
           streamer: true,
+          teamMember: data.teamMemberId ? true : undefined,
         },
       })
       
