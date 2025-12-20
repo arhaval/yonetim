@@ -17,13 +17,16 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
+    console.log(`Fetched ${members.length} team members`)
     return NextResponse.json(members)
-  } catch (error) {
-    console.error('Error fetching team members:', error)
-    return NextResponse.json(
-      { error: 'Ekip üyeleri getirilemedi' },
-      { status: 500 }
-    )
+  } catch (error: any) {
+    console.error('Error fetching team members:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    })
+    // Hata durumunda boş array döndür (frontend'de sorun çıkmasın)
+    return NextResponse.json([])
   }
 }
 
