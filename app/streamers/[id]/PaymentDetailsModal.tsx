@@ -73,40 +73,63 @@ export default function PaymentDetailsModal({
                   <DollarSign className="w-5 h-5 mr-2 text-green-600" />
                   Ödenen Ödemeler ({paidPayments.length})
                 </h3>
-                <div className="space-y-2">
-                  {paidPayments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="bg-green-50 border border-green-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-green-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tip / Dönem
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Açıklama
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Ödeme Tarihi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paidPayments.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-green-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-green-600">
                               {payment.amount.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            {payment.type && payment.period && (
-                              <span className="text-sm text-gray-600">
-                                - {payment.type} ({payment.period})
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            {payment.type && payment.period ? (
+                              <span className="text-sm text-gray-900">
+                                {payment.type} ({payment.period})
                               </span>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
                             )}
-                          </div>
-                          {payment.description && (
-                            <p className="text-sm text-gray-600 mb-1">{payment.description}</p>
-                          )}
-                          {payment.paidAt && (
-                            <div className="flex items-center text-xs text-gray-500">
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {format(new Date(payment.paidAt), 'dd MMMM yyyy HH:mm', { locale: tr })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-600">
+                              {payment.description || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            {payment.paidAt ? (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {format(new Date(payment.paidAt), 'dd MMMM yyyy HH:mm', { locale: tr })}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -118,34 +141,58 @@ export default function PaymentDetailsModal({
                   <DollarSign className="w-5 h-5 mr-2 text-red-600" />
                   Ödenmemiş Ödemeler ({unpaidPayments.length})
                 </h3>
-                <div className="space-y-2">
-                  {unpaidPayments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="bg-red-50 border border-red-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-red-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tip / Dönem
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Açıklama
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Durum
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {unpaidPayments.map((payment) => (
+                        <tr key={payment.id} className="hover:bg-red-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-red-600">
                               {payment.amount.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            {payment.type && payment.period && (
-                              <span className="text-sm text-gray-600">
-                                - {payment.type} ({payment.period})
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            {payment.type && payment.period ? (
+                              <span className="text-sm text-gray-900">
+                                {payment.type} ({payment.period})
                               </span>
+                            ) : (
+                              <span className="text-sm text-gray-400">-</span>
                             )}
-                          </div>
-                          {payment.description && (
-                            <p className="text-sm text-gray-600">{payment.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-600">
+                              {payment.description || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-center">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Beklemede
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -157,36 +204,55 @@ export default function PaymentDetailsModal({
                   <FileText className="w-5 h-5 mr-2 text-green-600" />
                   Ödenen Yayınlar ({paidStreams.length})
                 </h3>
-                <div className="space-y-2">
-                  {paidStreams.map((stream) => (
-                    <div
-                      key={stream.id}
-                      className="bg-green-50 border border-green-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-green-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Takım
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Maç Bilgisi
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tarih
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paidStreams.map((stream) => (
+                        <tr key={stream.id} className="hover:bg-green-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-green-600">
                               {stream.streamerEarning.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            {stream.teamName && (
-                              <span className="text-sm text-gray-600">- {stream.teamName}</span>
-                            )}
-                          </div>
-                          {stream.matchInfo && (
-                            <p className="text-sm text-gray-600 mb-1">{stream.matchInfo}</p>
-                          )}
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">
+                              {stream.teamName || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-600">
+                              {stream.matchInfo || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -198,36 +264,55 @@ export default function PaymentDetailsModal({
                   <FileText className="w-5 h-5 mr-2 text-red-600" />
                   Ödenmemiş Yayınlar ({unpaidStreams.length})
                 </h3>
-                <div className="space-y-2">
-                  {unpaidStreams.map((stream) => (
-                    <div
-                      key={stream.id}
-                      className="bg-red-50 border border-red-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-red-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Takım
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Maç Bilgisi
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tarih
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {unpaidStreams.map((stream) => (
+                        <tr key={stream.id} className="hover:bg-red-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-red-600">
                               {stream.streamerEarning.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            {stream.teamName && (
-                              <span className="text-sm text-gray-600">- {stream.teamName}</span>
-                            )}
-                          </div>
-                          {stream.matchInfo && (
-                            <p className="text-sm text-gray-600 mb-1">{stream.matchInfo}</p>
-                          )}
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">
+                              {stream.teamName || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-600">
+                              {stream.matchInfo || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {format(new Date(stream.date), 'dd MMMM yyyy', { locale: tr })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -239,31 +324,45 @@ export default function PaymentDetailsModal({
                   <FileText className="w-5 h-5 mr-2 text-green-600" />
                   Ödenen Metinler ({paidScripts.length})
                 </h3>
-                <div className="space-y-2">
-                  {paidScripts.map((script) => (
-                    <div
-                      key={script.id}
-                      className="bg-green-50 border border-green-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-green-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Başlık
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Oluşturulma Tarihi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paidScripts.map((script) => (
+                        <tr key={script.id} className="hover:bg-green-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-green-600">
                               {script.price.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            <span className="text-sm text-gray-600">- {script.title}</span>
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-900">{script.title}</span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
@@ -275,31 +374,45 @@ export default function PaymentDetailsModal({
                   <FileText className="w-5 h-5 mr-2 text-red-600" />
                   Ödenmemiş Metinler ({unpaidScripts.length})
                 </h3>
-                <div className="space-y-2">
-                  {unpaidScripts.map((script) => (
-                    <div
-                      key={script.id}
-                      className="bg-red-50 border border-red-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-red-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Başlık
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Oluşturulma Tarihi
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {unpaidScripts.map((script) => (
+                        <tr key={script.id} className="hover:bg-red-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-red-600">
                               {script.price.toLocaleString('tr-TR', {
                                 style: 'currency',
                                 currency: 'TRY',
                               })}
                             </span>
-                            <span className="text-sm text-gray-600">- {script.title}</span>
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-900">{script.title}</span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}

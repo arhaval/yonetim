@@ -69,6 +69,7 @@ export default async function TeamMemberDetailPage({
   let approvedScripts = 0
   let pendingScripts = 0
   let totalEarnings = 0
+  let financialRecords: any[] = []
 
   if (isVoiceActor && voiceActor) {
     totalScripts = voiceActor.scripts.length
@@ -99,7 +100,7 @@ export default async function TeamMemberDetailPage({
     }).catch(() => ({ _sum: { amount: null } }))
 
     // Finansal kayıtları getir (bu ekip üyesine ait olanlar)
-    const financialRecords = await prisma.financialRecord.findMany({
+    financialRecords = await prisma.financialRecord.findMany({
       where: {
         teamMemberId: member.id,
       },
