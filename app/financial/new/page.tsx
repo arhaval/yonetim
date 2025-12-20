@@ -47,13 +47,18 @@ export default function NewFinancialPage() {
 
       if (res.ok) {
         router.push('/financial')
+        router.refresh()
       } else {
         const data = await res.json()
-        alert(data.error || 'Bir hata oluştu')
+        const errorMsg = data.error || 'Bir hata oluştu'
+        console.error('API Error:', errorMsg)
+        alert(errorMsg)
         setLoading(false)
       }
-    } catch (error) {
-      alert('Bir hata oluştu')
+    } catch (error: any) {
+      console.error('Error:', error)
+      const errorMsg = error?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.'
+      alert(errorMsg)
       setLoading(false)
     }
   }

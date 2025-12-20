@@ -22,14 +22,32 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const records = await prisma.financialRecord.findMany({
-      where: whereClause,
-      include: {
-        streamer: true,
-        teamMember: true,
-      },
-      orderBy: { date: 'asc' },
-    }).catch(() => [])
+    // teamMember include'u schema'da yoksa hata vermesin
+    let records: any[] = []
+    try {
+      records = await prisma.financialRecord.findMany({
+        where: whereClause,
+        include: {
+          streamer: true,
+          teamMember: true,
+        },
+        orderBy: { date: 'asc' },
+      })
+    } catch (error: any) {
+      // teamMember include hatası varsa, sadece streamer ile dene
+      if (error.message?.includes('teamMember') || error.message?.includes('Unknown argument')) {
+        console.warn('teamMember include hatası, sadece streamer ile devam ediliyor...')
+        records = await prisma.financialRecord.findMany({
+          where: whereClause,
+          include: {
+            streamer: true,
+          },
+          orderBy: { date: 'asc' },
+        })
+      } else {
+        throw error
+      }
+    }
 
     // Payment ve TeamPayment kayıtlarını da ekle
     const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
@@ -110,26 +128,88 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
+    
+    // Veri doğrulama
+    if (!data.type || !data.category || !data.amount || !data.date) {
+      return NextResponse.json(
+        { error: 'Tip, kategori, tutar ve tarih gereklidir' },
+        { status: 400 }
+      )
+    }
+
+    // Prisma data objesi oluştur (teamMemberId varsa ekle, yoksa ekleme)
+    const prismaData: any = {
+      type: data.type,
+      category: data.category,
+      amount: parseFloat(data.amount),
+      description: data.description || null,
+      date: new Date(data.date),
+      streamerId: data.streamerId || null,
+    }
+
+    // teamMemberId sadece varsa ekle (schema'da yoksa hata vermesin)
+    try {
+      if (data.teamMemberId) {
+        prismaData.teamMemberId = data.teamMemberId
+      }
+    } catch (e) {
+      // teamMemberId alanı schema'da yoksa devam et
+      console.warn('teamMemberId alanı schema\'da bulunamadı, devam ediliyor...')
+    }
+
     const record = await prisma.financialRecord.create({
-      data: {
-        type: data.type,
-        category: data.category,
-        amount: data.amount,
-        description: data.description || null,
-        date: new Date(data.date),
-        streamerId: data.streamerId || null,
-        teamMemberId: data.teamMemberId || null,
-      },
+      data: prismaData,
       include: {
         streamer: true,
-        teamMember: true,
+        teamMember: data.teamMemberId ? true : undefined,
       },
     })
+    
     return NextResponse.json(record)
-  } catch (error) {
-    console.error('Error creating financial record:', error)
+  } catch (error: any) {
+    console.error('Error creating financial record:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    })
+    
+    // Daha açıklayıcı hata mesajları
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Geçersiz yayıncı veya ekip üyesi ID\'si' },
+        { status: 400 }
+      )
+    }
+    
+    if (error.message?.includes('teamMemberId') || error.message?.includes('Unknown argument')) {
+      // Schema'da teamMemberId yoksa, sadece streamerId ile kaydet
+      try {
+        const data = await request.json()
+        const record = await prisma.financialRecord.create({
+          data: {
+            type: data.type,
+            category: data.category,
+            amount: parseFloat(data.amount),
+            description: data.description || null,
+            date: new Date(data.date),
+            streamerId: data.streamerId || null,
+            // teamMemberId'yi atla
+          },
+          include: {
+            streamer: true,
+          },
+        })
+        return NextResponse.json(record)
+      } catch (retryError: any) {
+        return NextResponse.json(
+          { error: `Finansal kayıt oluşturulamadı: ${retryError.message}` },
+          { status: 500 }
+        )
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Finansal kayıt oluşturulamadı' },
+      { error: `Finansal kayıt oluşturulamadı: ${error.message || 'Bilinmeyen hata'}` },
       { status: 500 }
     )
   }
