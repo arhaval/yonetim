@@ -30,20 +30,12 @@ export default function NewFinancialPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('🟢 API çağrıları başlıyor...')
         const [streamersRes, teamRes, creatorsRes, voiceActorsRes] = await Promise.all([
           fetch('/api/streamers', { credentials: 'include' }),
           fetch('/api/team', { credentials: 'include' }),
           fetch('/api/content-creators', { credentials: 'include' }),
           fetch('/api/voice-actors', { credentials: 'include' }),
         ])
-
-        console.log('🟡 API yanıtları:', {
-          streamers: { status: streamersRes.status, ok: streamersRes.ok },
-          team: { status: teamRes.status, ok: teamRes.ok },
-          creators: { status: creatorsRes.status, ok: creatorsRes.ok },
-          voiceActors: { status: voiceActorsRes.status, ok: voiceActorsRes.ok },
-        })
 
         // JSON parse hatalarını yakala
         let streamersData: any[] = []
@@ -55,9 +47,6 @@ export default function NewFinancialPage() {
           const streamersText = await streamersRes.text()
           if (streamersRes.ok) {
             streamersData = streamersText ? JSON.parse(streamersText) : []
-            console.log('✅ Streamers parsed:', streamersData.length, 'items')
-          } else {
-            console.error('❌ Streamers API error:', streamersText)
           }
         } catch (e) {
           console.error('❌ Streamers JSON parse hatası:', e)
@@ -68,9 +57,6 @@ export default function NewFinancialPage() {
           const teamText = await teamRes.text()
           if (teamRes.ok) {
             teamDataRaw = teamText ? JSON.parse(teamText) : null
-            console.log('✅ Team parsed:', Array.isArray(teamDataRaw) ? teamDataRaw.length : 'not array')
-          } else {
-            console.error('❌ Team API error:', teamText)
           }
         } catch (e) {
           console.error('❌ Team JSON parse hatası:', e)
@@ -81,9 +67,6 @@ export default function NewFinancialPage() {
           const creatorsText = await creatorsRes.text()
           if (creatorsRes.ok) {
             creatorsData = creatorsText ? JSON.parse(creatorsText) : []
-            console.log('✅ Creators parsed:', creatorsData.length, 'items')
-          } else {
-            console.error('❌ Creators API error:', creatorsText)
           }
         } catch (e) {
           console.error('❌ Creators JSON parse hatası:', e)
@@ -94,9 +77,6 @@ export default function NewFinancialPage() {
           const voiceActorsText = await voiceActorsRes.text()
           if (voiceActorsRes.ok) {
             voiceActorsData = voiceActorsText ? JSON.parse(voiceActorsText) : []
-            console.log('✅ Voice Actors parsed:', voiceActorsData.length, 'items')
-          } else {
-            console.error('❌ Voice Actors API error:', voiceActorsText)
           }
         } catch (e) {
           console.error('❌ Voice Actors JSON parse hatası:', e)
@@ -117,13 +97,6 @@ export default function NewFinancialPage() {
             teamArray = (teamDataRaw as any).data
           }
         }
-
-        console.log('✅ Final data:', {
-          streamers: streamersArray.length,
-          teamMembers: teamArray.length,
-          creators: creatorsArray.length,
-          voiceActors: voiceActorsArray.length,
-        })
 
         setStreamers(streamersArray)
         setTeamMembers(teamArray)
@@ -170,12 +143,13 @@ export default function NewFinancialPage() {
           })
         })
 
-        console.log('✅ Combined members:', combined.length)
         setAllMembers(combined)
       } catch (error: any) {
-        console.error('❌ Error:', error)
+        console.error('Error fetching members:', error)
         setStreamers([])
         setTeamMembers([])
+        setContentCreators([])
+        setVoiceActors([])
         setAllMembers([])
       }
     }
