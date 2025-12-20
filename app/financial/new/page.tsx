@@ -10,7 +10,9 @@ export default function NewFinancialPage() {
   const [loading, setLoading] = useState(false)
   const [streamers, setStreamers] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
-  const [allMembers, setAllMembers] = useState<Array<{id: string, name: string, type: 'streamer' | 'teamMember', role?: string}>>([])
+  const [contentCreators, setContentCreators] = useState<any[]>([])
+  const [voiceActors, setVoiceActors] = useState<any[]>([])
+  const [allMembers, setAllMembers] = useState<Array<{id: string, name: string, type: 'streamer' | 'teamMember' | 'contentCreator' | 'voiceActor', role?: string}>>([])
   
   const [formData, setFormData] = useState({
     type: 'income',
@@ -27,30 +29,33 @@ export default function NewFinancialPage() {
     const fetchData = async () => {
       try {
         console.log('🟢 API çağrıları başlıyor...')
-        const [streamersRes, teamRes] = await Promise.all([
+        const [streamersRes, teamRes, creatorsRes, voiceActorsRes] = await Promise.all([
           fetch('/api/streamers', { credentials: 'include' }),
           fetch('/api/team', { credentials: 'include' }),
+          fetch('/api/content-creators', { credentials: 'include' }),
+          fetch('/api/voice-actors', { credentials: 'include' }),
         ])
 
         console.log('🟡 API yanıtları:', {
           streamers: { status: streamersRes.status, ok: streamersRes.ok },
           team: { status: teamRes.status, ok: teamRes.ok },
+          creators: { status: creatorsRes.status, ok: creatorsRes.ok },
+          voiceActors: { status: voiceActorsRes.status, ok: voiceActorsRes.ok },
         })
 
         // JSON parse hatalarını yakala
         let streamersData: any[] = []
         let teamDataRaw: any = null
+        let creatorsData: any[] = []
+        let voiceActorsData: any[] = []
         
         try {
           const streamersText = await streamersRes.text()
-          console.log('🟡 Streamers response text:', streamersText.substring(0, 200))
           if (streamersRes.ok) {
             streamersData = streamersText ? JSON.parse(streamersText) : []
             console.log('✅ Streamers parsed:', streamersData.length, 'items')
           } else {
             console.error('❌ Streamers API error:', streamersText)
-            const errorData = streamersText ? JSON.parse(streamersText) : {}
-            console.error('Error details:', errorData)
           }
         } catch (e) {
           console.error('❌ Streamers JSON parse hatası:', e)
@@ -59,21 +64,46 @@ export default function NewFinancialPage() {
         
         try {
           const teamText = await teamRes.text()
-          console.log('🟡 Team response text:', teamText.substring(0, 200))
           if (teamRes.ok) {
             teamDataRaw = teamText ? JSON.parse(teamText) : null
             console.log('✅ Team parsed:', Array.isArray(teamDataRaw) ? teamDataRaw.length : 'not array')
           } else {
             console.error('❌ Team API error:', teamText)
-            const errorData = teamText ? JSON.parse(teamText) : {}
-            console.error('Error details:', errorData)
           }
         } catch (e) {
           console.error('❌ Team JSON parse hatası:', e)
           teamDataRaw = null
         }
 
+        try {
+          const creatorsText = await creatorsRes.text()
+          if (creatorsRes.ok) {
+            creatorsData = creatorsText ? JSON.parse(creatorsText) : []
+            console.log('✅ Creators parsed:', creatorsData.length, 'items')
+          } else {
+            console.error('❌ Creators API error:', creatorsText)
+          }
+        } catch (e) {
+          console.error('❌ Creators JSON parse hatası:', e)
+          creatorsData = []
+        }
+
+        try {
+          const voiceActorsText = await voiceActorsRes.text()
+          if (voiceActorsRes.ok) {
+            voiceActorsData = voiceActorsText ? JSON.parse(voiceActorsText) : []
+            console.log('✅ Voice Actors parsed:', voiceActorsData.length, 'items')
+          } else {
+            console.error('❌ Voice Actors API error:', voiceActorsText)
+          }
+        } catch (e) {
+          console.error('❌ Voice Actors JSON parse hatası:', e)
+          voiceActorsData = []
+        }
+
         const streamersArray = Array.isArray(streamersData) ? streamersData : []
+        const creatorsArray = Array.isArray(creatorsData) ? creatorsData : []
+        const voiceActorsArray = Array.isArray(voiceActorsData) ? voiceActorsData : []
         let teamArray: any[] = []
         
         if (Array.isArray(teamDataRaw)) {
@@ -89,13 +119,17 @@ export default function NewFinancialPage() {
         console.log('✅ Final data:', {
           streamers: streamersArray.length,
           teamMembers: teamArray.length,
+          creators: creatorsArray.length,
+          voiceActors: voiceActorsArray.length,
         })
 
         setStreamers(streamersArray)
         setTeamMembers(teamArray)
+        setContentCreators(creatorsArray)
+        setVoiceActors(voiceActorsArray)
 
         // Birleşik liste oluştur
-        const combined: Array<{id: string, name: string, type: 'streamer' | 'teamMember', role?: string}> = []
+        const combined: Array<{id: string, name: string, type: 'streamer' | 'teamMember' | 'contentCreator' | 'voiceActor', role?: string}> = []
         
         // Streamers ekle
         streamersArray.forEach((s: any) => {
@@ -113,6 +147,24 @@ export default function NewFinancialPage() {
             name: tm.name,
             type: 'teamMember',
             role: tm.role,
+          })
+        })
+
+        // Content creators ekle
+        creatorsArray.forEach((c: any) => {
+          combined.push({
+            id: c.id,
+            name: c.name,
+            type: 'contentCreator',
+          })
+        })
+
+        // Voice actors ekle
+        voiceActorsArray.forEach((va: any) => {
+          combined.push({
+            id: va.id,
+            name: va.name,
+            type: 'voiceActor',
           })
         })
 
@@ -139,8 +191,12 @@ export default function NewFinancialPage() {
     if (member) {
       if (member.type === 'streamer') {
         setFormData({ ...formData, memberId, streamerId: member.id, teamMemberId: '' })
-      } else {
+      } else if (member.type === 'teamMember') {
         setFormData({ ...formData, memberId, streamerId: '', teamMemberId: member.id })
+      } else {
+        // ContentCreator ve VoiceActor için şimdilik sadece memberId'yi set ediyoruz
+        // FinancialRecord modelinde bu alanlar yok, ama gösterim için ekliyoruz
+        setFormData({ ...formData, memberId, streamerId: '', teamMemberId: '' })
       }
     }
   }
