@@ -9,7 +9,18 @@ export async function GET() {
     console.log('🔵 /api/team endpoint çağrıldı')
     
     const members = await prisma.teamMember.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        iban: true,
+        role: true,
+        baseSalary: true,
+        isActive: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: {
             tasks: true,

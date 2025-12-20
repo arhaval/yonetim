@@ -26,14 +26,16 @@ export default function NewFinancialPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('🟢 API çağrıları başlıyor...')
         const [streamersRes, teamRes] = await Promise.all([
-          fetch('/api/streamers'),
-          fetch('/api/team'),
+          fetch('/api/streamers', { credentials: 'include' }),
+          fetch('/api/team', { credentials: 'include' }),
         ])
 
-        if (!streamersRes.ok || !teamRes.ok) {
-          throw new Error('API yanıt hatası')
-        }
+        console.log('🟡 API yanıtları:', {
+          streamers: { status: streamersRes.status, ok: streamersRes.ok },
+          team: { status: teamRes.status, ok: teamRes.ok },
+        })
 
         // JSON parse hatalarını yakala
         let streamersData: any[] = []
@@ -41,17 +43,33 @@ export default function NewFinancialPage() {
         
         try {
           const streamersText = await streamersRes.text()
-          streamersData = streamersText ? JSON.parse(streamersText) : []
+          console.log('🟡 Streamers response text:', streamersText.substring(0, 200))
+          if (streamersRes.ok) {
+            streamersData = streamersText ? JSON.parse(streamersText) : []
+            console.log('✅ Streamers parsed:', streamersData.length, 'items')
+          } else {
+            console.error('❌ Streamers API error:', streamersText)
+            const errorData = streamersText ? JSON.parse(streamersText) : {}
+            console.error('Error details:', errorData)
+          }
         } catch (e) {
-          console.error('Streamers JSON parse hatası:', e)
+          console.error('❌ Streamers JSON parse hatası:', e)
           streamersData = []
         }
         
         try {
           const teamText = await teamRes.text()
-          teamDataRaw = teamText ? JSON.parse(teamText) : null
+          console.log('🟡 Team response text:', teamText.substring(0, 200))
+          if (teamRes.ok) {
+            teamDataRaw = teamText ? JSON.parse(teamText) : null
+            console.log('✅ Team parsed:', Array.isArray(teamDataRaw) ? teamDataRaw.length : 'not array')
+          } else {
+            console.error('❌ Team API error:', teamText)
+            const errorData = teamText ? JSON.parse(teamText) : {}
+            console.error('Error details:', errorData)
+          }
         } catch (e) {
-          console.error('Team JSON parse hatası:', e)
+          console.error('❌ Team JSON parse hatası:', e)
           teamDataRaw = null
         }
 
@@ -67,6 +85,11 @@ export default function NewFinancialPage() {
             teamArray = (teamDataRaw as any).data
           }
         }
+
+        console.log('✅ Final data:', {
+          streamers: streamersArray.length,
+          teamMembers: teamArray.length,
+        })
 
         setStreamers(streamersArray)
         setTeamMembers(teamArray)
@@ -93,9 +116,10 @@ export default function NewFinancialPage() {
           })
         })
 
+        console.log('✅ Combined members:', combined.length)
         setAllMembers(combined)
       } catch (error: any) {
-        console.error('Error:', error)
+        console.error('❌ Error:', error)
         setStreamers([])
         setTeamMembers([])
         setAllMembers([])
