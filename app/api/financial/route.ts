@@ -126,8 +126,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  let data: any = null
+  
   try {
-    const data = await request.json()
+    data = await request.json()
     
     // Veri doğrulama
     if (!data.type || !data.category || !data.amount || !data.date) {
@@ -148,13 +150,8 @@ export async function POST(request: NextRequest) {
     }
 
     // teamMemberId sadece varsa ekle (schema'da yoksa hata vermesin)
-    try {
-      if (data.teamMemberId) {
-        prismaData.teamMemberId = data.teamMemberId
-      }
-    } catch (e) {
-      // teamMemberId alanı schema'da yoksa devam et
-      console.warn('teamMemberId alanı schema\'da bulunamadı, devam ediliyor...')
+    if (data.teamMemberId) {
+      prismaData.teamMemberId = data.teamMemberId
     }
 
     const record = await prisma.financialRecord.create({
@@ -183,10 +180,9 @@ export async function POST(request: NextRequest) {
     
     if (error.message?.includes('teamMemberId') || error.message?.includes('Unknown argument')) {
       // Schema'da teamMemberId yoksa, sadece streamerId ile kaydet
-      try {
-        const data = await request.json()
-        const record = await prisma.financialRecord.create({
-          data: {
+      if (data) {
+        try {
+          const fallbackData: any = {
             type: data.type,
             category: data.category,
             amount: parseFloat(data.amount),
@@ -194,17 +190,20 @@ export async function POST(request: NextRequest) {
             date: new Date(data.date),
             streamerId: data.streamerId || null,
             // teamMemberId'yi atla
-          },
-          include: {
-            streamer: true,
-          },
-        })
-        return NextResponse.json(record)
-      } catch (retryError: any) {
-        return NextResponse.json(
-          { error: `Finansal kayıt oluşturulamadı: ${retryError.message}` },
-          { status: 500 }
-        )
+          }
+          const record = await prisma.financialRecord.create({
+            data: fallbackData,
+            include: {
+              streamer: true,
+            },
+          })
+          return NextResponse.json(record)
+        } catch (retryError: any) {
+          return NextResponse.json(
+            { error: `Finansal kayıt oluşturulamadı: ${retryError.message}` },
+            { status: 500 }
+          )
+        }
       }
     }
     
