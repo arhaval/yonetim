@@ -20,13 +20,29 @@ export default function NewFinancialPage() {
   })
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/streamers').then((res) => res.json()),
-      fetch('/api/team').then((res) => res.json()),
-    ]).then(([streamersData, teamData]) => {
-      setStreamers(Array.isArray(streamersData) ? streamersData : [])
-      setTeamMembers(Array.isArray(teamData) ? teamData : [])
-    })
+    const fetchData = async () => {
+      try {
+        const [streamersRes, teamRes] = await Promise.all([
+          fetch('/api/streamers'),
+          fetch('/api/team'),
+        ])
+
+        const streamersData = await streamersRes.json()
+        const teamData = await teamRes.json()
+
+        console.log('Streamers:', streamersData)
+        console.log('Team members:', teamData)
+
+        setStreamers(Array.isArray(streamersData) ? streamersData : [])
+        setTeamMembers(Array.isArray(teamData) ? teamData : [])
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setStreamers([])
+        setTeamMembers([])
+      }
+    }
+
+    fetchData()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
