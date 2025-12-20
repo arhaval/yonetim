@@ -99,23 +99,24 @@ model ExternalStream {
 }
 
 model ContentCreator {
-  id           String   @id @default(cuid())
+  id           String            @id @default(cuid())
   name         String
   profilePhoto String?
-  email        String?  @unique // İçerik üreticisi login için email
+  email        String?           @unique // İçerik üreticisi login için email
   phone        String?
-  iban         String?  // IBAN bilgisi
-  password     String?  // (hash'lenmiş)
-  loginToken   String?  @unique
+  iban         String?           // IBAN bilgisi
+  password     String?           // (hash'lenmiş)
+  loginToken   String?          @unique
   platform     String?
   channelUrl   String?
-  isActive     Boolean  @default(true)
+  isActive     Boolean           @default(true)
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
-  contents Content[]
-  scripts  VoiceoverScript[]
+  contents         Content[]
+  scripts          VoiceoverScript[]
+  financialRecords FinancialRecord[]
 }
 
 model Content {
@@ -141,20 +142,21 @@ model Content {
 }
 
 model VoiceActor {
-  id           String   @id @default(cuid())
+  id           String            @id @default(cuid())
   name         String
   profilePhoto String?
-  email        String?  @unique
+  email        String?           @unique
   phone        String?
   iban         String?
   password     String?
-  loginToken   String?  @unique
-  isActive     Boolean  @default(true)
+  loginToken   String?           @unique
+  isActive     Boolean           @default(true)
   notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
-  scripts VoiceoverScript[]
+  scripts          VoiceoverScript[]
+  financialRecords FinancialRecord[]
 }
 
 model VoiceoverScript {
@@ -175,24 +177,30 @@ model VoiceoverScript {
 }
 
 model FinancialRecord {
-  id           String      @id @default(cuid())
-  type         String      // income, expense
-  category     String      // salary, content, sponsorship, equipment, etc.
-  amount       Float
-  description  String?
-  date         DateTime
-  streamerId   String?
-  streamer     Streamer?   @relation(fields: [streamerId], references: [id])
-  teamMemberId String?
-  teamMember   TeamMember? @relation(fields: [teamMemberId], references: [id])
-  streamId     String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id               String          @id @default(cuid())
+  type             String          // income, expense
+  category         String          // salary, content, sponsorship, equipment, etc.
+  amount           Float
+  description      String?
+  date             DateTime
+  streamerId       String?
+  streamer         Streamer?       @relation(fields: [streamerId], references: [id])
+  teamMemberId     String?
+  teamMember       TeamMember?     @relation(fields: [teamMemberId], references: [id])
+  contentCreatorId String?
+  contentCreator   ContentCreator? @relation(fields: [contentCreatorId], references: [id])
+  voiceActorId     String?
+  voiceActor       VoiceActor?     @relation(fields: [voiceActorId], references: [id])
+  streamId         String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   @@index([date])
   @@index([type])
   @@index([streamerId])
   @@index([teamMemberId])
+  @@index([contentCreatorId])
+  @@index([voiceActorId])
 }
 
 model Payment {

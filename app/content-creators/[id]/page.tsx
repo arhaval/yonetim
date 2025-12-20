@@ -18,29 +18,32 @@ export default async function ContentCreatorDetailPage({
   try {
     creator = await prisma.contentCreator.findUnique({
       where: { id },
-    include: {
-      contents: {
-        orderBy: { publishDate: 'asc' },
-      },
-      scripts: {
-        orderBy: { createdAt: 'asc' },
-        include: {
-          voiceActor: {
-            select: {
-              id: true,
-              name: true,
+      include: {
+        contents: {
+          orderBy: { publishDate: 'asc' },
+        },
+        scripts: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            voiceActor: {
+              select: {
+                id: true,
+                name: true,
+              },
             },
           },
         },
-      },
-      _count: {
-        select: {
-          contents: true,
-          scripts: true,
+        financialRecords: {
+          orderBy: { date: 'desc' },
+        },
+        _count: {
+          select: {
+            contents: true,
+            scripts: true,
+          },
         },
       },
-    },
-  }).catch(() => null)
+    }).catch(() => null)
 
   if (!creator) {
     notFound()
@@ -56,6 +59,13 @@ export default async function ContentCreatorDetailPage({
   const totalComments = creator.contents.reduce((sum, c) => sum + (c.comments || 0), 0)
   const totalShares = creator.contents.reduce((sum, c) => sum + (c.shares || 0), 0)
   const totalSaves = creator.contents.reduce((sum, c) => sum + (c.saves || 0), 0)
+
+  // Finansal kayıtları hesapla
+  const financialRecords = creator.financialRecords || []
+  const totalPaid = financialRecords
+    .filter(fr => fr.type === 'expense')
+    .reduce((sum, fr) => sum + fr.amount, 0)
+  const totalUnpaid = 0 // Creator'lar için ödenmemiş ödeme yok, sadece finansal kayıtlar var
 
   // Sayıları formatla
   const formatNumber = (num: number) => {

@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
       include: {
         streamer: true,
         teamMember: true,
+        contentCreator: true,
+        voiceActor: true,
       },
       orderBy: { date: 'asc' },
     }).catch(() => [])
@@ -179,12 +181,10 @@ export async function POST(request: NextRequest) {
       description: data.description || null,
       date: new Date(data.date),
       streamerId: data.streamerId || null,
+      teamMemberId: data.teamMemberId || null,
+      contentCreatorId: data.contentCreatorId || null,
+      voiceActorId: data.voiceActorId || null,
       streamId: null, // streamId opsiyonel
-    }
-
-    // teamMemberId varsa ekle
-    if (data.teamMemberId) {
-      prismaData.teamMemberId = data.teamMemberId
     }
 
     console.log('Creating financial record with data:', {
@@ -194,6 +194,8 @@ export async function POST(request: NextRequest) {
       date: prismaData.date,
       streamerId: prismaData.streamerId,
       teamMemberId: prismaData.teamMemberId,
+      contentCreatorId: prismaData.contentCreatorId,
+      voiceActorId: prismaData.voiceActorId,
     })
 
     try {
@@ -202,6 +204,8 @@ export async function POST(request: NextRequest) {
         include: {
           streamer: true,
           teamMember: data.teamMemberId ? true : undefined,
+          contentCreator: data.contentCreatorId ? true : undefined,
+          voiceActor: data.voiceActorId ? true : undefined,
         },
       })
       

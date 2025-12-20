@@ -22,6 +22,8 @@ export default function NewFinancialPage() {
     date: new Date().toISOString().split('T')[0],
     streamerId: '',
     teamMemberId: '',
+    contentCreatorId: '',
+    voiceActorId: '',
     memberId: '', // Birleşik dropdown için
   })
 
@@ -183,20 +185,55 @@ export default function NewFinancialPage() {
 
   const handleMemberChange = (memberId: string) => {
     if (!memberId) {
-      setFormData({ ...formData, memberId: '', streamerId: '', teamMemberId: '' })
+      setFormData({ 
+        ...formData, 
+        memberId: '', 
+        streamerId: '', 
+        teamMemberId: '', 
+        contentCreatorId: '', 
+        voiceActorId: '' 
+      })
       return
     }
 
     const member = allMembers.find(m => m.id === memberId)
     if (member) {
       if (member.type === 'streamer') {
-        setFormData({ ...formData, memberId, streamerId: member.id, teamMemberId: '' })
+        setFormData({ 
+          ...formData, 
+          memberId, 
+          streamerId: member.id, 
+          teamMemberId: '', 
+          contentCreatorId: '', 
+          voiceActorId: '' 
+        })
       } else if (member.type === 'teamMember') {
-        setFormData({ ...formData, memberId, streamerId: '', teamMemberId: member.id })
-      } else {
-        // ContentCreator ve VoiceActor için şimdilik sadece memberId'yi set ediyoruz
-        // FinancialRecord modelinde bu alanlar yok, ama gösterim için ekliyoruz
-        setFormData({ ...formData, memberId, streamerId: '', teamMemberId: '' })
+        setFormData({ 
+          ...formData, 
+          memberId, 
+          streamerId: '', 
+          teamMemberId: member.id, 
+          contentCreatorId: '', 
+          voiceActorId: '' 
+        })
+      } else if (member.type === 'contentCreator') {
+        setFormData({ 
+          ...formData, 
+          memberId, 
+          streamerId: '', 
+          teamMemberId: '', 
+          contentCreatorId: member.id, 
+          voiceActorId: '' 
+        })
+      } else if (member.type === 'voiceActor') {
+        setFormData({ 
+          ...formData, 
+          memberId, 
+          streamerId: '', 
+          teamMemberId: '', 
+          contentCreatorId: '', 
+          voiceActorId: member.id 
+        })
       }
     }
   }
@@ -214,6 +251,8 @@ export default function NewFinancialPage() {
           amount: parseFloat(formData.amount),
           streamerId: formData.streamerId || null,
           teamMemberId: formData.teamMemberId || null,
+          contentCreatorId: formData.contentCreatorId || null,
+          voiceActorId: formData.voiceActorId || null,
         }),
       })
 
