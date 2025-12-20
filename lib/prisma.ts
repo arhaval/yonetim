@@ -42,6 +42,8 @@ export const prisma =
       },
     },
     errorFormat: "minimal",
+    // Connection pooling optimizasyonu
+    // Supabase connection pooler kullanıyorsanız bu ayarlar otomatik
   });
 
 if (!globalForPrisma.prisma) {

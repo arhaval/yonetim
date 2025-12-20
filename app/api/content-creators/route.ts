@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 
-export const dynamic = 'force-dynamic'
+// Cache GET requests for 30 seconds
+export const revalidate = 30
 
 export async function GET() {
   try {

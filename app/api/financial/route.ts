@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
+// Cache GET requests for 30 seconds
+export const revalidate = 30
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams

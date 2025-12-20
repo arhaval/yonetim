@@ -6,9 +6,8 @@ import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, T
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Dashboard her zaman güncel verileri göstermeli
-export const dynamic = 'force-dynamic'
-export const revalidate = 0 // Cache yok - her zaman güncel veriler
+// Dashboard cache optimizasyonu - 60 saniye cache
+export const revalidate = 60 // 60 saniye cache - performans için
 
 async function getStats() {
   try {
