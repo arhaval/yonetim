@@ -5,8 +5,21 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    // Tüm team member'ları çek
+    // Tüm team member'ları çek (avatar kolonu yok, select ile belirtiyoruz)
     const allMembers = await prisma.teamMember.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        iban: true,
+        baseSalary: true,
+        isActive: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: { createdAt: 'desc' },
     })
     
