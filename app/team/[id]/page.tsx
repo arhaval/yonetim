@@ -98,6 +98,14 @@ export default async function TeamMemberDetailPage({
       _sum: { amount: true },
     }).catch(() => ({ _sum: { amount: null } }))
 
+    // Finansal kayıtları getir (bu ekip üyesine ait olanlar)
+    const financialRecords = await prisma.financialRecord.findMany({
+      where: {
+        teamMemberId: member.id,
+      },
+      orderBy: { date: 'desc' },
+    }).catch(() => [])
+
     totalUnpaid = unpaidPayments._sum.amount || 0
   }
 

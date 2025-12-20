@@ -130,6 +130,14 @@ export default async function StreamerDetailPage({
     _sum: { amount: true },
   }).catch(() => ({ _sum: { amount: null } }))
 
+  // Finansal kayıtları getir (bu yayıncıya ait olanlar)
+  const financialRecords = await prisma.financialRecord.findMany({
+    where: {
+      streamerId: streamer.id,
+    },
+    orderBy: { date: 'desc' },
+  }).catch(() => [])
+
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 
   return (
@@ -420,6 +428,75 @@ export default async function StreamerDetailPage({
               )}
             </div>
           </div>
+
+          {/* Finansal Kayıtlar */}
+          {financialRecords.length > 0 && (
+            <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+                  Finansal Kayıtlar ({financialRecords.length})
+                </h3>
+              </div>
+              <div className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tarih
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Kategori
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Açıklama
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Durum
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {financialRecords.map((record) => (
+                        <tr key={record.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {format(new Date(record.date), 'dd MMM yyyy', { locale: tr })}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {record.category}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-900">
+                            {record.description || '-'}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-semibold">
+                            <span className={record.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+                              {record.type === 'income' ? '+' : '-'}
+                              {record.amount.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                                maximumFractionDigits: 0,
+                              })}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-center">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                              ✅ Ödenmiş
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
