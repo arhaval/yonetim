@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prisma data objesi oluştur (teamMemberId varsa ekle, yoksa ekleme)
+    // Prisma data objesi oluştur - teamMemberId'yi şimdilik ekleme (migration yapılmadı)
     const prismaData: any = {
       type: data.type,
       category: data.category,
@@ -146,55 +146,49 @@ export async function POST(request: NextRequest) {
       description: data.description || null,
       date: new Date(data.date),
       streamerId: data.streamerId || null,
+      // teamMemberId: schema migration yapılmadığı için şimdilik eklemiyoruz
     }
 
-    // teamMemberId sadece varsa ekle (schema'da yoksa hata vermesin)
-    if (data.teamMemberId) {
-      prismaData.teamMemberId = data.teamMemberId
-    }
-
+    // Önce teamMemberId olmadan dene (schema'da yok olabilir)
     try {
       const record = await prisma.financialRecord.create({
         data: prismaData,
         include: {
           streamer: true,
-          teamMember: data.teamMemberId ? true : undefined,
         },
       })
       
       return NextResponse.json(record)
     } catch (prismaError: any) {
-      // Prisma hatası - teamMemberId schema'da yoksa fallback dene
-      if (prismaError.message?.includes('teamMemberId') || prismaError.message?.includes('Unknown argument')) {
-        // teamMemberId olmadan tekrar dene
-        const fallbackData: any = {
-          type: data.type,
-          category: data.category,
-          amount: parseFloat(data.amount),
-          description: data.description || null,
-          date: new Date(data.date),
-          streamerId: data.streamerId || null,
-          // teamMemberId'yi atla
-        }
-        
-        const record = await prisma.financialRecord.create({
-          data: fallbackData,
-          include: {
-            streamer: true,
-          },
-        })
-        return NextResponse.json(record)
-      }
+      console.error('Prisma create error:', {
+        message: prismaError.message,
+        code: prismaError.code,
+        meta: prismaError.meta,
+      })
       
-      // Diğer Prisma hataları
+      // Prisma hata kodlarına göre mesaj
       if (prismaError.code === 'P2003') {
         return NextResponse.json(
-          { error: 'Geçersiz yayıncı veya ekip üyesi ID\'si' },
+          { error: 'Geçersiz yayıncı ID\'si' },
           { status: 400 }
         )
       }
       
-      throw prismaError
+      if (prismaError.code === 'P2002') {
+        return NextResponse.json(
+          { error: 'Bu kayıt zaten mevcut' },
+          { status: 400 }
+        )
+      }
+      
+      // Genel Prisma hatası
+      return NextResponse.json(
+        { 
+          error: `Finansal kayıt oluşturulamadı: ${prismaError.message || 'Veritabanı hatası'}`,
+          details: process.env.NODE_ENV === 'development' ? prismaError.message : undefined
+        },
+        { status: 500 }
+      )
     }
   } catch (error: any) {
     console.error('Error creating financial record:', {
