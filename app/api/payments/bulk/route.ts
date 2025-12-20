@@ -64,16 +64,47 @@ export async function POST(request: NextRequest) {
             paidAt: new Date(),
           },
         })
+
+        // Finansal kayıt oluştur (gider olarak)
+        await prisma.financialRecord.create({
+          data: {
+            type: 'expense',
+            category: 'salary',
+            amount: item.amount,
+            description: `${month} ayı yayıncı ödemesi`,
+            date: new Date(),
+            streamerId: item.id,
+          },
+        })
       }
     } else if (type === 'team') {
       // Ekip üyesi ödemeleri için
       for (const item of items) {
-        await prisma.teamPayment.update({
+        // TeamPayment'ı çek ki teamMemberId'yi alalım
+        const teamPayment = await prisma.teamPayment.findUnique({
           where: { id: item.id },
-          data: {
-            paidAt: new Date(),
-          },
         })
+
+        if (teamPayment) {
+          await prisma.teamPayment.update({
+            where: { id: item.id },
+            data: {
+              paidAt: new Date(),
+            },
+          })
+
+          // Finansal kayıt oluştur (gider olarak)
+          await prisma.financialRecord.create({
+            data: {
+              type: 'expense',
+              category: 'salary',
+              amount: teamPayment.amount,
+              description: `${teamPayment.period} ayı ekip üyesi ödemesi`,
+              date: new Date(),
+              teamMemberId: teamPayment.teamMemberId,
+            },
+          })
+        }
       }
     }
 
@@ -88,6 +119,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
 
 
 

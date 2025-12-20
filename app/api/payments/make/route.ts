@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
           amount: amount,
           description: note || `${teamPayment.period} ayı ekip üyesi ödemesi`,
           date: paymentDate,
+          teamMemberId: teamPayment.teamMemberId,
         },
       })
     } else if (type === 'voice-actors' && voiceActorId) {

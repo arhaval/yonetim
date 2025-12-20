@@ -384,6 +384,16 @@ export default function FinancialPage() {
                             👥 {record.teamMember.name} ({record.teamMember.role})
                           </span>
                         )}
+                        {record.voiceActor && (
+                          <span className="text-xs text-gray-600">
+                            🎤 {record.voiceActor.name}
+                          </span>
+                        )}
+                        {record.contentCreator && (
+                          <span className="text-xs text-gray-600">
+                            📝 {record.contentCreator.name}
+                          </span>
+                        )}
                         {record.isPayment && record.paidAt && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 mt-1">
                             ✅ Ödenmiş

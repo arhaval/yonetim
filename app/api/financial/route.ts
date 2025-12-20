@@ -62,6 +62,34 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'asc' },
     }).catch(() => [])
 
+    // Ödenen seslendirmen metinlerini getir
+    const paidVoiceoverScripts = await prisma.voiceoverScript.findMany({
+      where: {
+        status: 'paid',
+        ...(filter === 'monthly' && monthStart && monthEnd ? {
+          updatedAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        } : {}),
+      },
+      include: {
+        voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: 'asc' },
+    }).catch(() => [])
+
     // Payment'ları FinancialRecord formatına çevir
     const paymentRecords = payments.map((p) => ({
       id: `payment-${p.id}`,
@@ -98,8 +126,30 @@ export async function GET(request: NextRequest) {
       updatedAt: tp.updatedAt,
     }))
 
+    // Seslendirmen ödemelerini FinancialRecord formatına çevir
+    const voiceoverRecords = paidVoiceoverScripts.map((script) => ({
+      id: `voiceover-${script.id}`,
+      type: 'expense' as const,
+      category: 'Seslendirme',
+      amount: script.price,
+      description: script.title + (script.voiceActor ? ` - ${script.voiceActor.name}` : ''),
+      date: script.updatedAt,
+      streamer: null,
+      streamerId: null,
+      teamMember: null,
+      teamMemberId: null,
+      voiceActor: script.voiceActor,
+      voiceActorId: script.voiceActorId,
+      contentCreator: script.creator,
+      contentCreatorId: script.creatorId,
+      isPayment: true,
+      paidAt: script.updatedAt,
+      createdAt: script.createdAt,
+      updatedAt: script.updatedAt,
+    }))
+
     // Tüm kayıtları birleştir
-    const allRecords = [...records, ...paymentRecords, ...teamPaymentRecords]
+    const allRecords = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
 
     return NextResponse.json(allRecords)
   } catch (error) {
