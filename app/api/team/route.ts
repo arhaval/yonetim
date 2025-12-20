@@ -7,8 +7,6 @@ export const revalidate = 30
 
 export async function GET() {
   try {
-    console.log('🔵 /api/team endpoint çağrıldı')
-    
     const members = await prisma.teamMember.findMany({
       select: {
         id: true,
@@ -31,14 +29,6 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
-    
-    console.log(`✅ Fetched ${members.length} team members`)
-    console.log('✅ Members:', members.map(m => ({ id: m.id, name: m.name, role: m.role })))
-    
-    // Eğer üye yoksa, kullanıcıya bilgi ver
-    if (members.length === 0) {
-      console.warn('⚠️ Veritabanında ekip üyesi bulunamadı')
-    }
     
     return NextResponse.json(members)
   } catch (error: any) {
