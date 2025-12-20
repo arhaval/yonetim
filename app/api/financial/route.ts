@@ -32,12 +32,15 @@ export async function GET(request: NextRequest) {
     }).catch(() => [])
 
     // Payment ve TeamPayment kayıtlarını da ekle
+    const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
+    const monthEnd = filter === 'monthly' ? endOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
+
     const payments = await prisma.payment.findMany({
-      where: filter === 'monthly' ? {
-        paidAt: {
-          gte: parse(monthParam, 'yyyy-MM', new Date()),
-          lte: endOfMonth(parse(monthParam, 'yyyy-MM', new Date())),
-        },
+      where: filter === 'monthly' && monthStart && monthEnd ? {
+        OR: [
+          { paidAt: { gte: monthStart, lte: monthEnd } },
+          { createdAt: { gte: monthStart, lte: monthEnd } },
+        ],
       } : {},
       include: {
         streamer: true,
@@ -46,11 +49,11 @@ export async function GET(request: NextRequest) {
     }).catch(() => [])
 
     const teamPayments = await prisma.teamPayment.findMany({
-      where: filter === 'monthly' ? {
-        paidAt: {
-          gte: parse(monthParam, 'yyyy-MM', new Date()),
-          lte: endOfMonth(parse(monthParam, 'yyyy-MM', new Date())),
-        },
+      where: filter === 'monthly' && monthStart && monthEnd ? {
+        OR: [
+          { paidAt: { gte: monthStart, lte: monthEnd } },
+          { createdAt: { gte: monthStart, lte: monthEnd } },
+        ],
       } : {},
       include: {
         teamMember: true,
