@@ -265,7 +265,9 @@ export default function NewFinancialPage() {
             <p className="text-xs text-yellow-700">
               Toplam: <strong>{allMembers.length}</strong> kişi | 
               Yayıncılar: <strong>{streamers.length}</strong> | 
-              Ekip Üyeleri: <strong>{teamMembers.length}</strong>
+              Ekip Üyeleri: <strong>{teamMembers.length}</strong> | 
+              İçerik Üreticileri: <strong>{contentCreators.length}</strong> | 
+              Seslendirmenler: <strong>{voiceActors.length}</strong>
             </p>
             <a 
               href="/api/team/debug" 
@@ -355,7 +357,7 @@ export default function NewFinancialPage() {
                 <label className="block text-sm font-medium text-gray-700">
                   Kişi (Opsiyonel)
                   <span className="ml-2 text-xs text-gray-400">
-                    ({allMembers.length} kişi: {streamers.length} yayıncı, {teamMembers.length} ekip üyesi)
+                    ({allMembers.length} kişi: {streamers.length} yayıncı, {teamMembers.length} ekip üyesi, {contentCreators.length} içerik üreticisi, {voiceActors.length} seslendirmen)
                   </span>
                 </label>
                 <select
@@ -385,6 +387,24 @@ export default function NewFinancialPage() {
                           {teamMembers.map((member) => (
                             <option key={`team-${member.id}`} value={member.id}>
                               {member.name} {member.role ? `(${member.role})` : ''} (Ekip Üyesi)
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {contentCreators.length > 0 && (
+                        <optgroup label="İçerik Üreticileri">
+                          {contentCreators.map((creator) => (
+                            <option key={`creator-${creator.id}`} value={creator.id}>
+                              {creator.name} (İçerik Üreticisi)
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {voiceActors.length > 0 && (
+                        <optgroup label="Seslendirmenler">
+                          {voiceActors.map((actor) => (
+                            <option key={`actor-${actor.id}`} value={actor.id}>
+                              {actor.name} (Seslendirmen)
                             </option>
                           ))}
                         </optgroup>
