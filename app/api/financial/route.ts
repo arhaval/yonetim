@@ -126,10 +126,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  let data: any = null
-  
   try {
-    data = await request.json()
+    // Request body'yi bir kez oku ve sakla
+    const data = await request.json()
     
     // Veri doğrulama
     if (!data.type || !data.category || !data.amount || !data.date) {
@@ -154,15 +153,49 @@ export async function POST(request: NextRequest) {
       prismaData.teamMemberId = data.teamMemberId
     }
 
-    const record = await prisma.financialRecord.create({
-      data: prismaData,
-      include: {
-        streamer: true,
-        teamMember: data.teamMemberId ? true : undefined,
-      },
-    })
-    
-    return NextResponse.json(record)
+    try {
+      const record = await prisma.financialRecord.create({
+        data: prismaData,
+        include: {
+          streamer: true,
+          teamMember: data.teamMemberId ? true : undefined,
+        },
+      })
+      
+      return NextResponse.json(record)
+    } catch (prismaError: any) {
+      // Prisma hatası - teamMemberId schema'da yoksa fallback dene
+      if (prismaError.message?.includes('teamMemberId') || prismaError.message?.includes('Unknown argument')) {
+        // teamMemberId olmadan tekrar dene
+        const fallbackData: any = {
+          type: data.type,
+          category: data.category,
+          amount: parseFloat(data.amount),
+          description: data.description || null,
+          date: new Date(data.date),
+          streamerId: data.streamerId || null,
+          // teamMemberId'yi atla
+        }
+        
+        const record = await prisma.financialRecord.create({
+          data: fallbackData,
+          include: {
+            streamer: true,
+          },
+        })
+        return NextResponse.json(record)
+      }
+      
+      // Diğer Prisma hataları
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json(
+          { error: 'Geçersiz yayıncı veya ekip üyesi ID\'si' },
+          { status: 400 }
+        )
+      }
+      
+      throw prismaError
+    }
   } catch (error: any) {
     console.error('Error creating financial record:', {
       message: error.message,
@@ -170,41 +203,12 @@ export async function POST(request: NextRequest) {
       meta: error.meta,
     })
     
-    // Daha açıklayıcı hata mesajları
-    if (error.code === 'P2003') {
+    // Body okuma hatası
+    if (error.message?.includes('body has already been read') || error.message?.includes('body')) {
       return NextResponse.json(
-        { error: 'Geçersiz yayıncı veya ekip üyesi ID\'si' },
+        { error: 'Request body okunamadı. Lütfen tekrar deneyin.' },
         { status: 400 }
       )
-    }
-    
-    if (error.message?.includes('teamMemberId') || error.message?.includes('Unknown argument')) {
-      // Schema'da teamMemberId yoksa, sadece streamerId ile kaydet
-      if (data) {
-        try {
-          const fallbackData: any = {
-            type: data.type,
-            category: data.category,
-            amount: parseFloat(data.amount),
-            description: data.description || null,
-            date: new Date(data.date),
-            streamerId: data.streamerId || null,
-            // teamMemberId'yi atla
-          }
-          const record = await prisma.financialRecord.create({
-            data: fallbackData,
-            include: {
-              streamer: true,
-            },
-          })
-          return NextResponse.json(record)
-        } catch (retryError: any) {
-          return NextResponse.json(
-            { error: `Finansal kayıt oluşturulamadı: ${retryError.message}` },
-            { status: 500 }
-          )
-        }
-      }
     }
     
     return NextResponse.json(
