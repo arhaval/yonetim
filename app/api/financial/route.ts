@@ -138,18 +138,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prisma data objesi oluştur - teamMemberId'yi şimdilik ekleme (migration yapılmadı)
-    const prismaData: any = {
+    // Prisma data objesi oluştur - sadece mevcut alanlar
+    const prismaData = {
       type: data.type,
       category: data.category,
       amount: parseFloat(data.amount),
       description: data.description || null,
       date: new Date(data.date),
       streamerId: data.streamerId || null,
-      // teamMemberId: schema migration yapılmadığı için şimdilik eklemiyoruz
+      streamId: null, // streamId opsiyonel
     }
 
-    // Önce teamMemberId olmadan dene (schema'da yok olabilir)
+    console.log('Creating financial record with data:', {
+      type: prismaData.type,
+      category: prismaData.category,
+      amount: prismaData.amount,
+      date: prismaData.date,
+      streamerId: prismaData.streamerId,
+    })
+
     try {
       const record = await prisma.financialRecord.create({
         data: prismaData,
@@ -158,12 +165,14 @@ export async function POST(request: NextRequest) {
         },
       })
       
+      console.log('Financial record created successfully:', record.id)
       return NextResponse.json(record)
     } catch (prismaError: any) {
       console.error('Prisma create error:', {
         message: prismaError.message,
         code: prismaError.code,
         meta: prismaError.meta,
+        stack: prismaError.stack,
       })
       
       // Prisma hata kodlarına göre mesaj
@@ -185,7 +194,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: `Finansal kayıt oluşturulamadı: ${prismaError.message || 'Veritabanı hatası'}`,
-          details: process.env.NODE_ENV === 'development' ? prismaError.message : undefined
+          details: process.env.NODE_ENV === 'development' ? {
+            message: prismaError.message,
+            code: prismaError.code,
+            meta: prismaError.meta,
+          } : undefined
         },
         { status: 500 }
       )
