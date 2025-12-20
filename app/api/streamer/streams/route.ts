@@ -141,12 +141,12 @@ export async function POST(request: NextRequest) {
         totalRevenue: 0, // Admin tarafından girilecek
         streamerEarning: 0, // Admin tarafından girilecek
         arhavalProfit: 0, // Admin tarafından girilecek
-        status: 'pending', // Onay bekliyor
+        status: 'approved', // Yayıncılar yayınları girince direkt onaylanır, admin sonra ücret belirler
       },
     })
 
     return NextResponse.json({
-      message: 'Yayın başarıyla eklendi. Admin onayı bekleniyor.',
+      message: 'Yayın başarıyla eklendi. Admin ücret belirleyecek.',
       stream,
     })
   } catch (error: any) {

@@ -23,6 +23,14 @@ interface TeamPaymentCardsProps {
     createdAt: Date
     audioFile?: string | null
   }>
+  financialRecords?: Array<{
+    id: string
+    type: string
+    amount: number
+    date: Date
+    description?: string | null
+    category?: string | null
+  }>
 }
 
 export default function TeamPaymentCards({
@@ -30,6 +38,7 @@ export default function TeamPaymentCards({
   totalUnpaid,
   payments = [],
   scripts = [],
+  financialRecords = [],
 }: TeamPaymentCardsProps) {
   const [showPaidModal, setShowPaidModal] = useState(false)
   const [showUnpaidModal, setShowUnpaidModal] = useState(false)
@@ -99,6 +108,7 @@ export default function TeamPaymentCards({
         title="Ödenen Ödemeler"
         payments={payments.filter(p => p.paidAt)}
         scripts={scripts.filter(s => s.status === 'paid')}
+        financialRecords={financialRecords.filter(fr => fr.type === 'expense')}
       />
 
       <PaymentDetailsModal
@@ -107,6 +117,7 @@ export default function TeamPaymentCards({
         title="Ödenmemiş Ödemeler"
         payments={payments.filter(p => !p.paidAt)}
         scripts={scripts.filter(s => s.status === 'approved' || (s.status === 'pending' && s.audioFile))}
+        financialRecords={[]}
       />
     </>
   )

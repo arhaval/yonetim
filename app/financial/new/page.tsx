@@ -3,12 +3,22 @@
 import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function NewFinancialPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [streamers, setStreamers] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
+  
+  // İlk render'da direkt çalıştır
+  if (typeof window !== 'undefined') {
+    // Sayfa yüklendiğinde çalışacak
+    setTimeout(() => {
+      console.log('🔴 Component render edildi!')
+      alert('Sayfa yüklendi! useEffect çalışacak...')
+    }, 100)
+  }
   const [formData, setFormData] = useState({
     type: 'income',
     category: '',
@@ -20,8 +30,29 @@ export default function NewFinancialPage() {
   })
 
   useEffect(() => {
+    // İlk render'da çalışacak
+    window.addEventListener('load', () => {
+      console.log('🟢 Window loaded!')
+    })
+    
+    // Direkt çalıştır
+    console.log('🟢 useEffect çalıştı - İlk render')
+    
     const fetchData = async () => {
       try {
+        // Debug endpoint'ini çağır
+        try {
+          const debugRes = await fetch('/api/team/debug')
+          if (debugRes.ok) {
+            const debugData = await debugRes.json()
+            console.log('🔍 DEBUG DATA:', JSON.stringify(debugData, null, 2))
+            // Alert ile göster
+            alert(`Debug Bilgisi:\nTeam Members: ${debugData.summary.totalTeamMembers}\nStreamers: ${debugData.summary.totalStreamers}\nContent Creators: ${debugData.summary.totalContentCreators}\nVoice Actors: ${debugData.summary.totalVoiceActors}`)
+          }
+        } catch (debugErr) {
+          console.error('Debug endpoint hatası:', debugErr)
+        }
+        
         const [streamersRes, teamRes] = await Promise.all([
           fetch('/api/streamers'),
           fetch('/api/team'),
@@ -30,18 +61,34 @@ export default function NewFinancialPage() {
         const streamersData = await streamersRes.json()
         const teamData = await teamRes.json()
 
-        console.log('Streamers:', streamersData)
-        console.log('Team members:', teamData)
+        console.log('Streamers count:', streamersData.length)
+        console.log('Team Members count:', teamData.length)
+        console.log('Team Members data:', teamData)
 
         setStreamers(Array.isArray(streamersData) ? streamersData : [])
-        setTeamMembers(Array.isArray(teamData) ? teamData : [])
-      } catch (error) {
-        console.error('Error fetching data:', error)
+        
+        if (Array.isArray(teamData)) {
+          setTeamMembers(teamData)
+        } else if (teamData && typeof teamData === 'object') {
+          if (Array.isArray(teamData.members)) {
+            setTeamMembers(teamData.members)
+          } else if (Array.isArray(teamData.data)) {
+            setTeamMembers(teamData.data)
+          } else {
+            setTeamMembers([])
+          }
+        } else {
+          setTeamMembers([])
+        }
+      } catch (error: any) {
+        console.error('Error:', error)
+        alert(`Hata: ${error.message}`)
         setStreamers([])
         setTeamMembers([])
       }
     }
 
+    // Hemen çalıştır
     fetchData()
   }, [])
 
@@ -103,6 +150,21 @@ export default function NewFinancialPage() {
       <div className="px-4 py-6 sm:px-0">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Yeni Finansal Kayıt</h1>
+          {/* Debug bilgisi - her zaman görünür */}
+          <div className="mt-3 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+            <p className="text-sm font-semibold text-yellow-800 mb-2">🔍 Debug Bilgisi:</p>
+            <p className="text-xs text-yellow-700">
+              Streamers: <strong>{streamers.length}</strong> | 
+              Team Members: <strong>{teamMembers.length}</strong>
+            </p>
+            <a 
+              href="/api/team/debug" 
+              target="_blank" 
+              className="mt-2 inline-block text-sm text-blue-600 hover:underline font-semibold"
+            >
+              🔍 Tüm Üye Tiplerini Görmek İçin Tıklayın (Yeni Sekmede Açılır)
+            </a>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg">
@@ -202,6 +264,11 @@ export default function NewFinancialPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Ekip Üyesi (Opsiyonel)
+                  {teamMembers.length > 0 && (
+                    <span className="ml-2 text-xs text-gray-400">
+                      ({teamMembers.length} üye)
+                    </span>
+                  )}
                 </label>
                 <select
                   value={formData.teamMemberId}
@@ -209,14 +276,35 @@ export default function NewFinancialPage() {
                     setFormData({ ...formData, teamMemberId: e.target.value, streamerId: '' })
                   }
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
+                  disabled={loading}
                 >
                   <option value="">Yok</option>
-                  {teamMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} ({member.role})
+                  {teamMembers.length === 0 ? (
+                    <option value="" disabled>
+                      {loading ? 'Yükleniyor...' : 'Ekip üyesi bulunamadı'}
                     </option>
-                  ))}
+                  ) : (
+                    teamMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} {member.role ? `(${member.role})` : ''}
+                      </option>
+                    ))
+                  )}
                 </select>
+                {teamMembers.length === 0 && !loading && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Not:</strong> Finansal kayıtlar için sadece <strong>Ekip Üyesi</strong> (TeamMember) tipindeki kişiler seçilebilir. 
+                      <br />
+                      <span className="text-xs mt-1 block">
+                        Yayıncılar, İçerik Üreticileri ve Seslendirmenler için "Yayıncı" dropdown'ını kullanın veya 
+                        <Link href="/team/new" className="ml-1 font-semibold text-blue-600 hover:underline">
+                          yeni ekip üyesi ekleyin
+                        </Link>
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

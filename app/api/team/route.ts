@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    console.log('🔵 /api/team endpoint çağrıldı')
+    
     const members = await prisma.teamMember.findMany({
       include: {
         _count: {
@@ -17,16 +19,30 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
-    console.log(`Fetched ${members.length} team members`)
+    
+    console.log(`✅ Fetched ${members.length} team members`)
+    console.log('✅ Members:', members.map(m => ({ id: m.id, name: m.name, role: m.role })))
+    
+    // Eğer üye yoksa, kullanıcıya bilgi ver
+    if (members.length === 0) {
+      console.warn('⚠️ Veritabanında ekip üyesi bulunamadı')
+    }
+    
     return NextResponse.json(members)
   } catch (error: any) {
-    console.error('Error fetching team members:', {
+    console.error('❌ Error fetching team members:', {
       message: error.message,
       code: error.code,
       meta: error.meta,
+      stack: error.stack,
     })
-    // Hata durumunda boş array döndür (frontend'de sorun çıkmasın)
-    return NextResponse.json([])
+    // Hata durumunda boş array döndür ama detaylı log ekle
+    return NextResponse.json([], { 
+      status: 200,
+      headers: {
+        'X-Error': error.message || 'Unknown error'
+      }
+    })
   }
 }
 

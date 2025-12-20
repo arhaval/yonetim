@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // SADECE onaylanmış yayınları göster (status: 'approved')
+    // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
     const streams = await prisma.stream.findMany({
       where: { 
-        status: 'approved' // Sadece onaylanmış yayınlar
+        // Status filtresi kaldırıldı - tüm yayınlar gösterilir
       },
       include: {
         streamer: true,
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         teams: data.teams || null, // Eski sistem için
         cost: data.cost || 0, // Eski sistem için
         notes: data.notes || null,
-        status: 'pending', // Admin onaylayacak
+        status: 'approved', // Yayınlar direkt onaylanır, admin sonra ücret belirler
       },
     })
 

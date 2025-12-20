@@ -33,14 +33,14 @@ export default async function StreamerDetailPage({
       notFound()
     }
 
-    // Sadece onaylanmış yayınları çek (status: 'approved')
+    // Tüm yayınları çek (yayıncılar yayınları girince direkt onaylanır)
     let allStreams: any[] = []
     
     try {
       allStreams = await prisma.stream.findMany({
         where: {
           streamerId: id,
-          status: 'approved' // Sadece onaylanmış yayınlar
+          // Status filtresi kaldırıldı - tüm yayınlar gösterilir
         },
         take: 50,
         orderBy: { date: 'desc' },
@@ -246,6 +246,7 @@ export default async function StreamerDetailPage({
             totalUnpaid={totalUnpaid}
             payments={streamer.payments}
             streams={streamer.streams}
+            financialRecords={financialRecords}
           />
         </div>
 

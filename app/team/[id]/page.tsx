@@ -359,6 +359,7 @@ export default async function TeamMemberDetailPage({
                   type: p.type,
                   period: p.period,
                 }))}
+                financialRecords={financialRecords}
               />
             </>
           ) : null}

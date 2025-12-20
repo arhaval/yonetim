@@ -73,7 +73,7 @@ model Stream {
   arhavalProfit   Float    @default(0)
   teams           String?  // JSON array (eski sistem)
   cost            Float    @default(0) // eski sistem
-  status          String   @default("pending") // pending, approved, rejected
+  status          String   @default("approved") // pending, approved, rejected - Yayıncılar yayınları girince direkt onaylanır
   paymentStatus   String   @default("pending") // pending, paid
   notes           String?
   createdAt       DateTime @default(now())

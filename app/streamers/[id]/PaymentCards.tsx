@@ -23,6 +23,14 @@ interface PaymentCardsProps {
     teamName?: string | null
     matchInfo?: string | null
   }>
+  financialRecords?: Array<{
+    id: string
+    type: string
+    amount: number
+    date: Date
+    description?: string | null
+    category?: string | null
+  }>
 }
 
 export default function PaymentCards({
@@ -30,6 +38,7 @@ export default function PaymentCards({
   totalUnpaid,
   payments,
   streams,
+  financialRecords = [],
 }: PaymentCardsProps) {
   const [showPaidModal, setShowPaidModal] = useState(false)
   const [showUnpaidModal, setShowUnpaidModal] = useState(false)
@@ -38,6 +47,10 @@ export default function PaymentCards({
   const unpaidPayments = payments.filter(p => !p.paidAt)
   const paidStreams = streams.filter(s => s.paymentStatus === 'paid')
   const unpaidStreams = streams.filter(s => s.paymentStatus === 'pending')
+  
+  // Finansal kayıtlardan ödemeler (type: 'expense' ve bu kişiye ait)
+  const paidFinancialRecords = financialRecords.filter(fr => fr.type === 'expense')
+  const unpaidFinancialRecords: any[] = [] // Finansal kayıtlar genelde ödenmiş sayılır
 
   return (
     <>
@@ -88,6 +101,7 @@ export default function PaymentCards({
         title="Ödenen Ödemeler ve Yayınlar"
         payments={paidPayments}
         streams={paidStreams}
+        financialRecords={paidFinancialRecords}
       />
 
       <PaymentDetailsModal
@@ -96,6 +110,7 @@ export default function PaymentCards({
         title="Ödenmemiş Ödemeler ve Yayınlar"
         payments={unpaidPayments}
         streams={unpaidStreams}
+        financialRecords={unpaidFinancialRecords}
       />
     </>
   )

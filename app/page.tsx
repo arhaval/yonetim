@@ -6,9 +6,9 @@ import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, T
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Cache ayarları - 5 dakika cache (performans için)
-// force-dynamic kaldırıldı - revalidate ile çelişiyordu
-export const revalidate = 300 // 5 dakika cache - daha uzun cache = daha hızlı
+// Dashboard her zaman güncel verileri göstermeli
+export const dynamic = 'force-dynamic'
+export const revalidate = 0 // Cache yok - her zaman güncel veriler
 
 async function getStats() {
   try {
@@ -262,11 +262,11 @@ export default async function DashboardPage() {
     }
   }
 
-  // Prisma Client güncellenene kadar geçici çözüm
+  // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
   let recentStreams: any[] = []
   try {
     recentStreams = await prisma.stream.findMany({
-      where: { status: 'approved' }, // Sadece onaylanmış yayınları göster
+      // Status filtresi kaldırıldı - tüm yayınlar gösterilir
       take: 5,
       orderBy: { date: 'asc' },
       include: { streamer: true },

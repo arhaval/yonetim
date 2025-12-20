@@ -32,6 +32,14 @@ interface PaymentDetailsModalProps {
     createdAt: Date
     audioFile?: string | null
   }>
+  financialRecords?: Array<{
+    id: string
+    type: string
+    amount: number
+    date: Date
+    description?: string | null
+    category?: string | null
+  }>
 }
 
 export default function PaymentDetailsModal({
@@ -41,6 +49,7 @@ export default function PaymentDetailsModal({
   payments,
   streams,
   scripts,
+  financialRecords = [],
 }: PaymentDetailsModalProps) {
   if (!isOpen) return null
 
@@ -417,9 +426,70 @@ export default function PaymentDetailsModal({
               </div>
             )}
 
+            {/* Finansal Kayıtlardan Ödemeler */}
+            {financialRecords.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
+                  Finansal Kayıtlardan Ödemeler ({financialRecords.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-blue-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Kategori
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Açıklama
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          Tarih
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {financialRecords.map((record) => (
+                        <tr key={record.id} className="hover:bg-blue-50">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-blue-600">
+                              {record.amount.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                              })}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-900">
+                              {record.category || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className="text-sm text-gray-600">
+                              {record.description || '-'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center text-xs text-gray-500">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {format(new Date(record.date), 'dd MMMM yyyy', { locale: tr })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {paidPayments.length === 0 && unpaidPayments.length === 0 && 
              (!streams || (paidStreams.length === 0 && unpaidStreams.length === 0)) &&
-             (!scripts || (paidScripts.length === 0 && unpaidScripts.length === 0)) && (
+             (!scripts || (paidScripts.length === 0 && unpaidScripts.length === 0)) &&
+             financialRecords.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Henüz ödeme kaydı yok
               </div>

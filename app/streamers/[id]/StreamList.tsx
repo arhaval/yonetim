@@ -48,12 +48,7 @@ export default function StreamList({ streams, streamerId }: { streams: any[], st
                             locale: tr,
                           })}
                         </p>
-                        {stream.status === 'pending' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Onay Bekliyor
-                          </span>
-                        )}
-                        {stream.status === 'approved' && stream.streamerEarning === 0 && (
+                        {stream.streamerEarning === 0 && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
                             Maliyet Bekleniyor
                           </span>

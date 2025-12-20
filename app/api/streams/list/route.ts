@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // SADECE onaylanmış yayınları göster (status: 'approved')
+    // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
     const streams = await prisma.stream.findMany({
       where: {
         ...whereClause,
-        status: 'approved', // Sadece onaylanmış yayınlar
+        // Status filtresi kaldırıldı - tüm yayınlar gösterilir
       },
       include: {
         streamer: true,
