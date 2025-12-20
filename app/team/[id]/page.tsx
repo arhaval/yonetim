@@ -84,6 +84,14 @@ export default async function TeamMemberDetailPage({
       s.status === 'approved' || (s.status === 'pending' && s.audioFile)
     )
     totalUnpaid = unpaidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
+    
+    // Voice Actor için finansal kayıtları çek
+    financialRecords = await prisma.financialRecord.findMany({
+      where: {
+        voiceActorId: voiceActor.id,
+      },
+      orderBy: { date: 'desc' },
+    }).catch(() => [])
   } else if (member) {
     pendingTasks = member.tasks.filter((t) => t.status === 'pending').length
     completedTasks = member.tasks.filter(
@@ -366,9 +374,28 @@ export default async function TeamMemberDetailPage({
         </div>
 
         {isVoiceActor && voiceActor ? (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {/* Seslendirme Metinleri */}
-            <div className="bg-white shadow rounded-lg">
+          <>
+            {/* Voice Actor için ödeme kartları */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-6">
+              <TeamPaymentCards
+                totalPaid={totalEarnings}
+                totalUnpaid={totalUnpaid}
+                payments={[]}
+                scripts={voiceActor.scripts.map(s => ({
+                  id: s.id,
+                  title: s.title,
+                  price: s.price || 0,
+                  status: s.status,
+                  createdAt: s.createdAt,
+                  audioFile: s.audioFile,
+                }))}
+                financialRecords={financialRecords}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {/* Seslendirme Metinleri */}
+              <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
                   <FileText className="w-5 h-5 mr-2 text-pink-600" />
@@ -611,7 +638,7 @@ export default async function TeamMemberDetailPage({
             </div>
 
             {/* Finansal Kayıtlar */}
-            {member && financialRecords.length > 0 && (
+            {((member || voiceActor) && financialRecords.length > 0) && (
               <div className="bg-white shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
