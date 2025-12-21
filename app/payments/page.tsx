@@ -180,6 +180,10 @@ export default function PaymentsPage() {
   const totalPendingTeam = teamPayments
     .filter(p => !p.paidAt)
     .reduce((sum, p) => sum + p.amount, 0)
+  
+  const totalPaidTeam = teamPayments
+    .filter(p => p.paidAt)
+    .reduce((sum, p) => sum + p.amount, 0)
 
   const totalPendingVoiceActors = voiceActorPayments
     .filter(p => p.pendingAmount > 0)
@@ -251,7 +255,15 @@ export default function PaymentsPage() {
                 Ekip Üyeleri
                 {totalPendingTeam > 0 && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                    {totalPendingTeam.toLocaleString('tr-TR', {
+                    Bekleyen: {totalPendingTeam.toLocaleString('tr-TR', {
+                      style: 'currency',
+                      currency: 'TRY',
+                    })}
+                  </span>
+                )}
+                {totalPaidTeam > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                    Ödendi: {totalPaidTeam.toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                     })}
