@@ -31,8 +31,29 @@ export async function GET(request: NextRequest) {
         ...whereClause,
         // Status filtresi kaldırıldı - tüm yayınlar gösterilir
       },
-      include: {
-        streamer: true,
+      select: {
+        id: true,
+        streamerId: true,
+        date: true,
+        duration: true,
+        matchInfo: true,
+        teamName: true,
+        totalRevenue: true,
+        streamerEarning: true,
+        arhavalProfit: true,
+        status: true,
+        paymentStatus: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        streamer: {
+          select: {
+            id: true,
+            name: true,
+            profilePhoto: true,
+            isActive: true,
+          },
+        },
       },
       orderBy: { date: 'asc' },
     })
