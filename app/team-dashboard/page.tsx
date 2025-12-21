@@ -54,9 +54,9 @@ export default function TeamDashboardPage() {
   const loadData = async (memberId: string) => {
     try {
       const [tasksRes, paymentsRes, financialRes] = await Promise.all([
-        fetch(`/api/team/${memberId}/tasks`),
-        fetch(`/api/team/${memberId}/payments`),
-        fetch(`/api/team/${memberId}/financial`),
+        fetch(`/api/team/${memberId}/tasks`, { credentials: 'include' }),
+        fetch(`/api/team/${memberId}/payments`, { credentials: 'include' }),
+        fetch(`/api/team/${memberId}/financial`, { credentials: 'include' }),
       ])
 
       const tasksData = await tasksRes.json()
