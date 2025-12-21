@@ -15,9 +15,18 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(year, monthNum, 0, 23, 59, 59)
 
     // O ay için ödeme kayıtlarını getir
+    // period alanına göre VEYA paidAt tarihine göre filtrele
     const payments = await prisma.teamPayment.findMany({
       where: {
-        period: month,
+        OR: [
+          { period: month },
+          {
+            paidAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+        ],
       },
       include: {
         teamMember: {

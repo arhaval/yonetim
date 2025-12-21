@@ -206,8 +206,17 @@ export async function POST(request: NextRequest) {
         const paymentDate = new Date(data.date)
         const month = format(paymentDate, 'yyyy-MM')
         
+        console.log(`[Financial API] Attempting to create TeamPayment:`, {
+          teamMemberId: data.teamMemberId,
+          type: data.type,
+          category: data.category,
+          amount: parseFloat(data.amount),
+          date: paymentDate,
+          month: month,
+        })
+        
         try {
-          await prisma.teamPayment.create({
+          const teamPayment = await prisma.teamPayment.create({
             data: {
               teamMemberId: data.teamMemberId,
               amount: parseFloat(data.amount),
@@ -217,11 +226,28 @@ export async function POST(request: NextRequest) {
               paidAt: paymentDate,
             },
           })
-          console.log(`[Financial API] Created TeamPayment for team member ${data.teamMemberId}`)
+          console.log(`[Financial API] ✅ Created TeamPayment for team member ${data.teamMemberId}:`, {
+            id: teamPayment.id,
+            amount: teamPayment.amount,
+            period: teamPayment.period,
+            paidAt: teamPayment.paidAt,
+          })
         } catch (teamPaymentError: any) {
           // TeamPayment oluşturma hatası finansal kaydı etkilemesin
-          console.error('Error creating TeamPayment:', teamPaymentError)
+          console.error('❌ Error creating TeamPayment:', {
+            error: teamPaymentError.message,
+            code: teamPaymentError.code,
+            meta: teamPaymentError.meta,
+            teamMemberId: data.teamMemberId,
+          })
         }
+      } else {
+        console.log(`[Financial API] Skipping TeamPayment creation:`, {
+          teamMemberId: data.teamMemberId,
+          type: data.type,
+          category: data.category,
+          condition: !(data.teamMemberId && data.type === 'expense' && data.category === 'salary'),
+        })
       }
       
       return NextResponse.json(record)
