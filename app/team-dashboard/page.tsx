@@ -12,6 +12,7 @@ export default function TeamDashboardPage() {
   const [member, setMember] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [payments, setPayments] = useState<any[]>([])
+  const [financialRecords, setFinancialRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     pendingTasks: 0,
@@ -43,13 +44,15 @@ export default function TeamDashboardPage() {
 
   const loadData = async (memberId: string) => {
     try {
-      const [tasksRes, paymentsRes] = await Promise.all([
+      const [tasksRes, paymentsRes, financialRes] = await Promise.all([
         fetch(`/api/team/${memberId}/tasks`),
         fetch(`/api/team/${memberId}/payments`),
+        fetch(`/api/team/${memberId}/financial`),
       ])
 
       const tasksData = await tasksRes.json()
       const paymentsData = await paymentsRes.json()
+      const financialData = await financialRes.json()
 
       if (tasksRes.ok) {
         setTasks(tasksData.tasks || [])
@@ -69,6 +72,10 @@ export default function TeamDashboardPage() {
           .filter((p: any) => !p.paidAt)
           .reduce((sum: number, p: any) => sum + p.amount, 0)
         setStats(prev => ({ ...prev, unpaidAmount: unpaid }))
+      }
+
+      if (financialRes.ok) {
+        setFinancialRecords(financialData.financialRecords || [])
       }
     } catch (error) {
       console.error('Error loading data:', error)
