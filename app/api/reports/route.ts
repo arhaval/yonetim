@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
         id: s.id,
         name: s.name,
         // platform: s.platform, // BU SATIR SİLİNDİ (Veritabanında yoksa hata verir)
-        streamCount: s.streams?.length || s._count?.streams || 0,
+        streamCount: s._count?.streams || 0,
       })),
       topContent: contents,
       topContentByViews,
