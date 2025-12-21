@@ -55,7 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Desktop'ta sidebar varsayılan olarak açık
-    if (window.innerWidth >= 1024) {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       setSidebarOpen(true)
     }
   }, [])
