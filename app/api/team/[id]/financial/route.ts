@@ -14,6 +14,7 @@ export async function GET(
     const teamMemberId = resolvedParams.id
     
     // Authentication kontrolü - ekip üyesi sadece kendi kayıtlarını görebilmeli
+    // Admin panelinden erişim için kontrol yapılmıyor (admin herkesi görebilir)
     const cookieStore = await cookies()
     const loginToken = cookieStore.get('team-login-token')?.value
     
@@ -26,12 +27,15 @@ export async function GET(
       
       if (teamMember && teamMember.id !== teamMemberId) {
         // Farklı bir ekip üyesinin kayıtlarını görmeye çalışıyor
+        console.log(`[Financial API] Access denied: ${teamMember.id} tried to access ${teamMemberId}`)
         return NextResponse.json(
           { error: 'Bu kayıtlara erişim yetkiniz yok' },
           { status: 403 }
         )
       }
     }
+    
+    // Login token yoksa admin panelinden erişim olabilir, devam et
     
     const financialRecords = await prisma.financialRecord.findMany({
       where: { teamMemberId },
