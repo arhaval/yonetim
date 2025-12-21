@@ -91,13 +91,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2 relative">
                   <Image
-                    src="/arhaval-logo.png"
+                    src="/arhaval-logo.svg"
                     alt="Arhaval Logo"
                     width={48}
                     height={48}
                     className="object-contain"
                     priority
-                    unoptimized={false}
+                    unoptimized={true}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
@@ -226,13 +226,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Logo - Sağ tarafta */}
                 <div className="hidden sm:flex items-center">
                   <Image
-                    src="/arhaval-logo.png"
+                    src="/arhaval-logo.svg"
                     alt="Arhaval Logo"
                     width={120}
                     height={40}
                     className="h-10 w-auto object-contain"
                     priority
-                    unoptimized={false}
+                    unoptimized={true}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
