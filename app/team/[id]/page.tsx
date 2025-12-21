@@ -519,7 +519,7 @@ export default async function TeamMemberDetailPage({
                 </div>
               </div>
             </div>
-          </div>
+          </>
         ) : member ? (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="bg-white shadow rounded-lg">
