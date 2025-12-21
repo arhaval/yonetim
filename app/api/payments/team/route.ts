@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
 
     // O ay için ödeme kayıtlarını getir
     // period alanına göre VEYA paidAt tarihine göre filtrele
-    // Ayrıca paidAt null olmayan kayıtları da göster (finansal sayfadan yapılan ödemeler)
     const payments = await prisma.teamPayment.findMany({
       where: {
         OR: [
@@ -26,18 +25,6 @@ export async function GET(request: NextRequest) {
               gte: startDate,
               lte: endDate,
             },
-          },
-          {
-            // Finansal sayfadan yapılan ödemeler için: paidAt varsa ve o ay içindeyse
-            AND: [
-              { paidAt: { not: null } },
-              {
-                paidAt: {
-                  gte: startDate,
-                  lte: endDate,
-                },
-              },
-            ],
           },
         ],
       },
