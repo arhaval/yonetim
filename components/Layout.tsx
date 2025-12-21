@@ -2,11 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-
-// Logo version - logo dosyası değiştiğinde bu numarayı artırın
-const LOGO_VERSION = '1.0.0'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -91,12 +89,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="p-5 border-b border-slate-700/50">
             <div className="flex items-center justify-between">
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2">
-                  <img 
-                    src={`/arhaval-logo.png?v=${LOGO_VERSION}`}
-                    alt="Arhaval Logo" 
-                    className="w-full h-full object-contain"
-                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2 relative">
+                  <Image
+                    src="/arhaval-logo.png"
+                    alt="Arhaval Logo"
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                    priority
+                    unoptimized={false}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
@@ -224,11 +225,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex items-center space-x-3">
                 {/* Logo - Sağ tarafta */}
                 <div className="hidden sm:flex items-center">
-                  <img 
-                    src={`/arhaval-logo.png?v=${LOGO_VERSION}`}
-                    alt="Arhaval Logo" 
+                  <Image
+                    src="/arhaval-logo.png"
+                    alt="Arhaval Logo"
+                    width={120}
+                    height={40}
                     className="h-10 w-auto object-contain"
-                    style={{ maxHeight: '40px' }}
+                    priority
+                    unoptimized={false}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'

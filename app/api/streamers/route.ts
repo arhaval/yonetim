@@ -12,14 +12,33 @@ export async function GET() {
   if (adminCheck) return adminCheck
   try {
     const streamers = await prisma.streamer.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        profilePhoto: true,
+        email: true,
+        phone: true,
+        iban: true,
+        channelUrl: true,
+        hourlyRate: true,
+        commissionRate: true,
+        isActive: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
         _count: {
           select: {
             streams: true,
             externalStreams: true,
           },
         },
-        teamRates: true,
+        teamRates: {
+          select: {
+            id: true,
+            teamName: true,
+            hourlyRate: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     })

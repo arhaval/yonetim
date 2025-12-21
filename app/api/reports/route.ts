@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-// searchParams kullandığı için dynamic olmalı
-export const dynamic = 'force-dynamic'
+// Cache GET requests for 30 seconds (searchParams cache key'e dahil edilir)
+export const revalidate = 30
 
 export async function GET(request: NextRequest) {
   try {
