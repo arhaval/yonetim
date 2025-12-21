@@ -85,10 +85,11 @@ export async function GET(request: NextRequest) {
         _sum: { cost: true },
       }).catch(() => ({ _sum: { cost: null } })),
       prisma.streamer.findMany({
-        include: {
-          streams: {
-            where: whereClause,
-          },
+        select: {
+          id: true,
+          name: true,
+          profilePhoto: true,
+          isActive: true,
           _count: {
             select: {
               streams: true,
@@ -101,6 +102,20 @@ export async function GET(request: NextRequest) {
       ).catch(() => []),
       prisma.content.findMany({
         where: contentWhereClause,
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          platform: true,
+          url: true,
+          publishDate: true,
+          views: true,
+          likes: true,
+          comments: true,
+          shares: true,
+          saves: true,
+          creatorName: true,
+        },
         orderBy: {
           likes: 'desc',
         },
@@ -108,6 +123,15 @@ export async function GET(request: NextRequest) {
       }).catch(() => []),
       prisma.content.findMany({
         where: contentWhereClause,
+        select: {
+          views: true,
+          likes: true,
+          comments: true,
+          shares: true,
+          saves: true,
+          platform: true,
+          type: true,
+        },
       }).catch(() => []),
     ])
 
