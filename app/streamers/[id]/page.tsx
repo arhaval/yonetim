@@ -9,6 +9,10 @@ import StreamList from './StreamList'
 import PaymentCards from './PaymentCards'
 import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 
+// Sayfayı her istekte yenile (finansal kayıtlar için)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function StreamerDetailPage({
   params,
 }: {
