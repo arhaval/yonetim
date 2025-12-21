@@ -289,13 +289,13 @@ export default function PaymentsPage() {
           </div>
         ) : activeTab === 'streamers' ? (
           <div className="space-y-4">
-            {streamerPayments.filter(p => p.pendingAmount > 0).length === 0 ? (
+            {streamerPayments.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Bu ay için ödenmemiş ödeme bulunamadı</p>
+                <p className="text-gray-500">Bu ay için yayın bulunamadı</p>
               </div>
             ) : (
               <>
-                {streamerPayments.filter(p => p.pendingAmount > 0).map((payment) => (
+                {streamerPayments.map((payment) => (
                   <div
                     key={payment.streamerId}
                     className="bg-white rounded-lg shadow-lg p-6 border border-gray-200"
@@ -425,7 +425,7 @@ export default function PaymentsPage() {
                     </div>
                   </div>
                 ))}
-                {streamerPayments.some(p => p.pendingAmount > 0) && (
+                {streamerPayments.filter(p => p.pendingAmount > 0).length > 0 && (
                   <div className="mt-6">
                     <button
                       onClick={() => handleBulkPayment('streamers', streamerPayments.filter(p => p.pendingAmount > 0))}

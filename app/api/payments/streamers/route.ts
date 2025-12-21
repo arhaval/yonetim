@@ -50,11 +50,13 @@ export async function GET(request: NextRequest) {
         }
       }
       acc[streamerId].totalStreams++
-      acc[streamerId].totalAmount += stream.streamerEarning
+      acc[streamerId].totalAmount += stream.streamerEarning || 0
+      // paymentStatus kontrolü - null/undefined durumlarını da pending olarak kabul et
       if (stream.paymentStatus === 'paid') {
-        acc[streamerId].paidAmount += stream.streamerEarning
+        acc[streamerId].paidAmount += stream.streamerEarning || 0
       } else {
-        acc[streamerId].pendingAmount += stream.streamerEarning
+        // pending, null, undefined veya başka bir değer -> pendingAmount'a ekle
+        acc[streamerId].pendingAmount += stream.streamerEarning || 0
       }
       return acc
     }, {})
