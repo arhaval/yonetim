@@ -213,6 +213,18 @@ export async function POST(request: NextRequest) {
         },
       })
       
+      console.log(`[Financial API] ✅ Created financial record:`, {
+        id: record.id,
+        type: record.type,
+        category: record.category,
+        amount: record.amount,
+        streamerId: record.streamerId,
+        teamMemberId: record.teamMemberId,
+        contentCreatorId: record.contentCreatorId,
+        voiceActorId: record.voiceActorId,
+        date: record.date,
+      })
+      
       // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
       // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
       const shouldCreateTeamPayment = !!(
