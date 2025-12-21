@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Finansal kayıt oluştur (gider olarak)
-      await prisma.financialRecord.create({
+      const financialRecord = await prisma.financialRecord.create({
         data: {
           type: 'expense',
           category: 'salary',
@@ -148,6 +148,12 @@ export async function POST(request: NextRequest) {
           date: paymentDate,
           teamMemberId: teamPayment.teamMemberId,
         },
+      })
+      
+      console.log(`[Payment API] Created financial record for team member ${teamPayment.teamMemberId}:`, {
+        id: financialRecord.id,
+        amount: financialRecord.amount,
+        date: financialRecord.date,
       })
     } else if (type === 'voice-actors' && voiceActorId) {
       // Seslendirmen ödemesi
