@@ -23,7 +23,16 @@ export default function TeamDashboardPage() {
 
   useEffect(() => {
     checkAuth()
-  }, [])
+    
+    // Her 30 saniyede bir verileri yenile (finansal kayıtlar için)
+    const interval = setInterval(() => {
+      if (member?.id) {
+        loadData(member.id)
+      }
+    }, 30000) // 30 saniye
+
+    return () => clearInterval(interval)
+  }, [member])
 
   const checkAuth = async () => {
     try {
