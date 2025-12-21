@@ -201,6 +201,29 @@ export async function POST(request: NextRequest) {
         },
       })
       
+      // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
+      if (data.teamMemberId && data.type === 'expense' && data.category === 'salary') {
+        const paymentDate = new Date(data.date)
+        const month = format(paymentDate, 'yyyy-MM')
+        
+        try {
+          await prisma.teamPayment.create({
+            data: {
+              teamMemberId: data.teamMemberId,
+              amount: parseFloat(data.amount),
+              type: 'salary',
+              period: month,
+              description: data.description || `${month} ayı ekip üyesi ödemesi`,
+              paidAt: paymentDate,
+            },
+          })
+          console.log(`[Financial API] Created TeamPayment for team member ${data.teamMemberId}`)
+        } catch (teamPaymentError: any) {
+          // TeamPayment oluşturma hatası finansal kaydı etkilemesin
+          console.error('Error creating TeamPayment:', teamPaymentError)
+        }
+      }
+      
       return NextResponse.json(record)
     } catch (prismaError: any) {
       console.error('Prisma create error:', {
