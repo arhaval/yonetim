@@ -269,13 +269,13 @@ export default function NewFinancialPage() {
 
   return (
     <Layout>
-      <div className="px-4 py-6 sm:px-0">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Yeni Finansal Kayıt</h1>
+      <div className="px-4 py-4 sm:py-6 sm:px-0">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Yeni Finansal Kayıt</h1>
           {/* Debug bilgisi - her zaman görünür */}
-          <div className="mt-3 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
-            <p className="text-sm font-semibold text-yellow-800 mb-2">🔍 Debug Bilgisi:</p>
-            <p className="text-xs text-yellow-700">
+          <div className="mt-3 p-3 sm:p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+            <p className="text-xs sm:text-sm font-semibold text-yellow-800 mb-2">🔍 Debug Bilgisi:</p>
+            <p className="text-xs text-yellow-700 break-words">
               Toplam: <strong>{allMembers.length}</strong> kişi | 
               Yayıncılar: <strong>{streamers.length}</strong> | 
               Ekip Üyeleri: <strong>{teamMembers.length}</strong> | 
@@ -285,7 +285,7 @@ export default function NewFinancialPage() {
             <a 
               href="/api/team/debug" 
               target="_blank" 
-              className="mt-2 inline-block text-sm text-blue-600 hover:underline font-semibold"
+              className="mt-2 inline-block text-xs sm:text-sm text-blue-600 hover:underline font-semibold break-words"
             >
               🔍 Tüm Üye Tiplerini Görmek İçin Tıklayın (Yeni Sekmede Açılır)
             </a>
