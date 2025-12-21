@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { startOfMonth, endOfMonth, parse } from 'date-fns'
+import { startOfMonth, endOfMonth, parse, format } from 'date-fns'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
