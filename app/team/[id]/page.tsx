@@ -466,6 +466,7 @@ export default async function TeamMemberDetailPage({
                   )}
                 </div>
               </div>
+              </div>
             </div>
 
             {/* Ödeme Özeti */}
