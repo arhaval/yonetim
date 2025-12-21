@@ -84,10 +84,15 @@ export default function TeamDashboardPage() {
       }
 
       if (financialRes.ok) {
+        console.log(`[Team Dashboard] Financial records loaded:`, financialData.financialRecords?.length || 0, financialData)
         setFinancialRecords(financialData.financialRecords || [])
+      } else {
+        console.error(`[Team Dashboard] Financial records error:`, financialRes.status, financialData)
+        setFinancialRecords([])
       }
     } catch (error) {
       console.error('Error loading data:', error)
+      setFinancialRecords([])
     } finally {
       setLoading(false)
     }
