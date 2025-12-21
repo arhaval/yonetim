@@ -176,6 +176,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Debug: Gelen veriyi logla
+    console.log(`[Financial API] Received data:`, {
+      type: data.type,
+      category: data.category,
+      amount: data.amount,
+      date: data.date,
+      teamMemberId: data.teamMemberId,
+      streamerId: data.streamerId,
+      contentCreatorId: data.contentCreatorId,
+      voiceActorId: data.voiceActorId,
+    })
+
     // Prisma data objesi oluştur
     const prismaData: any = {
       type: data.type,
@@ -202,7 +214,26 @@ export async function POST(request: NextRequest) {
       })
       
       // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
-      if (data.teamMemberId && data.type === 'expense' && data.category === 'salary') {
+      // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
+      const shouldCreateTeamPayment = !!(
+        data.teamMemberId && 
+        data.type === 'expense' && 
+        data.category === 'salary'
+      )
+      
+      console.log(`[Financial API] TeamPayment creation check:`, {
+        teamMemberId: data.teamMemberId,
+        type: data.type,
+        category: data.category,
+        shouldCreate: shouldCreateTeamPayment,
+        conditions: {
+          hasTeamMemberId: !!data.teamMemberId,
+          isExpense: data.type === 'expense',
+          isSalary: data.category === 'salary',
+        },
+      })
+      
+      if (shouldCreateTeamPayment) {
         const paymentDate = new Date(data.date)
         const month = format(paymentDate, 'yyyy-MM')
         
