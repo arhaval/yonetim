@@ -216,18 +216,22 @@ export default function NewFinancialPage() {
     e.preventDefault()
     setLoading(true)
 
+    const submitData = {
+      ...formData,
+      amount: parseFloat(formData.amount),
+      streamerId: formData.streamerId || null,
+      teamMemberId: formData.teamMemberId || null,
+      contentCreatorId: formData.contentCreatorId || null,
+      voiceActorId: formData.voiceActorId || null,
+    }
+    
+    console.log('[Financial Form] Submitting data:', submitData)
+
     try {
       const res = await fetch('/api/financial', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          amount: parseFloat(formData.amount),
-          streamerId: formData.streamerId || null,
-          teamMemberId: formData.teamMemberId || null,
-          contentCreatorId: formData.contentCreatorId || null,
-          voiceActorId: formData.voiceActorId || null,
-        }),
+        body: JSON.stringify(submitData),
       })
 
       if (res.ok) {
