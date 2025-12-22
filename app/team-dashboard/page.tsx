@@ -84,10 +84,14 @@ export default function TeamDashboardPage() {
       }
 
       if (financialRes.ok) {
-        console.log(`[Team Dashboard] Financial records loaded:`, financialData.financialRecords?.length || 0, financialData)
+        console.log(`[Team Dashboard] Financial records loaded:`, financialData.financialRecords?.length || 0)
+        console.log(`[Team Dashboard] Financial records data:`, financialData)
+        console.log(`[Team Dashboard] Member ID:`, memberId)
+        console.log(`[Team Dashboard] Sample records:`, financialData.financialRecords?.slice(0, 3))
         setFinancialRecords(financialData.financialRecords || [])
       } else {
         console.error(`[Team Dashboard] Financial records error:`, financialRes.status, financialData)
+        console.error(`[Team Dashboard] Member ID:`, memberId)
         setFinancialRecords([])
       }
     } catch (error) {

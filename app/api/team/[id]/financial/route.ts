@@ -30,6 +30,7 @@ export async function GET(
     
     // Login token yoksa admin panelinden erişim olabilir, devam et
     
+    // Önce bu teamMemberId ile kayıtları kontrol et
     const financialRecords = await prisma.financialRecord.findMany({
       where: { teamMemberId },
       orderBy: { date: 'desc' },
@@ -55,11 +56,22 @@ export async function GET(
           type: true,
           category: true,
           amount: true,
+          date: true,
         },
-        take: 10,
+        take: 20,
+        orderBy: { date: 'desc' },
       })
       console.log(`[Financial API] Debug: Total financial records in DB:`, allRecords.length)
-      console.log(`[Financial API] Debug: Sample records with teamMemberId:`, allRecords.filter(r => r.teamMemberId))
+      console.log(`[Financial API] Debug: Records with teamMemberId:`, allRecords.filter(r => r.teamMemberId))
+      console.log(`[Financial API] Debug: Looking for teamMemberId: "${teamMemberId}"`)
+      console.log(`[Financial API] Debug: Matching records:`, allRecords.filter(r => r.teamMemberId === teamMemberId))
+      
+      // Ayrıca bu teamMemberId'nin var olup olmadığını kontrol et
+      const memberExists = await prisma.teamMember.findUnique({
+        where: { id: teamMemberId },
+        select: { id: true, name: true },
+      })
+      console.log(`[Financial API] Debug: Team member exists:`, memberExists)
     }
     
     return NextResponse.json({ financialRecords })

@@ -189,18 +189,26 @@ export async function POST(request: NextRequest) {
     })
 
     // Prisma data objesi oluştur
+    // Boş string'leri null'a çevir
     const prismaData: any = {
       type: data.type,
       category: data.category,
       amount: parseFloat(data.amount),
       description: data.description || null,
       date: new Date(data.date),
-      streamerId: data.streamerId || null,
-      teamMemberId: data.teamMemberId || null,
-      contentCreatorId: data.contentCreatorId || null,
-      voiceActorId: data.voiceActorId || null,
+      streamerId: (data.streamerId && data.streamerId.trim() !== '') ? data.streamerId : null,
+      teamMemberId: (data.teamMemberId && data.teamMemberId.trim() !== '') ? data.teamMemberId : null,
+      contentCreatorId: (data.contentCreatorId && data.contentCreatorId.trim() !== '') ? data.contentCreatorId : null,
+      voiceActorId: (data.voiceActorId && data.voiceActorId.trim() !== '') ? data.voiceActorId : null,
       streamId: null, // streamId opsiyonel
     }
+    
+    console.log(`[Financial API] Prisma data prepared:`, {
+      teamMemberId: prismaData.teamMemberId,
+      streamerId: prismaData.streamerId,
+      contentCreatorId: prismaData.contentCreatorId,
+      voiceActorId: prismaData.voiceActorId,
+    })
 
     try {
       const record = await prisma.financialRecord.create({
