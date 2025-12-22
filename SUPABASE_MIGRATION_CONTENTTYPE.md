@@ -111,4 +111,3 @@ Bu column eklendikten sonra:
 
 **Not:** Bu migration production database'de yapılıyor, dikkatli olun!
 
-

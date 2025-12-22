@@ -1,4 +1,4 @@
-# 📧 Email ve Şifre Zorunlu Hale Getirildi
+ş# 📧 Email ve Şifre Zorunlu Hale Getirildi
 
 ## ✅ Yapılan Değişiklikler
 

@@ -94,3 +94,4 @@ Veya API endpoint'i kullanarak kayıt sayfası ekleyebilirsiniz.
 - Şifreler bcrypt ile hash'lenir
 - Session yönetimi cookie tabanlıdır (production'da JWT kullanılmalı)
 
+   
