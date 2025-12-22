@@ -350,84 +350,85 @@ export default function StreamerDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-            <div className="divide-y divide-gray-200">
-              {paymentHistory.map((payment: any) => (
-                <div key={payment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0">
-                          {payment.status === 'paid' ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-600" />
-                          ) : payment.status === 'unpaid' ? (
-                            <AlertCircle className="w-5 h-5 text-red-600" />
-                          ) : (
-                            <Clock className="w-5 h-5 text-yellow-600" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-lg font-semibold text-gray-900">
-                              {payment.title || payment.description || (payment.period ? `${payment.period} ayı ödemesi` : 'Ödeme')}
-                            </p>
-                            {payment.source && (
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                payment.source === 'payout' 
-                                  ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {payment.source === 'payout' ? 'Manuel Ödeme' : 'İş Ödemesi'}
-                              </span>
+              <div className="divide-y divide-gray-200">
+                {paymentHistory.map((payment: any) => (
+                  <div key={payment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0">
+                            {payment.status === 'paid' ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-600" />
+                            ) : payment.status === 'unpaid' ? (
+                              <AlertCircle className="w-5 h-5 text-red-600" />
+                            ) : (
+                              <Clock className="w-5 h-5 text-yellow-600" />
                             )}
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              payment.status === 'paid' 
-                                ? 'bg-green-100 text-green-800' 
-                                : payment.status === 'unpaid'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {payment.status === 'paid' ? 'Ödendi' : payment.status === 'unpaid' ? 'Ödenmedi' : 'Kısmen Ödendi'}
-                            </span>
                           </div>
-                          <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                            <span className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {format(new Date(payment.date || payment.paidAt || payment.createdAt), 'dd MMMM yyyy', { locale: tr })}
-                            </span>
-                            {payment.period && (
-                              <>
-                                <span>•</span>
-                                <span>Dönem: {payment.period}</span>
-                              </>
-                            )}
-                            {payment.description && payment.source !== 'payout' && (
-                              <>
-                                <span>•</span>
-                                <span>{payment.description}</span>
-                              </>
-                            )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-lg font-semibold text-gray-900">
+                                {payment.title || payment.description || (payment.period ? `${payment.period} ayı ödemesi` : 'Ödeme')}
+                              </p>
+                              {payment.source && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                  payment.source === 'payout' 
+                                    ? 'bg-blue-100 text-blue-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {payment.source === 'payout' ? 'Manuel Ödeme' : 'İş Ödemesi'}
+                                </span>
+                              )}
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                payment.status === 'paid' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : payment.status === 'unpaid'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {payment.status === 'paid' ? 'Ödendi' : payment.status === 'unpaid' ? 'Ödenmedi' : 'Kısmen Ödendi'}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                              <span className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {format(new Date(payment.date || payment.paidAt || payment.createdAt), 'dd MMMM yyyy', { locale: tr })}
+                              </span>
+                              {payment.period && (
+                                <>
+                                  <span>•</span>
+                                  <span>Dönem: {payment.period}</span>
+                                </>
+                              )}
+                              {payment.description && payment.source !== 'payout' && (
+                                <>
+                                  <span>•</span>
+                                  <span>{payment.description}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-lg font-bold ${
-                        payment.status === 'paid' 
-                          ? 'text-green-600' 
-                          : payment.status === 'unpaid'
-                          ? 'text-red-600'
-                          : 'text-yellow-600'
-                      }`}>
-                        {payment.amount.toLocaleString('tr-TR', {
-                          style: 'currency',
-                          currency: 'TRY',
-                          maximumFractionDigits: 0,
-                        })}
-                      </p>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold ${
+                          payment.status === 'paid' 
+                            ? 'text-green-600' 
+                            : payment.status === 'unpaid'
+                            ? 'text-red-600'
+                            : 'text-yellow-600'
+                        }`}>
+                          {payment.amount.toLocaleString('tr-TR', {
+                            style: 'currency',
+                            currency: 'TRY',
+                            maximumFractionDigits: 0,
+                          })}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
