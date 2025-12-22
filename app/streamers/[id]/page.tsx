@@ -135,6 +135,22 @@ export default async function StreamerDetailPage({
   }).catch(() => ({ _sum: { amount: null } }))
 
   // Finansal kayıtları getir (bu yayıncıya ait olanlar)
+  // Debug: Önce tüm finansal kayıtları kontrol et
+  const allFinancialRecords = await prisma.financialRecord.findMany({
+    select: {
+      id: true,
+      streamerId: true,
+      type: true,
+      category: true,
+      amount: true,
+    },
+    orderBy: { date: 'desc' },
+    take: 10, // Son 10 kaydı kontrol et
+  }).catch(() => [])
+  
+  console.log(`[Streamer Profile] All recent financial records:`, allFinancialRecords)
+  console.log(`[Streamer Profile] Looking for records with streamerId: ${streamer.id}`)
+  
   const financialRecords = await prisma.financialRecord.findMany({
     where: {
       streamerId: streamer.id,
@@ -147,6 +163,7 @@ export default async function StreamerDetailPage({
   
   console.log(`[Streamer Profile] Found ${financialRecords.length} financial records for streamer ${streamer.id}`, {
     streamerId: streamer.id,
+    streamerName: streamer.name,
     records: financialRecords.map(r => ({ id: r.id, type: r.type, category: r.category, amount: r.amount, streamerId: r.streamerId })),
   })
 
