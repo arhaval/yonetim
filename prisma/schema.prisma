@@ -285,6 +285,25 @@ model TeamPayment {
   @@index([period])
 }
 
+model Payout {
+  id          String   @id @default(cuid())
+  recipientType String // 'streamer' | 'voiceActor' | 'teamMember' | 'contentCreator'
+  recipientId   String // Streamer/VoiceActor/TeamMember/ContentCreator ID
+  amount      Float    // Pozitif tutar
+  status      String   @default("paid") // 'paid' | 'unpaid' | 'partial'
+  source      String   @default("manual") // 'manual' | 'stream' | 'voice' | 'other'
+  referenceId String?  // streamId/voiceJobId varsa
+  note        String?
+  paidAt      DateTime? // Ödeme tarihi
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([recipientType, recipientId])
+  @@index([recipientType, recipientId, createdAt])
+  @@index([status, createdAt])
+  @@index([paidAt])
+}
+
 model MonthlyPlan {
   id        String   @id @default(cuid())
   title     String

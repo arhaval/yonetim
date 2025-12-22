@@ -25,6 +25,8 @@ export default function NewFinancialPage() {
     contentCreatorId: '',
     voiceActorId: '',
     memberId: '', // Birleşik dropdown için
+    isPayout: false, // Bu bir ödeme mi?
+    payoutStatus: 'paid', // Ödeme durumu
   })
 
   useEffect(() => {
@@ -214,6 +216,13 @@ export default function NewFinancialPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Eğer payout seçilmişse ama kişi seçilmemişse hata ver
+    if (formData.isPayout && !formData.memberId) {
+      alert('Ödeme kaydı oluşturmak için "Kime Ödendi?" alanını doldurmalısınız.')
+      return
+    }
+
     setLoading(true)
 
     const submitData = {
@@ -223,12 +232,15 @@ export default function NewFinancialPage() {
       teamMemberId: formData.teamMemberId || null,
       contentCreatorId: formData.contentCreatorId || null,
       voiceActorId: formData.voiceActorId || null,
+      isPayout: formData.isPayout,
+      payoutStatus: formData.payoutStatus,
     }
     
     console.log('[Financial Form] Submitting data:', submitData)
 
     try {
-      const res = await fetch('/api/financial', {
+      const endpoint = formData.isPayout ? '/api/payouts' : '/api/financial'
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
@@ -389,7 +401,7 @@ export default function NewFinancialPage() {
 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Kişi (Opsiyonel)
+                  Kime Ödendi? {formData.isPayout && <span className="text-red-500">*</span>}
                   <span className="ml-2 text-xs text-gray-400">
                     ({allMembers.length} kişi: {streamers.length} yayıncı, {teamMembers.length} ekip üyesi, {contentCreators.length} içerik üreticisi, {voiceActors.length} seslendirmen)
                   </span>
@@ -399,6 +411,7 @@ export default function NewFinancialPage() {
                   onChange={(e) => handleMemberChange(e.target.value)}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2"
                   disabled={loading}
+                  required={formData.isPayout}
                 >
                   <option value="">Yok</option>
                   {allMembers.length === 0 ? (
@@ -451,6 +464,48 @@ export default function NewFinancialPage() {
                     <p className="text-xs text-gray-500">
                       Kişi yoksa önce <Link href="/team/new" className="text-blue-600 hover:underline">ekip üyesi</Link> veya <Link href="/streamers/new" className="text-blue-600 hover:underline">yayıncı ekleyin</Link>
                     </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="sm:col-span-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isPayout"
+                    checked={formData.isPayout}
+                    onChange={(e) => {
+                      setFormData({ ...formData, isPayout: e.target.checked })
+                      if (!e.target.checked) {
+                        // Toggle kapalıysa memberId'yi temizle
+                        setFormData(prev => ({ ...prev, isPayout: false, memberId: '', streamerId: '', teamMemberId: '', contentCreatorId: '', voiceActorId: '' }))
+                      }
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="isPayout" className="ml-2 block text-sm font-medium text-gray-700">
+                    Bu bir ödeme mi? (Manuel ödeme kaydı oluştur)
+                  </label>
+                </div>
+                {formData.isPayout && (
+                  <div className="mt-3 ml-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs text-blue-800 mb-2">
+                      ✅ Ödeme kaydı oluşturulacak. Seçilen kişi kendi panelinde bu ödemeyi görebilecek.
+                    </p>
+                    <div className="mt-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Ödeme Durumu
+                      </label>
+                      <select
+                        value={formData.payoutStatus}
+                        onChange={(e) => setFormData({ ...formData, payoutStatus: e.target.value })}
+                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xs border p-2"
+                      >
+                        <option value="paid">Ödendi</option>
+                        <option value="unpaid">Ödenmedi</option>
+                        <option value="partial">Kısmen Ödendi</option>
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
