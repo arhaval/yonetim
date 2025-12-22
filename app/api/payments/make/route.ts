@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
           amount: amount,
           description: note || `${month} ayı seslendirme ödemesi`,
           date: paidAt ? new Date(paidAt) : new Date(),
+          voiceActorId: voiceActorId,
         },
       })
     } else {

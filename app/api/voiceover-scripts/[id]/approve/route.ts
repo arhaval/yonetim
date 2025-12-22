@@ -89,6 +89,8 @@ export async function POST(
             amount: price,
             description: `Seslendirme: ${updatedScript.title} - ${updatedScript.voiceActor?.name || 'Bilinmeyen'}`,
             date: new Date(),
+            voiceActorId: updatedScript.voiceActorId || null,
+            contentCreatorId: updatedScript.creatorId || null,
           },
         })
         console.log('Finansal kayıt oluşturuldu:', financialRecord)

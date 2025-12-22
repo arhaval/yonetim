@@ -36,6 +36,31 @@ export async function GET(
     })
 
     console.log(`[Financial API] Team member ${teamMemberId}: Found ${financialRecords.length} financial records`)
+    console.log(`[Financial API] Sample records:`, financialRecords.slice(0, 3).map(r => ({
+      id: r.id,
+      type: r.type,
+      category: r.category,
+      amount: r.amount,
+      teamMemberId: r.teamMemberId,
+      date: r.date,
+    })))
+    
+    // Eğer kayıt bulunamazsa, tüm finansal kayıtları kontrol et (debug için)
+    if (financialRecords.length === 0) {
+      const allRecords = await prisma.financialRecord.findMany({
+        where: {},
+        select: {
+          id: true,
+          teamMemberId: true,
+          type: true,
+          category: true,
+          amount: true,
+        },
+        take: 10,
+      })
+      console.log(`[Financial API] Debug: Total financial records in DB:`, allRecords.length)
+      console.log(`[Financial API] Debug: Sample records with teamMemberId:`, allRecords.filter(r => r.teamMemberId))
+    }
     
     return NextResponse.json({ financialRecords })
   } catch (error: any) {

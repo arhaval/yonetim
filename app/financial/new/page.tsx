@@ -241,6 +241,15 @@ export default function NewFinancialPage() {
         // Eğer streamerId varsa, streamer profil sayfasına yönlendir
         if (result.streamerId) {
           router.push(`/streamers/${result.streamerId}`)
+        } else if (result.teamMemberId) {
+          // Eğer teamMemberId varsa, ekip üyesi profil sayfasına yönlendir
+          router.push(`/team/${result.teamMemberId}`)
+        } else if (result.contentCreatorId) {
+          // Eğer contentCreatorId varsa, içerik üreticisi profil sayfasına yönlendir
+          router.push(`/content-creators/${result.contentCreatorId}`)
+        } else if (result.voiceActorId) {
+          // Eğer voiceActorId varsa, seslendirmen profil sayfasına yönlendir
+          router.push(`/team/${result.voiceActorId}`)
         } else {
           router.push('/financial')
         }

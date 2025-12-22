@@ -236,6 +236,39 @@ export async function POST(request: NextRequest) {
         }
       }
       
+      // Eğer teamMemberId varsa, ekip üyesinin profil sayfasını revalidate et
+      if (record.teamMemberId) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/revalidate?path=/team/${record.teamMemberId}`, {
+            method: 'POST',
+          }).catch(() => {}) // Revalidate hatası finansal kaydı etkilemesin
+        } catch (e) {
+          // Ignore
+        }
+      }
+      
+      // Eğer contentCreatorId varsa, içerik üreticisinin profil sayfasını revalidate et
+      if (record.contentCreatorId) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/revalidate?path=/content-creators/${record.contentCreatorId}`, {
+            method: 'POST',
+          }).catch(() => {}) // Revalidate hatası finansal kaydı etkilemesin
+        } catch (e) {
+          // Ignore
+        }
+      }
+      
+      // Eğer voiceActorId varsa, seslendirmenin profil sayfasını revalidate et
+      if (record.voiceActorId) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/revalidate?path=/team/${record.voiceActorId}`, {
+            method: 'POST',
+          }).catch(() => {}) // Revalidate hatası finansal kaydı etkilemesin
+        } catch (e) {
+          // Ignore
+        }
+      }
+      
       // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
       // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
       const shouldCreateTeamPayment = !!(

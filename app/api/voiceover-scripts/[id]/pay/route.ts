@@ -79,6 +79,8 @@ export async function POST(
         amount: script.price,
         description: `Seslendirme ücreti - ${script.title}${script.voiceActor ? ` (${script.voiceActor.name})` : ''}`,
         date: new Date(),
+        voiceActorId: script.voiceActorId || null,
+        contentCreatorId: script.creatorId || null,
       },
     })
 

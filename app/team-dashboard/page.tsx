@@ -333,12 +333,12 @@ export default function TeamDashboardPage() {
           </div>
 
           {/* Finansal Kayıtlar */}
-          {financialRecords.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
-                Finansal Kayıtlar ({financialRecords.length})
-              </h2>
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+              Finansal Kayıtlar ({financialRecords.length})
+            </h2>
+            {financialRecords.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -394,8 +394,12 @@ export default function TeamDashboardPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-8">
+                Henüz finansal kayıt bulunmamaktadır.
+              </p>
+            )}
+          </div>
         </div>
       </main>
     </div>
