@@ -70,10 +70,12 @@ export default function TeamDashboardPage() {
         ])
       }
 
+      const errorResponse = { ok: false, status: 500, json: async () => ({ error: 'Timeout' }) } as Response
+
       const [tasksRes, paymentsRes, financialRes] = await Promise.all([
-        fetchWithTimeout(`/api/team/${memberId}/tasks`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
-        fetchWithTimeout(`/api/team/${memberId}/payments`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
-        fetchWithTimeout(`/api/team/${memberId}/financial`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout(`/api/team/${memberId}/tasks`).catch(() => errorResponse),
+        fetchWithTimeout(`/api/team/${memberId}/payments`).catch(() => errorResponse),
+        fetchWithTimeout(`/api/team/${memberId}/financial`).catch(() => errorResponse),
       ])
 
       const tasksData = await tasksRes.json().catch(() => ({ error: 'Parse error' }))
