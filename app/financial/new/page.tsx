@@ -235,7 +235,15 @@ export default function NewFinancialPage() {
       })
 
       if (res.ok) {
-        router.push('/financial')
+        const result = await res.json()
+        console.log('[Financial Form] ✅ Record created:', result)
+        
+        // Eğer streamerId varsa, streamer profil sayfasına yönlendir
+        if (result.streamerId) {
+          router.push(`/streamers/${result.streamerId}`)
+        } else {
+          router.push('/financial')
+        }
         router.refresh()
       } else {
         const data = await res.json()

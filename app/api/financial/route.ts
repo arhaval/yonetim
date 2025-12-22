@@ -225,6 +225,17 @@ export async function POST(request: NextRequest) {
         date: record.date,
       })
       
+      // Eğer streamerId varsa, streamer'ın profil sayfasını revalidate et
+      if (record.streamerId) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/revalidate?path=/streamers/${record.streamerId}`, {
+            method: 'POST',
+          }).catch(() => {}) // Revalidate hatası finansal kaydı etkilemesin
+        } catch (e) {
+          // Ignore
+        }
+      }
+      
       // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
       // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
       const shouldCreateTeamPayment = !!(
