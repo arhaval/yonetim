@@ -10,6 +10,35 @@ import { useState, useEffect } from 'react'
 type FilterType = 'monthly' | 'total'
 type CategoryFilter = 'all' | 'stream' | 'team' | 'content' | 'sponsor' | 'other'
 
+// Kategori isimlerini Türkçe'ye çevir
+const categoryLabels: Record<string, string> = {
+  'sponsorship': 'Sponsorluk',
+  'sponsorluk': 'Sponsorluk',
+  'content': 'İçerik',
+  'içerik': 'İçerik',
+  'stream': 'Yayın',
+  'yayın': 'Yayın',
+  'merchandise': 'Ürün Satışı',
+  'ürün': 'Ürün Satışı',
+  'donation': 'Bağış',
+  'bağış': 'Bağış',
+  'other': 'Diğer',
+  'diğer': 'Diğer',
+  'salary': 'Maaş',
+  'maaş': 'Maaş',
+  'equipment': 'Ekipman',
+  'ekipman': 'Ekipman',
+  'marketing': 'Pazarlama',
+  'pazarlama': 'Pazarlama',
+  'office': 'Ofis Giderleri',
+  'ofis': 'Ofis Giderleri',
+}
+
+const getCategoryLabel = (category: string): string => {
+  if (!category) return 'Diğer'
+  return categoryLabels[category.toLowerCase()] || category
+}
+
 export default function FinancialPage() {
   const [filter, setFilter] = useState<FilterType>('monthly')
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
@@ -372,7 +401,7 @@ export default function FinancialPage() {
                     <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1">
                         <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-800">
-                          {record.category}
+                          {getCategoryLabel(record.category)}
                         </span>
                         {record.streamer && (
                           <span className="text-xs text-gray-600">

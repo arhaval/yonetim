@@ -199,7 +199,10 @@ export async function POST(request: NextRequest) {
     
     // Eğer type='expense' ve bir kişiye ödeme yapılıyorsa, payout olarak işaretle
     const hasRecipient = !!(data.streamerId || data.teamMemberId || data.contentCreatorId || data.voiceActorId)
-    if (data.type === 'expense' && hasRecipient && (data.category === 'salary' || data.category?.includes('maaş') || data.category?.includes('ödeme'))) {
+    const categoryLower = (data.category || '').toLowerCase()
+    const isSalaryCategory = categoryLower === 'salary' || categoryLower === 'maaş' || categoryLower.includes('maaş') || categoryLower.includes('ödeme')
+    
+    if (data.type === 'expense' && hasRecipient && isSalaryCategory) {
       entryType = 'payout'
       direction = 'OUT'
     } else if (data.type === 'income') {
@@ -309,10 +312,13 @@ export async function POST(request: NextRequest) {
       
       // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
       // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
+      const categoryLowerForPayment = (data.category || '').toLowerCase()
+      const isSalaryCategoryForPayment = categoryLowerForPayment === 'salary' || categoryLowerForPayment === 'maaş' || categoryLowerForPayment.includes('maaş')
+      
       const shouldCreateTeamPayment = !!(
         data.teamMemberId && 
         data.type === 'expense' && 
-        data.category === 'salary'
+        isSalaryCategoryForPayment
       )
       
       console.log(`[Financial API] TeamPayment creation check:`, {
@@ -323,7 +329,7 @@ export async function POST(request: NextRequest) {
         conditions: {
           hasTeamMemberId: !!data.teamMemberId,
           isExpense: data.type === 'expense',
-          isSalary: data.category === 'salary',
+          isSalary: isSalaryCategoryForPayment,
         },
       })
       
@@ -367,11 +373,14 @@ export async function POST(request: NextRequest) {
           })
         }
       } else {
+        const categoryLowerForSkip = (data.category || '').toLowerCase()
+        const isSalaryCategoryForSkip = categoryLowerForSkip === 'salary' || categoryLowerForSkip === 'maaş' || categoryLowerForSkip.includes('maaş')
+        
         console.log(`[Financial API] Skipping TeamPayment creation:`, {
           teamMemberId: data.teamMemberId,
           type: data.type,
           category: data.category,
-          condition: !(data.teamMemberId && data.type === 'expense' && data.category === 'salary'),
+          condition: !(data.teamMemberId && data.type === 'expense' && isSalaryCategoryForSkip),
         })
       }
       

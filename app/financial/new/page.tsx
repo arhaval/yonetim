@@ -283,21 +283,35 @@ export default function NewFinancialPage() {
 
   const categories = {
     income: [
-      'sponsorship',
-      'content',
-      'stream',
-      'merchandise',
-      'donation',
-      'other',
+      { value: 'sponsorluk', label: 'Sponsorluk' },
+      { value: 'içerik', label: 'İçerik' },
+      { value: 'yayın', label: 'Yayın' },
+      { value: 'ürün', label: 'Ürün Satışı' },
+      { value: 'bağış', label: 'Bağış' },
+      { value: 'diğer', label: 'Diğer' },
     ],
     expense: [
-      'salary',
-      'equipment',
-      'marketing',
-      'content',
-      'office',
-      'other',
+      { value: 'maaş', label: 'Maaş' },
+      { value: 'ekipman', label: 'Ekipman' },
+      { value: 'pazarlama', label: 'Pazarlama' },
+      { value: 'içerik', label: 'İçerik' },
+      { value: 'ofis', label: 'Ofis Giderleri' },
+      { value: 'diğer', label: 'Diğer' },
     ],
+  }
+  
+  // İngilizce kategorileri Türkçe'ye çevir (eski kayıtlar için)
+  const categoryMapping: Record<string, string> = {
+    'sponsorship': 'Sponsorluk',
+    'content': 'İçerik',
+    'stream': 'Yayın',
+    'merchandise': 'Ürün Satışı',
+    'donation': 'Bağış',
+    'other': 'Diğer',
+    'salary': 'Maaş',
+    'equipment': 'Ekipman',
+    'marketing': 'Pazarlama',
+    'office': 'Ofis Giderleri',
   }
 
   return (
@@ -360,8 +374,8 @@ export default function NewFinancialPage() {
                   <option value="">Seçiniz</option>
                   {categories[formData.type as keyof typeof categories].map(
                     (cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
                       </option>
                     )
                   )}
