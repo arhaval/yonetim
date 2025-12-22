@@ -2,15 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, LogOut, Calendar, Clock, Building2, Trophy, DollarSign, CheckCircle2, AlertCircle, CreditCard, Video } from 'lucide-react'
+import { Plus, Calendar, Clock, Building2, Trophy, DollarSign, CheckCircle2, AlertCircle, CreditCard, Video } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import { AppShell } from '@/components/shared/AppShell'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { StatCard } from '@/components/shared/StatCard'
+import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { ErrorState } from '@/components/shared/ErrorState'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function StreamerDashboardPage() {
   const router = useRouter()
   const [streamer, setStreamer] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [paymentInfo, setPaymentInfo] = useState<any>(null)
   const [paymentHistory, setPaymentHistory] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -40,7 +48,8 @@ export default function StreamerDashboardPage() {
       loadStreams(data.streamer.id)
       loadPaymentInfo(data.streamer.id)
     } catch (error) {
-      router.push('/streamer-login')
+      setError('Kullanıcı bilgileri yüklenemedi')
+      setLoading(false)
     }
   }
 
@@ -50,9 +59,12 @@ export default function StreamerDashboardPage() {
       const data = await res.json()
       if (res.ok) {
         setStreams(data)
+      } else {
+        setError('Yayınlar yüklenemedi')
       }
     } catch (error) {
       console.error('Error loading streams:', error)
+      setError('Yayınlar yüklenemedi')
     } finally {
       setLoading(false)
     }
@@ -69,11 +81,6 @@ export default function StreamerDashboardPage() {
     } catch (error) {
       console.error('Error loading payment info:', error)
     }
-  }
-
-  const handleLogout = async () => {
-    await fetch('/api/streamer-auth/logout', { method: 'POST' })
-    router.push('/streamer-login')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,12 +123,26 @@ export default function StreamerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Yükleniyor...</p>
+      <AppShell role="streamer" user={streamer}>
+        <div className="space-y-6">
+          <LoadingSkeleton.StatCardSkeleton />
+          <LoadingSkeleton.StatCardSkeleton />
+          <LoadingSkeleton.StatCardSkeleton />
+          <LoadingSkeleton.TableSkeleton rows={5} cols={6} />
         </div>
-      </div>
+      </AppShell>
+    )
+  }
+
+  if (error && !streamer) {
+    return (
+      <AppShell role="streamer">
+        <ErrorState 
+          title="Bir hata oluştu" 
+          message={error}
+          onRetry={checkAuth}
+        />
+      </AppShell>
     )
   }
 
@@ -130,120 +151,66 @@ export default function StreamerDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-2">
-                <img 
-                  src="/arhaval-logo.png" 
-                  alt="Arhaval Logo" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    if (target.parentElement) {
-                      target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
-                      target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
-                    }
-                  }}
+    <AppShell role="streamer" user={streamer}>
+      <PageHeader
+        title={`Hoş geldiniz, ${streamer.name}`}
+        description="Yayınlarınızı ekleyin ve ödemelerinizi görüntüleyin"
+        rightActions={
+          !showForm && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Yeni Yayın Ekle
+            </Button>
+          )
+        }
+      />
+
+      {/* Ödeme Özeti */}
+      {paymentInfo && (
+        <div className="space-y-6 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CreditCard className="w-5 h-5 mr-2" />
+                Ödeme Özeti
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatCard
+                  title="Toplam Alacak"
+                  value={paymentInfo.totalDue.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                  description="Toplam ödenecek tutar"
+                  icon={DollarSign}
+                  iconClassName="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                />
+                <StatCard
+                  title="Ödenen"
+                  value={paymentInfo.totalPaid.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                  description="Toplam ödenen tutar"
+                  icon={CheckCircle2}
+                  iconClassName="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                />
+                <StatCard
+                  title="Ödenmemiş"
+                  value={paymentInfo.totalUnpaid.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                  description="Bekleyen ödeme tutarı"
+                  icon={AlertCircle}
+                  iconClassName="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                 />
               </div>
-              {streamer.profilePhoto ? (
-                <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-2 ring-indigo-200">
-                  <img
-                    src={streamer.profilePhoto}
-                    alt={streamer.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg ring-2 ring-indigo-200">
-                  <span className="text-white font-bold text-2xl">
-                    {streamer.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {streamer.name}
-                </h1>
-                <p className="mt-1 text-gray-600">Yayınlarınızı buradan ekleyebilirsiniz</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-
-        {/* Ödeme Özeti */}
-        {paymentInfo && (
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-indigo-600" />
-                Ödeme Özeti
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
-                    <DollarSign className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Toplam Alacak</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {paymentInfo.totalDue.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Toplam ödenecek tutar</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-md">
-                    <CheckCircle2 className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Ödenen</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {paymentInfo.totalPaid.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Toplam ödenen tutar</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-6 border border-red-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-md">
-                    <AlertCircle className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Ödenmemiş</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {paymentInfo.totalUnpaid.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">Bekleyen ödeme tutarı</p>
-              </div>
-            </div>
             
             {/* Ödeme İlerleme Çubuğu */}
             {paymentInfo.totalDue > 0 && (
@@ -269,24 +236,39 @@ export default function StreamerDashboardPage() {
           </div>
         )}
 
-        {/* Add Stream Button */}
-        {!showForm && (
-          <div className="mb-6">
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Yeni Yayın Ekle
-            </button>
-          </div>
+              {/* Ödeme İlerleme Çubuğu */}
+              {paymentInfo.totalDue > 0 && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Ödeme İlerlemesi</span>
+                    <span className="text-sm font-semibold">
+                      {((paymentInfo.totalPaid / paymentInfo.totalDue) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
+                      style={{ width: `${(paymentInfo.totalPaid / paymentInfo.totalDue) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+                    <span>Ödenen: {paymentInfo.totalPaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
+                    <span>Kalan: {paymentInfo.totalUnpaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Add Stream Form */}
         {showForm && (
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Yeni Yayın Ekle</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Yeni Yayın Ekle</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -353,43 +335,44 @@ export default function StreamerDashboardPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false)
-                    setFormData({
-                      date: new Date().toISOString().split('T')[0],
-                      matchInfo: '',
-                      duration: '',
-                      teamName: '',
-                    })
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
-                </button>
-              </div>
-            </form>
-          </div>
+                <div className="flex items-center justify-end space-x-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowForm(false)
+                      setFormData({
+                        date: new Date().toISOString().split('T')[0],
+                        matchInfo: '',
+                        duration: '',
+                        teamName: '',
+                      })
+                    }}
+                  >
+                    İptal
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
         {/* Payment History */}
         {paymentHistory.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-indigo-600" />
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CreditCard className="w-5 h-5 mr-2" />
                 Ödeme Geçmişi
-              </h2>
-            </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
             <div className="divide-y divide-gray-200">
               {paymentHistory.map((payment: any) => (
                 <div key={payment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
@@ -468,19 +451,19 @@ export default function StreamerDashboardPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Streams List */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-          <div className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Video className="w-6 h-6 mr-2 text-indigo-600" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Video className="w-6 h-6 mr-2" />
               Yayınlarım ({streams.length})
-            </h2>
-          </div>
-          <div className="p-6">
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             {streams.length === 0 ? (
               <div className="text-center py-12">
                 <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -581,10 +564,9 @@ export default function StreamerDashboardPage() {
                 </table>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </CardContent>
+        </Card>
+    </AppShell>
   )
 }
 
