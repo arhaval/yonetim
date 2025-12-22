@@ -45,7 +45,9 @@ export default function TeamDashboardPage() {
       }
 
       setMember(data.member)
-      loadData(data.member.id)
+      // Cookie'deki team-member-id'yi kullan (daha güvenilir)
+      const memberId = data.member.id
+      loadData(memberId)
     } catch (error) {
       router.push('/team-login')
     }
@@ -53,6 +55,7 @@ export default function TeamDashboardPage() {
 
   const loadData = async (memberId: string) => {
     try {
+      console.log(`[Team Dashboard] Loading data for member ID: ${memberId}`)
       const [tasksRes, paymentsRes, financialRes] = await Promise.all([
         fetch(`/api/team/${memberId}/tasks`, { credentials: 'include' }),
         fetch(`/api/team/${memberId}/payments`, { credentials: 'include' }),

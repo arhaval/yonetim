@@ -11,28 +11,22 @@ export async function GET(
   try {
     // Params'ı resolve et (Next.js App Router'da Promise olabilir)
     const resolvedParams = await Promise.resolve(params)
-    const teamMemberId = resolvedParams.id
+    let teamMemberId = resolvedParams.id
     
     // Authentication kontrolü - ekip üyesi sadece kendi kayıtlarını görebilmeli
-    // Admin panelinden erişim için kontrol yapılmıyor (admin herkesi görebilir)
     const cookieStore = await cookies()
-    const loginToken = cookieStore.get('team-login-token')?.value
+    const cookieMemberId = cookieStore.get('team-member-id')?.value
     
-    if (loginToken) {
-      // Ekip üyesi login olmuş, kendi kayıtlarını kontrol et
-      // Not: TeamMember modelinde loginToken yok, bu yüzden doğrudan teamMemberId ile kontrol ediyoruz
-      // Authentication kontrolü team-auth API'sinde yapılıyor
-      // Burada sadece teamMemberId'nin loginToken ile eşleşip eşleşmediğini kontrol ediyoruz
-      // Eğer loginToken varsa ve teamMemberId farklıysa, erişim reddedilir
-      // Ancak TeamMember modelinde loginToken olmadığı için bu kontrolü kaldırıyoruz
-      // Authentication team-auth middleware'inde yapılıyor
+    // Eğer cookie'de team-member-id varsa, onu kullan (ekip üyesi login olmuş)
+    if (cookieMemberId) {
+      teamMemberId = cookieMemberId
     }
-    
-    // Login token yoksa admin panelinden erişim olabilir, devam et
     
     // Önce bu teamMemberId ile kayıtları kontrol et
     const financialRecords = await prisma.financialRecord.findMany({
-      where: { teamMemberId },
+      where: { 
+        teamMemberId: teamMemberId 
+      },
       orderBy: { date: 'desc' },
     })
 
