@@ -8,7 +8,7 @@ import { tr } from 'date-fns/locale/tr'
 import { AppShell } from '@/components/shared/AppShell'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatCard } from '@/components/shared/StatCard'
-import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
+import { TableSkeleton, StatCardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -125,10 +125,10 @@ export default function StreamerDashboardPage() {
     return (
       <AppShell role="streamer" user={streamer}>
         <div className="space-y-6">
-          <LoadingSkeleton.StatCardSkeleton />
-          <LoadingSkeleton.StatCardSkeleton />
-          <LoadingSkeleton.StatCardSkeleton />
-          <LoadingSkeleton.TableSkeleton rows={5} cols={6} />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <TableSkeleton rows={5} cols={6} />
         </div>
       </AppShell>
     )
@@ -156,12 +156,12 @@ export default function StreamerDashboardPage() {
         title={`Hoş geldiniz, ${streamer.name}`}
         description="Yayınlarınızı ekleyin ve ödemelerinizi görüntüleyin"
         rightActions={
-          !showForm && (
+          !showForm ? (
             <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Yeni Yayın Ekle
             </Button>
-          )
+          ) : undefined
         }
       />
 
@@ -211,31 +211,7 @@ export default function StreamerDashboardPage() {
                   iconClassName="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
                 />
               </div>
-            
-            {/* Ödeme İlerleme Çubuğu */}
-            {paymentInfo.totalDue > 0 && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Ödeme İlerlemesi</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {((paymentInfo.totalPaid / paymentInfo.totalDue) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
-                    style={{ width: `${(paymentInfo.totalPaid / paymentInfo.totalDue) * 100}%` }}
-                  ></div>
-                </div>
-                <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                  <span>Ödenen: {paymentInfo.totalPaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
-                  <span>Kalan: {paymentInfo.totalUnpaid.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
+              
               {/* Ödeme İlerleme Çubuğu */}
               {paymentInfo.totalDue > 0 && (
                 <div className="mt-6">
@@ -259,7 +235,8 @@ export default function StreamerDashboardPage() {
               )}
             </CardContent>
           </Card>
-        )}
+        </div>
+      )}
 
         {/* Add Stream Form */}
         {showForm && (
