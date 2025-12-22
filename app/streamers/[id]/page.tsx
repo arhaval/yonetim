@@ -140,7 +140,15 @@ export default async function StreamerDetailPage({
       streamerId: streamer.id,
     },
     orderBy: { date: 'desc' },
-  }).catch(() => [])
+  }).catch((error) => {
+    console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
+    return []
+  })
+  
+  console.log(`[Streamer Profile] Found ${financialRecords.length} financial records for streamer ${streamer.id}`, {
+    streamerId: streamer.id,
+    records: financialRecords.map(r => ({ id: r.id, type: r.type, category: r.category, amount: r.amount, streamerId: r.streamerId })),
+  })
 
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 
