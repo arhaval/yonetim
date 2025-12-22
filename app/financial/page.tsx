@@ -368,86 +368,86 @@ export default function FinancialPage() {
         </div>
 
         {/* Records Table */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-          <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900">Finansal Kayıtlar</h2>
+        <div className="bg-card rounded-2xl shadow-large overflow-hidden border border-border">
+          <div className="px-6 py-4 bg-muted/50 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground">Finansal Kayıtlar</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tür</th>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kategori</th>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden sm:table-cell">Açıklama</th>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tarih</th>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Tutar</th>
-                  <th className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">İşlem</th>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">Tür</th>
+                  <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">Kategori</th>
+                  <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground hidden sm:table-cell">Açıklama</th>
+                  <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">Tarih</th>
+                  <th className="h-12 px-6 text-right align-middle font-semibold text-sm text-muted-foreground">Tutar</th>
+                  <th className="h-12 px-6 text-center align-middle font-semibold text-sm text-muted-foreground">İşlem</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
+                  <tr key={record.id} className="border-b border-border transition-colors hover:bg-muted/50">
+                    <td className="p-4 align-middle">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold ${
                           record.type === 'income'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                         }`}
                       >
                         {record.type === 'income' ? '💰 Gelir' : '💸 Gider'}
                       </span>
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-800">
+                    <td className="p-4 align-middle">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-muted text-muted-foreground border border-border">
                           {getCategoryLabel(record.category)}
                         </span>
                         {record.streamer && (
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-muted-foreground">
                             👤 {record.streamer.name}
                           </span>
                         )}
                         {record.teamMember && (
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-muted-foreground">
                             👥 {record.teamMember.name} ({record.teamMember.role})
                           </span>
                         )}
                         {record.voiceActor && (
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-muted-foreground">
                             🎤 {record.voiceActor.name}
                           </span>
                         )}
                         {record.contentCreator && (
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-muted-foreground">
                             📝 {record.contentCreator.name}
                           </span>
                         )}
                         {record.isPayment && record.paidAt && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 mt-1">
                             ✅ Ödenmiş
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 hidden sm:table-cell">
-                      <p className="text-sm font-medium text-gray-900">
+                    <td className="p-4 align-middle hidden sm:table-cell">
+                      <p className="text-sm font-medium text-foreground">
                         {record.description || '-'}
                       </p>
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
-                      <p className="text-xs sm:text-sm text-gray-600">
+                    <td className="p-4 align-middle">
+                      <p className="text-sm text-muted-foreground">
                         {format(new Date(record.date), 'dd MMM yyyy', {
                           locale: tr,
                         })}
                       </p>
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+                    <td className="p-4 align-middle text-right">
                       <p
-                        className={`text-sm sm:text-lg font-bold ${
+                        className={`text-base font-bold ${
                           record.type === 'income'
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}
                       >
                         {record.type === 'income' ? '+' : '-'}
@@ -457,13 +457,13 @@ export default function FinancialPage() {
                         })}
                       </p>
                     </td>
-                    <td className="px-2 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
+                    <td className="p-4 align-middle text-center">
                       {!record.id.startsWith('stream-') && 
                        !record.id.startsWith('payment-') && 
                        !record.id.startsWith('team-payment-') && (
                         <button
                           onClick={() => handleDeleteRecord(record.id)}
-                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors border border-destructive/20"
                           title="Sil"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -476,7 +476,7 @@ export default function FinancialPage() {
             </table>
             {filteredRecords.length === 0 && (
               <div className="text-center py-16">
-                <p className="text-gray-500 font-medium">Henüz kayıt bulunamadı</p>
+                <p className="text-muted-foreground font-medium">Henüz kayıt bulunamadı</p>
               </div>
             )}
           </div>

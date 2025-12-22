@@ -431,52 +431,52 @@ export default function ContentPage() {
 
 
         {/* Tablo Formatı */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-card rounded-2xl shadow-large border border-border overflow-hidden">
           {contents.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-gray-500 font-medium">Henüz içerik eklenmemiş</p>
+              <p className="text-muted-foreground font-medium">Henüz içerik eklenmemiş</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Başlık
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Platform
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Tip
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       İçerik Üreticisi
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Görüntülenme
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Beğeni
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Yorum
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Paylaşım
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Kaydetme
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Tarih
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-right align-middle font-semibold text-sm text-muted-foreground">
                       İşlemler
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {contents
                     .filter((content) => {
                       // Client-side filtreleme - sadece görsel
@@ -525,87 +525,87 @@ export default function ContentPage() {
               return (
                         <tr
                   key={content.id}
-                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          className="border-b border-border transition-colors hover:bg-muted/50 cursor-pointer"
                           onClick={() => router.push(`/content/${content.id}`)}
                 >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={content.title}>
+                          <td className="p-4 align-middle">
+                            <div className="text-sm font-medium text-foreground max-w-xs truncate" title={content.title}>
                           {content.title}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="p-4 align-middle">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
                             content.platform === 'YouTube' 
-                              ? 'bg-red-50 text-red-700 border-red-200' 
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
+                              ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200' 
+                              : 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:text-purple-200'
                           }`}>
                             {content.platform}
                           </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="p-4 align-middle">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
                             contentType === 'Shorts' || contentType === 'Reels'
-                              ? 'bg-orange-50 text-orange-700 border-orange-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                              ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-200'
+                              : 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-200'
                           }`}>
                             {contentType}
                           </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="p-4 align-middle">
                             {content.creator ? (
                         <Link
                           href={`/content-creators/${content.creator.id}`}
                           onClick={(e) => e.stopPropagation()}
-                                className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                                className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
                         >
                           {content.creator.name}
                         </Link>
                             ) : (
-                              <span className="text-sm text-gray-500">-</span>
+                              <span className="text-sm text-muted-foreground">-</span>
                     )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.views || 0)}</span>
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-1.5">
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-medium text-foreground">{formatNumber(content.views || 0)}</span>
                         </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-1">
-                        <Heart className="w-4 h-4 text-red-400" />
-                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.likes || 0)}</span>
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-1.5">
+                        <Heart className="w-4 h-4 text-red-500" />
+                              <span className="text-sm font-medium text-foreground">{formatNumber(content.likes || 0)}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-1">
-                              <MessageCircle className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-medium text-gray-900">{formatNumber(content.comments || 0)}</span>
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-1.5">
+                              <MessageCircle className="w-4 h-4 text-blue-500" />
+                              <span className="text-sm font-medium text-foreground">{formatNumber(content.comments || 0)}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="p-4 align-middle">
                             {content.platform === 'Instagram' ? (
-                              <div className="flex items-center space-x-1">
-                                <Share2 className="w-4 h-4 text-green-400" />
-                                <span className="text-sm font-medium text-gray-900">{formatNumber(content.shares || 0)}</span>
+                              <div className="flex items-center gap-1.5">
+                                <Share2 className="w-4 h-4 text-green-500" />
+                                <span className="text-sm font-medium text-foreground">{formatNumber(content.shares || 0)}</span>
                           </div>
                             ) : (
-                              <span className="text-sm text-gray-400">-</span>
+                              <span className="text-sm text-muted-foreground">-</span>
                       )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="p-4 align-middle">
                             {content.platform === 'Instagram' ? (
-                              <div className="flex items-center space-x-1">
-                                <Bookmark className="w-4 h-4 text-purple-400" />
-                                <span className="text-sm font-medium text-gray-900">{formatNumber(content.saves || 0)}</span>
+                              <div className="flex items-center gap-1.5">
+                                <Bookmark className="w-4 h-4 text-purple-500" />
+                                <span className="text-sm font-medium text-foreground">{formatNumber(content.saves || 0)}</span>
                     </div>
                             ) : (
-                              <span className="text-sm text-gray-400">-</span>
+                              <span className="text-sm text-muted-foreground">-</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="p-4 align-middle text-sm text-muted-foreground">
                             {format(new Date(content.publishDate), 'dd MMM yyyy', { locale: tr })}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                          <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                             <DeleteButton
                               id={content.id}
                               type="content"

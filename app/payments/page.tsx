@@ -370,47 +370,47 @@ export default function PaymentsPage() {
                           <div className="mt-6 border-t pt-4">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Onaylanmış Yayınlar</h4>
                             <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Süre</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Takım</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maç</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr className="border-b border-border bg-muted/50">
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Tarih</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Süre</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Takım</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Maç</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Tutar</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Durum</th>
                                   </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody>
                                   {payment.streams.map((stream: any) => (
-                                    <tr key={stream.id}>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                    <tr key={stream.id} className="border-b border-border transition-colors hover:bg-muted/50">
+                                      <td className="p-4 align-middle text-sm text-foreground">
                                         {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {stream.duration} saat
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {stream.teamName || '-'}
                                       </td>
-                                      <td className="px-3 py-2 text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {stream.matchInfo || '-'}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-indigo-600">
+                                      <td className="p-4 align-middle text-sm font-semibold text-primary">
                                         {stream.streamerEarning.toLocaleString('tr-TR', {
                                           style: 'currency',
                                           currency: 'TRY',
                                         })}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap">
+                                      <td className="p-4 align-middle">
                                         {stream.paymentStatus === 'paid' ? (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            <CheckCircle className="w-3 h-3 mr-1.5" />
                                             Ödendi
                                           </span>
                                         ) : (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <Clock className="w-3 h-3 mr-1" />
+                                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                            <Clock className="w-3 h-3 mr-1.5" />
                                             Bekliyor
                                           </span>
                                         )}
@@ -512,35 +512,35 @@ export default function PaymentsPage() {
                           <div className="mt-6 border-t pt-4">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Tamamlanmış Görevler</h4>
                             <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Görev</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Açıklama</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öncelik</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tamamlanma</th>
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr className="border-b border-border bg-muted/50">
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Görev</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Açıklama</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Öncelik</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Tamamlanma</th>
                                   </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody>
                                   {payment.tasks.map((task: any) => (
-                                    <tr key={task.id}>
-                                      <td className="px-3 py-2 text-sm font-medium text-gray-900">
+                                    <tr key={task.id} className="border-b border-border transition-colors hover:bg-muted/50">
+                                      <td className="p-4 align-middle text-sm font-medium text-foreground">
                                         {task.title}
                                       </td>
-                                      <td className="px-3 py-2 text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {task.description || '-'}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                          task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                          'bg-green-100 text-green-800'
+                                      <td className="p-4 align-middle">
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                          task.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                         }`}>
                                           {task.priority === 'high' ? 'Yüksek' :
                                            task.priority === 'medium' ? 'Orta' : 'Düşük'}
                                         </span>
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {task.completedAt ? format(new Date(task.completedAt), 'dd MMM yyyy', { locale: tr }) : '-'}
                                       </td>
                                     </tr>
@@ -658,43 +658,43 @@ export default function PaymentsPage() {
                           <div className="mt-6 border-t pt-4">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Onaylanmış Metinler</h4>
                             <div className="overflow-x-auto">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlık</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
-                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr className="border-b border-border bg-muted/50">
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Başlık</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Oluşturulma</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Tutar</th>
+                                    <th className="h-12 px-4 text-left align-middle font-semibold text-sm text-muted-foreground">Durum</th>
                                   </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody>
                                   {payment.scripts.map((script: any) => (
-                                    <tr key={script.id}>
-                                      <td className="px-3 py-2 text-sm text-gray-900">
+                                    <tr key={script.id} className="border-b border-border transition-colors hover:bg-muted/50">
+                                      <td className="p-4 align-middle text-sm text-foreground">
                                         {script.title}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                                      <td className="p-4 align-middle text-sm text-muted-foreground">
                                         {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap text-sm font-semibold text-indigo-600">
+                                      <td className="p-4 align-middle text-sm font-semibold text-primary">
                                         {script.price.toLocaleString('tr-TR', {
                                           style: 'currency',
                                           currency: 'TRY',
                                         })}
                                       </td>
-                                      <td className="px-3 py-2 whitespace-nowrap">
+                                      <td className="p-4 align-middle">
                                         {script.status === 'paid' ? (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            <CheckCircle className="w-3 h-3 mr-1.5" />
                                             Ödendi
                                           </span>
                                         ) : script.status === 'approved' ? (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <Clock className="w-3 h-3 mr-1" />
+                                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                            <Clock className="w-3 h-3 mr-1.5" />
                                             Bekliyor
                                           </span>
                                         ) : (
-                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
                                             Beklemede
                                           </span>
                                         )}

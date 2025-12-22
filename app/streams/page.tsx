@@ -99,86 +99,86 @@ export default function StreamsPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="bg-card rounded-2xl shadow-large border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Tarih
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Yayıncı
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Maç Bilgisi
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Firma
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Süre
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Maliyet
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       Gelir
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       İşlemler
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {streams.map((stream) => (
-                    <tr key={stream.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                    <tr key={stream.id} className="border-b border-border transition-colors hover:bg-muted/50">
+                      <td className="p-4 align-middle">
+                        <div className="text-sm font-medium text-foreground">
                           {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                      <td className="p-4 align-middle">
+                        <div className="flex items-center gap-3">
                           {stream.streamer?.profilePhoto ? (
                             <img
-                              className="h-10 w-10 rounded-full mr-3"
+                              className="h-10 w-10 rounded-full object-cover ring-2 ring-border"
                               src={stream.streamer.profilePhoto}
                               alt={stream.streamer.name}
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mr-3">
-                              <User className="h-6 w-6 text-white" />
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center ring-2 ring-border">
+                              <User className="h-5 w-5 text-white" />
                             </div>
                           )}
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-foreground">
                             {stream.streamer?.name || 'Bilinmeyen Yayıncı'}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate" title={stream.matchInfo || ''}>
+                      <td className="p-4 align-middle">
+                        <div className="text-sm text-muted-foreground max-w-xs truncate" title={stream.matchInfo || ''}>
                           {stream.matchInfo || '-'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="p-4 align-middle">
                         {stream.teamName ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                             {stream.teamName}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-400">-</span>
+                          <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 flex items-center">
-                          <Clock className="w-4 h-4 mr-1 text-gray-400" />
+                      <td className="p-4 align-middle">
+                        <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
                           {stream.duration} saat
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="p-4 align-middle">
                         {stream.streamerEarning > 0 ? (
-                          <span className="text-sm font-bold text-red-600">
+                          <span className="text-sm font-bold text-destructive">
                             {stream.streamerEarning.toLocaleString('tr-TR', {
                               style: 'currency',
                               currency: 'TRY',
@@ -186,12 +186,12 @@ export default function StreamsPage() {
                             })}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Girilmemiş</span>
+                          <span className="text-xs text-muted-foreground italic">Girilmemiş</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="p-4 align-middle">
                         {stream.totalRevenue > 0 ? (
-                          <span className="text-sm font-semibold text-green-600">
+                          <span className="text-sm font-semibold text-green-600 dark:text-green-400">
                             {stream.totalRevenue.toLocaleString('tr-TR', {
                               style: 'currency',
                               currency: 'TRY',
@@ -199,24 +199,24 @@ export default function StreamsPage() {
                             })}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400">-</span>
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="p-4 align-middle">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={(e) => handleCostClick(stream, e)}
-                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted text-muted-foreground hover:bg-muted/80 transition-colors border border-border"
                             title="Maliyet Bilgileri"
                           >
-                            <DollarSign className="w-4 h-4 mr-1" />
+                            <DollarSign className="w-3.5 h-3.5 mr-1.5" />
                             Maliyet
                           </button>
                           <Link
                             href={`/streams/${stream.id}`}
-                            className="inline-flex items-center px-3 py-1.5 border border-indigo-300 text-xs font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                            className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20"
                           >
-                            <ExternalLink className="w-4 h-4 mr-1" />
+                            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                             Detay
                           </Link>
                           <DeleteButton
