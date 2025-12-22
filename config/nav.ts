@@ -5,7 +5,6 @@ import {
   Mic, 
   Video, 
   FileText, 
-  Script, 
   DollarSign, 
   CreditCard, 
   BarChart3, 
@@ -42,7 +41,7 @@ export const adminNav: NavSection[] = [
     items: [
       { title: 'Yayınlar', href: '/streams', icon: Video },
       { title: 'İçerikler', href: '/content', icon: FileText },
-      { title: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: Script },
+      { title: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: FileText },
     ]
   },
   {
@@ -79,7 +78,7 @@ export const voiceActorNav: NavSection[] = [
   {
     items: [
       { title: 'Dashboard', href: '/voice-actor-dashboard', icon: LayoutDashboard },
-      { title: 'Gelen İşler', href: '/voice-actor-dashboard#pending', icon: Script },
+      { title: 'Gelen İşler', href: '/voice-actor-dashboard#pending', icon: FileText },
       { title: 'Teslim Ettiklerim', href: '/voice-actor-dashboard#completed', icon: CheckCircle },
       { title: 'Ödemelerim', href: '/voice-actor-dashboard#payments', icon: CreditCard },
     ]
