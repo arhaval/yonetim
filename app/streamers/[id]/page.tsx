@@ -508,8 +508,13 @@ export default async function StreamerDetailPage({
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="p-6 text-center">
+                <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">Henüz finansal kayıt bulunmuyor</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Layout>
