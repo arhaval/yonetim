@@ -435,14 +435,14 @@ export default async function StreamerDetailPage({
           </div>
 
           {/* Finansal Kayıtlar */}
-          {financialRecords.length > 0 && (
-            <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2 text-green-600" />
-                  Finansal Kayıtlar ({financialRecords.length})
-                </h3>
-              </div>
+          <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+                Finansal Kayıtlar ({financialRecords.length})
+              </h3>
+            </div>
+            {financialRecords.length > 0 ? (
               <div className="p-6">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
