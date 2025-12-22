@@ -29,40 +29,40 @@ export function StatCard({
   iconClassName,
 }: StatCardProps) {
   return (
-    <Card className={cn('hover:shadow-lg transition-shadow', className)}>
+    <Card className={cn('card-hover border-border/50', className)}>
       <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
               {title}
             </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-3xl font-bold tracking-tight text-foreground mb-1">
               {value}
             </p>
             {description && (
-              <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {description}
               </p>
             )}
             {trend && (
               <div className={cn(
-                'flex items-center gap-1 mt-2 text-xs font-medium',
+                'flex items-center gap-1.5 mt-3 text-xs font-semibold',
                 trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               )}>
-                <span>{trend.isPositive ? '↑' : '↓'}</span>
+                <span className="text-base">{trend.isPositive ? '↑' : '↓'}</span>
                 <span>{trend.value}%</span>
-                <span className="text-slate-500 dark:text-slate-400">{trend.label}</span>
+                <span className="text-muted-foreground font-normal">{trend.label}</span>
               </div>
             )}
           </div>
           {Icon && (
             <div className={cn(
-              'w-12 h-12 rounded-xl flex items-center justify-center',
-              iconClassName || 'bg-blue-100 dark:bg-blue-900/30'
+              'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-soft',
+              iconClassName || 'bg-primary/10 text-primary'
             )}>
               <Icon className={cn(
-                'w-6 h-6',
-                iconClassName?.includes('text-') ? '' : 'text-blue-600 dark:text-blue-400'
+                'w-7 h-7',
+                iconClassName?.includes('text-') ? '' : ''
               )} />
             </div>
           )}

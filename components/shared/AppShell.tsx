@@ -113,10 +113,10 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between px-4 h-16">
+      <div className="lg:hidden sticky top-0 z-50 bg-card border-b border-border shadow-soft">
+        <div className="flex items-center justify-between px-5 h-16">
           <div className="flex items-center gap-3">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
@@ -135,22 +135,22 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
                 />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-medium">
                 <img 
                   src="/arhaval-logo.png?v=5" 
                   alt="Logo" 
-                  className="w-6 h-6 object-contain"
+                  className="w-7 h-7 object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
                     if (target.parentElement) {
-                      target.parentElement.innerHTML = '<span class="text-white text-xs font-bold">A</span>'
+                      target.parentElement.innerHTML = '<span class="text-white text-sm font-bold">A</span>'
                     }
                   }}
                 />
               </div>
-              <span className="font-semibold text-slate-900 dark:text-slate-100">Arhaval</span>
+              <span className="font-bold text-lg text-foreground">Arhaval</span>
             </div>
           </div>
           {user && (
@@ -167,14 +167,14 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
         {/* Desktop Sidebar */}
         <aside
           className={cn(
-            'hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-40',
-            'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800'
+            'hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 lg:z-40',
+            'bg-card border-r border-border shadow-soft'
           )}
         >
           <div className="flex flex-col flex-1 min-h-0">
             {/* Logo */}
-            <div className="flex items-center gap-3 px-6 h-16 border-b border-slate-200 dark:border-slate-800">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <div className="flex items-center gap-3 px-6 h-18 border-b border-border">
+              <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-medium">
                 <img 
                   src="/arhaval-logo.png?v=5" 
                   alt="Logo" 
@@ -183,12 +183,12 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
                     const target = e.target as HTMLImageElement
                     target.style.display = 'none'
                     if (target.parentElement) {
-                      target.parentElement.innerHTML = '<span class="text-white text-xs font-bold">A</span>'
+                      target.parentElement.innerHTML = '<span class="text-white text-sm font-bold">A</span>'
                     }
                   }}
                 />
               </div>
-              <span className="font-bold text-lg text-slate-900 dark:text-slate-100">Arhaval</span>
+              <span className="font-bold text-xl text-foreground tracking-tight">Arhaval</span>
             </div>
 
             {/* Navigation */}
@@ -198,26 +198,26 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
 
             {/* User Section */}
             {user && (
-              <div className="border-t border-slate-200 dark:border-slate-800 p-4">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="border-t border-border p-5 bg-muted/30">
+                <div className="flex items-center gap-3 mb-4">
                   {user.profilePhoto ? (
                     <img
                       src={user.profilePhoto}
                       alt={user.name || 'User'}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-11 h-11 rounded-xl object-cover border-2 border-border shadow-soft"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
+                    <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-medium">
+                      <span className="text-white font-bold text-sm">
                         {(user.name || user.email || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {user.name || 'Kullanıcı'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground"
                   onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -237,10 +237,10 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1 lg:pl-64">
+        <div className="flex-1 lg:pl-72">
           {/* Desktop Topbar */}
-          <div className="hidden lg:block sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between px-6 h-16">
+          <div className="hidden lg:block sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border shadow-soft">
+            <div className="flex items-center justify-between px-8 h-18">
               <div className="flex items-center gap-4">
                 <Button
                   variant="ghost"
@@ -252,12 +252,12 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
                 </Button>
               </div>
               {user && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <p className="text-sm font-semibold text-foreground">
                       {user.name || 'Kullanıcı'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
@@ -265,11 +265,11 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
                     <img
                       src={user.profilePhoto}
                       alt={user.name || 'User'}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-10 h-10 rounded-xl object-cover border-2 border-border shadow-soft"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                      <span className="text-white font-semibold text-xs">
+                    <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-medium">
+                      <span className="text-white font-bold text-sm">
                         {(user.name || user.email || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -280,7 +280,7 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
           </div>
 
           {/* Page Content */}
-          <main className="p-6">
+          <main className="p-8 max-w-7xl mx-auto">
             {children}
           </main>
         </div>
@@ -317,20 +317,20 @@ function SidebarContent({
                   href={item.href}
                   onClick={onLinkClick}
                   className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-smooth',
                     active
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-primary/10 text-primary shadow-soft'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
-                  <Icon className={cn('h-5 w-5', active ? 'text-blue-600 dark:text-blue-400' : '')} />
+                  <Icon className={cn('h-5 w-5', active ? 'text-primary' : '')} />
                   <span className="flex-1">{item.title}</span>
                   {item.badge && (
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-primary/20 text-primary">
                       {item.badge}
                     </span>
                   )}
-                  {active && <ChevronRight className="h-4 w-4" />}
+                  {active && <ChevronRight className="h-4 w-4 text-primary" />}
                 </Link>
               )
             })}

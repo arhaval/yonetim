@@ -15,6 +15,7 @@ const config: Config = {
   			brand: {
   				dark: '#1e293b',
   				primary: '#3b82f6',
+  				primaryLight: '#eff6ff',
   				accent: '#f59e0b',
   				secondary: '#2563eb',
   				gray: '#f8fafc'
@@ -62,6 +63,15 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		spacing: {
+  			'18': '4.5rem',
+  			'88': '22rem',
+  		},
+  		boxShadow: {
+  			'soft': '0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06)',
+  			'medium': '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06)',
+  			'large': '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08)',
   		}
   	}
   },

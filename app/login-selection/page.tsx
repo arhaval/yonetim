@@ -60,11 +60,11 @@ const roles = [
 
 export default function LoginSelectionPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-subtle dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="w-full max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="mx-auto w-24 h-24 mb-6 flex items-center justify-center bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 p-4">
+        <div className="text-center mb-16 space-y-4">
+          <div className="mx-auto w-28 h-28 mb-8 flex items-center justify-center bg-card rounded-3xl shadow-large border border-border p-5">
             <img 
               src="/arhaval-logo.png?v=5" 
               alt="Arhaval Logo" 
@@ -73,15 +73,15 @@ export default function LoginSelectionPage() {
                 const target = e.target as HTMLImageElement
                 target.style.display = 'none'
                 if (target.parentElement) {
-                  target.parentElement.innerHTML = '<span class="text-slate-900 dark:text-slate-100 font-bold text-3xl">A</span>'
+                  target.parentElement.innerHTML = '<span class="text-foreground font-bold text-4xl">A</span>'
                 }
               }}
             />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight text-foreground mb-4">
             Arhaval Denetim Merkezi
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Hesap türünüzü seçerek giriş yapın
           </p>
         </div>
@@ -92,20 +92,20 @@ export default function LoginSelectionPage() {
             const Icon = role.icon
             return (
               <Link key={role.id} href={role.href}>
-                <Card className="group h-full hover:shadow-xl transition-all duration-300 border-slate-200 dark:border-slate-800 hover:-translate-y-1 cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${role.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-8 h-8 text-white" />
+                <Card className="group h-full card-hover border-border cursor-pointer">
+                  <CardContent className="p-8">
+                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${role.gradient} flex items-center justify-center mb-6 shadow-medium group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                       {role.title}
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    <p className="text-base text-muted-foreground mb-6 leading-relaxed">
                       {role.description}
                     </p>
-                    <div className="flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:gap-2 transition-all">
+                    <div className="flex items-center text-sm font-semibold text-primary group-hover:gap-2 transition-all">
                       <span>Giriş Yap</span>
-                      <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </CardContent>
                 </Card>
@@ -115,10 +115,10 @@ export default function LoginSelectionPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="mt-16 text-center">
+          <p className="text-base text-muted-foreground">
             Sorun mu yaşıyorsunuz?{' '}
-            <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+            <a href="#" className="text-primary font-semibold hover:underline transition-colors">
               Destek alın
             </a>
           </p>
