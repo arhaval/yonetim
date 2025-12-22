@@ -2,9 +2,9 @@
 
 import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
-import { format, subMonths, subWeeks, getWeek, getYear } from 'date-fns'
+import { format, subMonths, subWeeks, getWeek, getYear, differenceInDays, formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { Save, Instagram, Youtube, Twitter, Twitch, Music, Table2, Grid, TrendingUp, TrendingDown } from 'lucide-react'
+import { Save, Instagram, Youtube, Twitter, Twitch, Music, Table2, Grid, TrendingUp, TrendingDown, AlertCircle, Clock } from 'lucide-react'
 
 const platforms = [
   { name: 'Instagram', icon: Instagram, color: 'from-pink-500 to-purple-500' },
@@ -34,6 +34,7 @@ export default function SocialMediaPage() {
   const [previousStats, setPreviousStats] = useState<Record<string, number>>({})
   const [allHistory, setAllHistory] = useState<any[]>([])
   const [inputValues, setInputValues] = useState<Record<string, number>>({})
+  const [platformLastDates, setPlatformLastDates] = useState<Record<string, { lastEntry: string | null; previousEntry: string | null }>>({})
 
   useEffect(() => {
     fetchData()
@@ -74,6 +75,18 @@ export default function SocialMediaPage() {
         prevStats[platform.name] = stat?.followerCount || 0
       })
       setPreviousStats(prevStats)
+      
+      // Platform son girilen tarihleri
+      if (data.platformLastDates) {
+        const dates: Record<string, { lastEntry: string | null; previousEntry: string | null }> = {}
+        Object.keys(data.platformLastDates).forEach(platform => {
+          dates[platform] = {
+            lastEntry: data.platformLastDates[platform].lastEntry || null,
+            previousEntry: data.platformLastDates[platform].previousEntry || null,
+          }
+        })
+        setPlatformLastDates(dates)
+      }
     } catch (error) {
       console.error('Error fetching social media stats:', error)
     } finally {
@@ -86,9 +99,48 @@ export default function SocialMediaPage() {
       const response = await fetch('/api/social-media?allHistory=true')
       const data = await response.json()
       setAllHistory(data.allStats || [])
+      
+      // Platform son girilen tarihleri
+      if (data.platformLastDates) {
+        const dates: Record<string, { lastEntry: string | null; previousEntry: string | null }> = {}
+        Object.keys(data.platformLastDates).forEach(platform => {
+          dates[platform] = {
+            lastEntry: data.platformLastDates[platform].lastEntry || null,
+            previousEntry: data.platformLastDates[platform].previousEntry || null,
+          }
+        })
+        setPlatformLastDates(dates)
+      }
     } catch (error) {
       console.error('Error fetching history:', error)
     }
+  }
+  
+  // Tarih farkını hesapla ve formatla
+  const getDaysSinceLastEntry = (platform: string): number | null => {
+    const lastEntry = platformLastDates[platform]?.lastEntry
+    if (!lastEntry) return null
+    return differenceInDays(new Date(), new Date(lastEntry))
+  }
+  
+  // Tarih farkını göster (örn: "25 gün önce")
+  const getLastEntryText = (platform: string): string | null => {
+    const lastEntry = platformLastDates[platform]?.lastEntry
+    if (!lastEntry) return null
+    try {
+      return formatDistanceToNow(new Date(lastEntry), { 
+        addSuffix: true, 
+        locale: tr 
+      })
+    } catch {
+      return null
+    }
+  }
+  
+  // 25 gün geçmişse bildirim göster
+  const shouldShowReminder = (platform: string): boolean => {
+    const daysSince = getDaysSinceLastEntry(platform)
+    return daysSince !== null && daysSince >= 25
   }
 
   const handleSave = async () => {
@@ -98,7 +150,7 @@ export default function SocialMediaPage() {
         month: periodType === 'month' ? selectedPeriod : null,
         week: periodType === 'week' ? selectedPeriod : null,
         platform: platform.name,
-        followerCount: stats[platform.name]?.followerCount || 0,
+        followerCount: inputValues[platform.name] || stats[platform.name]?.followerCount || 0,
         target: stats[platform.name]?.target || null,
       }))
 
@@ -246,10 +298,10 @@ export default function SocialMediaPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Sosyal Medya Takibi
             </h1>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-base text-muted-foreground">
               {periodType === 'month' ? 'Aylık' : 'Haftalık'} sosyal medya takipçi sayılarını güncelleyin ve takip edin
             </p>
           </div>
@@ -354,8 +406,22 @@ export default function SocialMediaPage() {
               return (
                 <div
                   key={platform.name}
-                  className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-all"
+                  className={`bg-white rounded-2xl shadow-xl p-6 border transition-all relative ${
+                    shouldShowReminder(platform.name) 
+                      ? 'border-orange-300 bg-orange-50/30' 
+                      : 'border-gray-100'
+                  } hover:shadow-2xl`}
                 >
+                  {/* Bildirim Badge */}
+                  {shouldShowReminder(platform.name) && (
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 bg-orange-100 border border-orange-300 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                      <span className="text-xs font-semibold text-orange-700">
+                        {getDaysSinceLastEntry(platform.name)} gün geçti
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between mb-4">
                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${platform.color} flex items-center justify-center shadow-lg`}>
                       <Icon className="w-7 h-7 text-white" />
@@ -363,6 +429,13 @@ export default function SocialMediaPage() {
                     <div className="text-right">
                       <p className="text-2xl font-bold text-gray-900">
                         {inputValue.toLocaleString('tr-TR')}
+                        {previous > 0 && change.absoluteChange !== 0 && (
+                          <span className={`ml-2 text-lg font-semibold ${
+                            change.isPositive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            ({change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')})
+                          </span>
+                        )}
                       </p>
                       {previous > 0 && change.absoluteChange !== 0 && (
                         <div className="flex items-center justify-end gap-1 mt-1">
@@ -371,15 +444,23 @@ export default function SocialMediaPage() {
                           ) : (
                             <TrendingDown className="w-4 h-4 text-red-600" />
                           )}
-                          <span className={`text-sm font-bold ${
+                          <span className={`text-xs font-medium ${
                             change.isPositive ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')}
+                            {change.isPositive ? '+' : ''}{change.value.toFixed(1)}%
                           </span>
                         </div>
                       )}
                     </div>
                   </div>
+                  
+                  {/* Son Girilen Tarih Bilgisi */}
+                  {getLastEntryText(platform.name) && (
+                    <div className="mb-4 flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Son giriş: {getLastEntryText(platform.name)}</span>
+                    </div>
+                  )}
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -516,12 +597,19 @@ export default function SocialMediaPage() {
                             
                             return (
                               <td key={platform.name} className="px-6 py-4 text-center">
-                                <div className="flex flex-col items-center">
+                                <div className="flex flex-col items-center gap-1">
                                   <span className="text-sm font-semibold text-gray-900">
                                     {value.toLocaleString('tr-TR')}
+                                    {prevValue > 0 && change.absoluteChange !== 0 && (
+                                      <span className={`ml-2 text-xs font-semibold ${
+                                        change.isPositive ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        ({change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')})
+                                      </span>
+                                    )}
                                   </span>
                                   {prevValue > 0 && change.absoluteChange !== 0 && (
-                                    <span className={`text-xs font-medium flex items-center gap-1 mt-1 ${
+                                    <span className={`text-xs font-medium flex items-center gap-1 ${
                                       change.isPositive ? 'text-green-600' : 'text-red-600'
                                     }`}>
                                       {change.isPositive ? (
@@ -529,10 +617,12 @@ export default function SocialMediaPage() {
                                       ) : (
                                         <TrendingDown className="w-3 h-3" />
                                       )}
-                                      {change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')}
-                                      <span className="text-gray-500">
-                                        ({change.isPositive ? '+' : ''}{change.value.toFixed(1)}%)
-                                      </span>
+                                      {change.isPositive ? '+' : ''}{change.value.toFixed(1)}%
+                                    </span>
+                                  )}
+                                  {stat?.updatedAt && (
+                                    <span className="text-xs text-gray-400 mt-1">
+                                      {formatDistanceToNow(new Date(stat.updatedAt), { addSuffix: true, locale: tr })}
                                     </span>
                                   )}
                                 </div>

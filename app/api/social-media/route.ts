@@ -20,12 +20,27 @@ export async function GET(request: NextRequest) {
       // Tüm tarihsel verileri getir (tablo görünümü için)
       const allStats = await prisma.socialMediaStats.findMany({
         orderBy: [
-          { month: 'desc' },
-          { week: 'desc' },
+          { createdAt: 'desc' },
           { platform: 'asc' },
         ],
       })
-      return NextResponse.json({ allStats })
+      
+      // Her platform için son girilen tarihleri hesapla
+      const platformLastDates: Record<string, { lastEntry: Date | null; previousEntry: Date | null }> = {}
+      
+      const platforms = ['Instagram', 'YouTube', 'X', 'Twitch', 'TikTok']
+      platforms.forEach(platform => {
+        const platformStats = allStats.filter(s => s.platform === platform)
+        platformLastDates[platform] = {
+          lastEntry: platformStats[0]?.updatedAt || platformStats[0]?.createdAt || null,
+          previousEntry: platformStats[1]?.updatedAt || platformStats[1]?.createdAt || null,
+        }
+      })
+      
+      return NextResponse.json({ 
+        allStats,
+        platformLastDates 
+      })
     }
 
     // Mevcut dönem verilerini al
@@ -59,9 +74,27 @@ export async function GET(request: NextRequest) {
       orderBy: { platform: 'asc' },
     })
 
+    // Her platform için son girilen tarihleri hesapla
+    const platformLastDates: Record<string, { lastEntry: Date | null; previousEntry: Date | null }> = {}
+    const platforms = ['Instagram', 'YouTube', 'X', 'Twitch', 'TikTok']
+    
+    for (const platform of platforms) {
+      const platformStats = await prisma.socialMediaStats.findMany({
+        where: { platform },
+        orderBy: { updatedAt: 'desc' },
+        take: 2,
+      })
+      
+      platformLastDates[platform] = {
+        lastEntry: platformStats[0]?.updatedAt || platformStats[0]?.createdAt || null,
+        previousEntry: platformStats[1]?.updatedAt || platformStats[1]?.createdAt || null,
+      }
+    }
+
     return NextResponse.json({
       currentPeriod: stats,
       previousPeriod: previousStats,
+      platformLastDates,
     })
   } catch (error) {
     console.error('Error fetching social media stats:', error)
