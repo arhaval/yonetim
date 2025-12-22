@@ -178,11 +178,14 @@ model VoiceoverScript {
 
 model FinancialRecord {
   id               String          @id @default(cuid())
-  type             String          // income, expense
+  type             String          // income, expense (deprecated, use entryType)
   category         String          // salary, content, sponsorship, equipment, etc.
-  amount           Float
+  amount           Float           // Her zaman pozitif, direction ile OUT/IN ayrılır
   description      String?
-  date             DateTime
+  date             DateTime        // Deprecated, use occurredAt
+  occurredAt       DateTime        @default(now()) // Ödeme tarihi
+  entryType        String          @default("expense") // payout, expense, income, adjustment
+  direction        String          @default("OUT") // OUT (gider/ödeme), IN (gelir)
   streamerId       String?
   streamer         Streamer?       @relation(fields: [streamerId], references: [id])
   teamMemberId     String?
@@ -192,15 +195,24 @@ model FinancialRecord {
   voiceActorId     String?
   voiceActor       VoiceActor?     @relation(fields: [voiceActorId], references: [id])
   streamId         String?
+  relatedPaymentId String?         // İlgili Payment/TeamPayment ID'si (varsa)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
   @@index([date])
+  @@index([occurredAt])
   @@index([type])
+  @@index([entryType])
+  @@index([entryType, occurredAt])
+  @@index([direction])
   @@index([streamerId])
   @@index([teamMemberId])
   @@index([contentCreatorId])
   @@index([voiceActorId])
+  @@index([streamerId, occurredAt])
+  @@index([teamMemberId, occurredAt])
+  @@index([contentCreatorId, occurredAt])
+  @@index([voiceActorId, occurredAt])
 }
 
 model Payment {
@@ -214,6 +226,11 @@ model Payment {
   paidAt      DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([streamerId])
+  @@index([streamerId, paidAt])
+  @@index([paidAt])
+  @@index([period])
 }
 
 model TeamMember {
@@ -261,6 +278,11 @@ model TeamPayment {
   paidAt       DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
+  @@index([teamMemberId])
+  @@index([teamMemberId, paidAt])
+  @@index([paidAt])
+  @@index([period])
 }
 
 model MonthlyPlan {

@@ -5,19 +5,49 @@ import { hashPassword } from '@/lib/auth'
 // Cache GET requests for 30 seconds
 export const revalidate = 30
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const startTime = Date.now()
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    
     const voiceActors = await prisma.voiceActor.findMany({
-      include: {
-        _count: {
-          select: {
-            scripts: true,
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        profilePhoto: true,
+        email: true,
+        phone: true,
+        iban: true,
+        isActive: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        // _count kaldırıldı - performans için
+      },
+      where: {
+        isActive: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     })
-    return NextResponse.json(voiceActors)
+    
+    const total = await prisma.voiceActor.count({
+      where: { isActive: true },
+    })
+    
+    const duration = Date.now() - startTime
+    console.log(`[Voice Actors API] Fetched ${voiceActors.length} voice actors in ${duration}ms`)
+    
+    return NextResponse.json(voiceActors, {
+      headers: {
+        'X-Total-Count': total.toString(),
+        'X-Limit': limit.toString(),
+        'X-Offset': offset.toString(),
+      },
+    })
   } catch (error) {
     console.error('Error fetching voice actors:', error)
     return NextResponse.json(

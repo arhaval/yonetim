@@ -6,11 +6,16 @@ import { requireAdmin } from '@/lib/admin-check'
 // Cache GET requests for 1 minute
 export const revalidate = 60
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   // Admin kontrolü
   const adminCheck = await requireAdmin()
   if (adminCheck) return adminCheck
   try {
+    const startTime = Date.now()
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    
     const streamers = await prisma.streamer.findMany({
       select: {
         id: true,
@@ -26,23 +31,31 @@ export async function GET() {
         notes: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            streams: true,
-            externalStreams: true,
-          },
-        },
-        teamRates: {
-          select: {
-            id: true,
-            teamName: true,
-            hourlyRate: true,
-          },
-        },
+        // _count kaldırıldı - performans için
+        // teamRates kaldırıldı - detay sayfasında gösterilir
+      },
+      where: {
+        isActive: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     })
-    return NextResponse.json(streamers)
+    
+    const total = await prisma.streamer.count({
+      where: { isActive: true },
+    })
+    
+    const duration = Date.now() - startTime
+    console.log(`[Streamers API] Fetched ${streamers.length} streamers in ${duration}ms`)
+    
+    return NextResponse.json(streamers, {
+      headers: {
+        'X-Total-Count': total.toString(),
+        'X-Limit': limit.toString(),
+        'X-Offset': offset.toString(),
+      },
+    })
   } catch (error) {
     console.error('Error fetching streamers:', error)
     return NextResponse.json(

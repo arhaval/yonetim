@@ -14,6 +14,7 @@ export default function TeamDashboardPage() {
   const [payments, setPayments] = useState<any[]>([])
   const [financialRecords, setFinancialRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState({
     pendingTasks: 0,
     completedTasks: 0,
@@ -55,16 +56,29 @@ export default function TeamDashboardPage() {
 
   const loadData = async (memberId: string) => {
     try {
+      setLoading(true)
+      setError(null)
       console.log(`[Team Dashboard] Loading data for member ID: ${memberId}`)
+      
+      // Timeout wrapper
+      const fetchWithTimeout = (url: string, timeout = 10000) => {
+        return Promise.race([
+          fetch(url, { credentials: 'include' }),
+          new Promise<Response>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeout)
+          ),
+        ])
+      }
+
       const [tasksRes, paymentsRes, financialRes] = await Promise.all([
-        fetch(`/api/team/${memberId}/tasks`, { credentials: 'include' }),
-        fetch(`/api/team/${memberId}/payments`, { credentials: 'include' }),
-        fetch(`/api/team/${memberId}/financial`, { credentials: 'include' }),
+        fetchWithTimeout(`/api/team/${memberId}/tasks`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout(`/api/team/${memberId}/payments`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout(`/api/team/${memberId}/financial`).catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
       ])
 
-      const tasksData = await tasksRes.json()
-      const paymentsData = await paymentsRes.json()
-      const financialData = await financialRes.json()
+      const tasksData = await tasksRes.json().catch(() => ({ error: 'Parse error' }))
+      const paymentsData = await paymentsRes.json().catch(() => ({ error: 'Parse error' }))
+      const financialData = await financialRes.json().catch(() => ({ error: 'Parse error' }))
 
       if (tasksRes.ok) {
         setTasks(tasksData.tasks || [])
@@ -79,11 +93,16 @@ export default function TeamDashboardPage() {
       }
 
       if (paymentsRes.ok) {
-        setPayments(paymentsData.payments || [])
-        const unpaid = (paymentsData.payments || [])
-          .filter((p: any) => !p.paidAt)
-          .reduce((sum: number, p: any) => sum + p.amount, 0)
+        // Birleşik ödemeler (hem TeamPayment hem FinancialRecord payout)
+        const allPayments = paymentsData.payments || []
+        setPayments(allPayments)
+        const unpaid = allPayments
+          .filter((p: any) => p.status === 'unpaid' || !p.paidAt)
+          .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
         setStats(prev => ({ ...prev, unpaidAmount: unpaid }))
+      } else {
+        console.error(`[Team Dashboard] Payments error:`, paymentsRes.status, paymentsData)
+        setPayments([])
       }
 
       if (financialRes.ok) {
@@ -97,9 +116,12 @@ export default function TeamDashboardPage() {
         console.error(`[Team Dashboard] Member ID:`, memberId)
         setFinancialRecords([])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading data:', error)
+      setError(error.message || 'Veriler yüklenirken bir hata oluştu')
       setFinancialRecords([])
+      setPayments([])
+      setTasks([])
     } finally {
       setLoading(false)
     }
@@ -110,12 +132,33 @@ export default function TeamDashboardPage() {
     router.push('/team-login')
   }
 
-  if (loading) {
+  if (loading && !member) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50">
+        <div className="text-center max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Veri Yüklenemedi</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setError(null)
+              if (member?.id) loadData(member.id)
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Tekrar Dene
+          </button>
         </div>
       </div>
     )
@@ -298,24 +341,39 @@ export default function TeamDashboardPage() {
                 Ödemelerim
               </h2>
               <div className="space-y-3">
-                {payments.slice(0, 5).map((payment: any) => (
+                {payments.slice(0, 10).map((payment: any) => (
                   <div
                     key={payment.id}
                     className="p-4 rounded-lg border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">
-                          {payment.type === 'salary' ? 'Maaş' : payment.type === 'bonus' ? 'Bonus' : 'Komisyon'}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">{payment.period}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-gray-900">
+                            {payment.title || (payment.type === 'salary' ? 'Maaş' : payment.type === 'bonus' ? 'Bonus' : payment.type === 'commission' ? 'Komisyon' : 'Ödeme')}
+                          </p>
+                          {payment.source && (
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              payment.source === 'financial' 
+                                ? 'bg-blue-100 text-blue-700' 
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {payment.source === 'financial' ? 'Finansal' : 'İş Ödemesi'}
+                            </span>
+                          )}
+                        </div>
+                        {payment.period && (
+                          <p className="text-sm text-gray-600 mt-1">{payment.period}</p>
+                        )}
                         {payment.description && (
                           <p className="text-xs text-gray-500 mt-1">{payment.description}</p>
                         )}
-                        {payment.paidAt && (
+                        {payment.status === 'paid' || payment.paidAt ? (
                           <p className="text-xs text-green-600 mt-1">
-                            Ödendi: {format(new Date(payment.paidAt), 'dd MMM yyyy', { locale: tr })}
+                            Ödendi: {format(new Date(payment.occurredAt || payment.paidAt), 'dd MMM yyyy', { locale: tr })}
                           </p>
+                        ) : (
+                          <p className="text-xs text-red-600 mt-1">Ödenmedi</p>
                         )}
                       </div>
                       <div className="text-right">
@@ -325,8 +383,10 @@ export default function TeamDashboardPage() {
                             currency: 'TRY',
                           })}
                         </p>
-                        {!payment.paidAt && (
-                          <span className="badge badge-danger mt-1">Ödenmedi</span>
+                        {payment.status === 'unpaid' || (!payment.paidAt && payment.status !== 'paid') && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-1">
+                            Ödenmedi
+                          </span>
                         )}
                       </div>
                     </div>

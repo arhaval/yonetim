@@ -5,8 +5,14 @@ import { hashPassword } from '@/lib/auth'
 // Cache GET requests for 30 seconds
 export const revalidate = 30
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const startTime = Date.now()
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    
+    // Sadece gereken alanları çek (ilişkileri çekme - N+1 önleme)
     const members = await prisma.teamMember.findMany({
       select: {
         id: true,
@@ -20,17 +26,30 @@ export async function GET() {
         notes: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            tasks: true,
-            payments: true,
-          },
-        },
+        // _count kaldırıldı - performans için
+      },
+      where: {
+        isActive: true, // Sadece aktif üyeleri göster
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
     })
     
-    return NextResponse.json(members)
+    const total = await prisma.teamMember.count({
+      where: { isActive: true },
+    })
+    
+    const duration = Date.now() - startTime
+    console.log(`[Team API] Fetched ${members.length} members in ${duration}ms (limit: ${limit}, offset: ${offset})`)
+    
+    return NextResponse.json(members, {
+      headers: {
+        'X-Total-Count': total.toString(),
+        'X-Limit': limit.toString(),
+        'X-Offset': offset.toString(),
+      },
+    })
   } catch (error: any) {
     console.error('❌ Error fetching team members:', {
       message: error.message,

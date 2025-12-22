@@ -2,7 +2,7 @@
 
 import Layout from '@/components/Layout'
 import Link from 'next/link'
-import { Plus, User, Mail, Shield, Mic, Video, Camera, Pencil } from 'lucide-react'
+import { Plus, User, Mail, Shield, Mic, Video, Camera, Pencil, AlertCircle } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import DeleteButton from '@/components/DeleteButton'
 import { useRouter } from 'next/navigation'
@@ -21,6 +21,7 @@ export default function TeamPage() {
   const router = useRouter()
   const [members, setMembers] = useState<UnifiedMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -48,11 +49,23 @@ export default function TeamPage() {
   const fetchAllMembers = async () => {
     try {
       setLoading(true)
+      setError(null)
+      
+      // Timeout wrapper
+      const fetchWithTimeout = (url: string, timeout = 10000) => {
+        return Promise.race([
+          fetch(url),
+          new Promise<Response>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), timeout)
+          ),
+        ])
+      }
+
       const [teamRes, creatorsRes, voiceRes, streamersRes] = await Promise.all([
-        fetch('/api/team').catch(() => null),
-        fetch('/api/content-creators').catch(() => null),
-        fetch('/api/voice-actors').catch(() => null),
-        fetch('/api/streamers').catch(() => null)
+        fetchWithTimeout('/api/team').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout('/api/content-creators').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout('/api/voice-actors').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
+        fetchWithTimeout('/api/streamers').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
       ])
 
       let combinedMembers: UnifiedMember[] = []
@@ -92,8 +105,13 @@ export default function TeamPage() {
       }
 
       setMembers(combinedMembers)
-  } catch (error) {
+      
+      if (combinedMembers.length === 0 && !teamRes?.ok && !creatorsRes?.ok && !voiceRes?.ok && !streamersRes?.ok) {
+        setError('Tüm API istekleri başarısız oldu')
+      }
+  } catch (error: any) {
       console.error('Veriler çekilemedi:', error)
+      setError(error.message || 'Veriler yüklenirken bir hata oluştu')
     } finally {
       setLoading(false)
     }
@@ -127,7 +145,43 @@ export default function TeamPage() {
     }
   }
 
-  if (loading) return <Layout><div className="p-6">Yükleniyor...</div></Layout>
+  if (loading) {
+    return (
+      <Layout>
+        <div className="p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+              <p className="mt-4 text-gray-600">Yükleniyor...</p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Veri Yüklenemedi</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setError(null)
+                fetchAllMembers()
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Tekrar Dene
+            </button>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>

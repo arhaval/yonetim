@@ -5,20 +5,51 @@ import { hashPassword } from '@/lib/auth'
 // Cache GET requests for 30 seconds
 export const revalidate = 30
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const startTime = Date.now()
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    
     const creators = await prisma.contentCreator.findMany({
+      select: {
+        id: true,
+        name: true,
+        profilePhoto: true,
+        email: true,
+        phone: true,
+        iban: true,
+        platform: true,
+        channelUrl: true,
+        isActive: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        // _count kaldırıldı - performans için
+      },
+      where: {
+        isActive: true,
+      },
       orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: {
-            contents: true,
-            scripts: true,
-          },
-        },
+      take: limit,
+      skip: offset,
+    })
+    
+    const total = await prisma.contentCreator.count({
+      where: { isActive: true },
+    })
+    
+    const duration = Date.now() - startTime
+    console.log(`[Content Creators API] Fetched ${creators.length} creators in ${duration}ms`)
+    
+    return NextResponse.json(creators, {
+      headers: {
+        'X-Total-Count': total.toString(),
+        'X-Limit': limit.toString(),
+        'X-Offset': offset.toString(),
       },
     })
-    return NextResponse.json(creators)
   } catch (error) {
     console.error('Error fetching content creators:', error)
     return NextResponse.json(

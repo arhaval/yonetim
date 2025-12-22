@@ -190,20 +190,50 @@ export async function POST(request: NextRequest) {
 
     // Prisma data objesi oluştur
     // Boş string'leri null'a çevir
+    const rawAmount = parseFloat(data.amount)
+    const positiveAmount = Math.abs(rawAmount) // Her zaman pozitif
+    
+    // entryType ve direction belirleme
+    let entryType = data.entryType || 'expense'
+    let direction = data.direction || 'OUT'
+    
+    // Eğer type='expense' ve bir kişiye ödeme yapılıyorsa, payout olarak işaretle
+    const hasRecipient = !!(data.streamerId || data.teamMemberId || data.contentCreatorId || data.voiceActorId)
+    if (data.type === 'expense' && hasRecipient && (data.category === 'salary' || data.category?.includes('maaş') || data.category?.includes('ödeme'))) {
+      entryType = 'payout'
+      direction = 'OUT'
+    } else if (data.type === 'income') {
+      entryType = 'income'
+      direction = 'IN'
+    } else if (data.type === 'expense') {
+      entryType = 'expense'
+      direction = 'OUT'
+    }
+    
+    const occurredAt = data.occurredAt ? new Date(data.occurredAt) : new Date(data.date)
+    
     const prismaData: any = {
-      type: data.type,
+      type: data.type, // Deprecated ama geriye uyumluluk için
       category: data.category,
-      amount: parseFloat(data.amount),
+      amount: positiveAmount, // Her zaman pozitif
       description: data.description || null,
-      date: new Date(data.date),
+      date: new Date(data.date), // Deprecated ama geriye uyumluluk için
+      occurredAt: occurredAt, // Yeni standart tarih alanı
+      entryType: entryType,
+      direction: direction,
       streamerId: (data.streamerId && data.streamerId.trim() !== '') ? data.streamerId : null,
       teamMemberId: (data.teamMemberId && data.teamMemberId.trim() !== '') ? data.teamMemberId : null,
       contentCreatorId: (data.contentCreatorId && data.contentCreatorId.trim() !== '') ? data.contentCreatorId : null,
       voiceActorId: (data.voiceActorId && data.voiceActorId.trim() !== '') ? data.voiceActorId : null,
       streamId: null, // streamId opsiyonel
+      relatedPaymentId: data.relatedPaymentId || null,
     }
     
     console.log(`[Financial API] Prisma data prepared:`, {
+      entryType: prismaData.entryType,
+      direction: prismaData.direction,
+      amount: prismaData.amount,
+      occurredAt: prismaData.occurredAt,
       teamMemberId: prismaData.teamMemberId,
       streamerId: prismaData.streamerId,
       contentCreatorId: prismaData.contentCreatorId,
