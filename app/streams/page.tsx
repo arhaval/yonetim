@@ -23,7 +23,11 @@ export default function StreamsPage() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch('/api/streams')
+      // Cache ile API çağrısı - performans için
+      const res = await fetch('/api/streams', { 
+        cache: 'force-cache', 
+        next: { revalidate: 30 } 
+      })
       const data = await res.json()
       setStreams(Array.isArray(data) ? data : [])
     } catch (error) {

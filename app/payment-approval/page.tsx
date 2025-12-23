@@ -81,11 +81,12 @@ export default function PaymentApprovalPage() {
   const fetchPersons = async () => {
     setLoading(true)
     try {
+      // Cache ile API çağrıları - performans için
       const [streamersRes, voiceActorsRes, creatorsRes, teamRes] = await Promise.all([
-        fetch('/api/streamers'),
-        fetch('/api/voice-actors'),
-        fetch('/api/content-creators'),
-        fetch('/api/team'),
+        fetch('/api/streamers', { cache: 'force-cache', next: { revalidate: 30 } }),
+        fetch('/api/voice-actors', { cache: 'force-cache', next: { revalidate: 30 } }),
+        fetch('/api/content-creators', { cache: 'force-cache', next: { revalidate: 30 } }),
+        fetch('/api/team', { cache: 'force-cache', next: { revalidate: 30 } }),
       ])
 
       const allPersons: Person[] = []

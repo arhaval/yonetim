@@ -51,16 +51,20 @@ export default function TeamPage() {
       setLoading(true)
       setError(null)
       
-      // Timeout wrapper
-      const fetchWithTimeout = (url: string, timeout = 10000) => {
+      // Timeout wrapper - daha kısa timeout
+      const fetchWithTimeout = (url: string, timeout = 5000) => {
         return Promise.race([
-          fetch(url),
+          fetch(url, { 
+            cache: 'force-cache', // Cache kullan
+            next: { revalidate: 30 } // 30 saniye cache
+          }),
           new Promise<Response>((_, reject) =>
             setTimeout(() => reject(new Error('Request timeout')), timeout)
           ),
         ])
       }
 
+      // Paralel API çağrıları - cache ile
       const [teamRes, creatorsRes, voiceRes, streamersRes] = await Promise.all([
         fetchWithTimeout('/api/team').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),
         fetchWithTimeout('/api/content-creators').catch(() => ({ ok: false, json: async () => ({ error: 'Timeout' }) })),

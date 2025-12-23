@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Cache GET requests for 10 seconds (ödemeler sık değişebilir)
+export const revalidate = 10
+
 export const dynamic = 'force-dynamic'
 
 // Kişiye özel yayınlar ve içerikleri getir

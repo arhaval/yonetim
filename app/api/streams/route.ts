@@ -1,18 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Cache GET requests for 30 seconds
+export const revalidate = 30
+
 export async function GET() {
   try {
+    const startTime = Date.now()
     // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
+    // Sadece gerekli alanları çek - performans için
     const streams = await prisma.stream.findMany({
       where: { 
         // Status filtresi kaldırıldı - tüm yayınlar gösterilir
       },
-      include: {
-        streamer: true,
+      select: {
+        id: true,
+        date: true,
+        duration: true,
+        matchInfo: true,
+        teamName: true,
+        totalRevenue: true,
+        streamerEarning: true,
+        paymentStatus: true,
+        streamer: {
+          select: {
+            id: true,
+            name: true,
+            profilePhoto: true,
+          },
+        },
       },
       orderBy: { date: 'desc' },
+      take: 100, // İlk 100 kayıt - pagination için
     })
+    
+    const duration = Date.now() - startTime
+    console.log(`[Streams API] Fetched ${streams.length} streams in ${duration}ms`)
     
     return NextResponse.json(streams)
   } catch (error: any) {
