@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { format, subMonths, subWeeks, getWeek, getYear, startOfMonth, endOfMonth } from 'date-fns'
-
-// Hafta formatını oluştur (2024-W01 gibi)
-function getWeekString(date: Date): string {
-  const year = getYear(date)
-  const week = getWeek(date, { weekStartsOn: 1 })
-  return `${year}-W${week.toString().padStart(2, '0')}`
-}
 
 export async function GET(request: NextRequest) {
   try {
