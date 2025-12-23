@@ -320,7 +320,7 @@ export default async function TeamMemberDetailPage({
                       Toplam Görev
                     </dt>
                     <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                      {member.tasks.length}
+                      {tasks.length}
                     </dd>
                   </dl>
                 </div>
@@ -350,9 +350,9 @@ export default async function TeamMemberDetailPage({
                 </div>
               </div>
               <TeamPaymentCards
-                totalPaid={(member.payments || []).filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0)}
+                totalPaid={payments.filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0)}
                 totalUnpaid={totalUnpaid}
-                payments={(member.payments || []).map(p => ({
+                payments={payments.map(p => ({
                   id: p.id,
                   amount: p.amount || 0,
                   paidAt: p.paidAt,
@@ -532,7 +532,7 @@ export default async function TeamMemberDetailPage({
                 </h3>
                 <div className="flow-root">
                   <ul className="-my-5 divide-y divide-gray-200">
-                    {(member.tasks || []).map((task) => (
+                    {tasks.map((task) => (
                       <li key={task.id} className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -587,7 +587,7 @@ export default async function TeamMemberDetailPage({
                 </h3>
                 <div className="flow-root">
                   <ul className="-my-5 divide-y divide-gray-200">
-                    {(member.payments || []).map((payment) => (
+                    {payments.map((payment) => (
                       <li key={payment.id} className="py-4">
                         <div className="flex items-center justify-between">
                           <div>
