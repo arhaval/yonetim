@@ -548,22 +548,44 @@ export default function SocialMediaPage() {
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Platform</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold sticky left-0 bg-gradient-to-r from-blue-600 to-blue-500 z-10">
+                      Tarih
+                    </th>
                     {platforms.map((platform) => (
                       <th key={platform.name} className="px-6 py-4 text-center text-sm font-semibold">
-                        {platform.name}
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{platform.name}</span>
+                          <span className="text-xs font-normal opacity-90">Takipçi</span>
+                        </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {(() => {
-                    // Tüm unique period'ları bul (month veya week)
+                    // Tüm unique period'ları bul ve tarihe göre sırala (en eski en üstte)
                     const allPeriods = Array.from(
                       new Set(
                         allHistory.map((stat: any) => stat.month || stat.week).filter(Boolean)
                       )
-                    ).sort((a: any, b: any) => b.localeCompare(a))
+                    ).sort((a: any, b: any) => {
+                      // Tarihe göre sırala (en eski en üstte)
+                      if (a.includes('W') && b.includes('W')) {
+                        // Hafta formatı: 2024-W01
+                        const [yearA, weekA] = a.split('-W').map(Number)
+                        const [yearB, weekB] = b.split('-W').map(Number)
+                        if (yearA !== yearB) return yearA - yearB
+                        return weekA - weekB
+                      } else if (a.includes('W')) {
+                        // Hafta önce gelir
+                        return -1
+                      } else if (b.includes('W')) {
+                        return 1
+                      } else {
+                        // Ay formatı: 2024-01
+                        return a.localeCompare(b)
+                      }
+                    })
 
                     return allPeriods.map((period: string) => {
                       const periodStats = allHistory.filter(
@@ -571,20 +593,29 @@ export default function SocialMediaPage() {
                       )
                       
                       return (
-                        <tr key={period} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                            {period.includes('W') 
-                              ? `Hafta ${period.split('-W')[1]} - ${period.split('-W')[0]}`
-                              : format(new Date(period + '-01'), 'MMMM yyyy', { locale: tr })
-                            }
+                        <tr key={period} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white z-10 border-r border-gray-200">
+                            <div className="flex flex-col">
+                              <span className="font-semibold">
+                                {period.includes('W') 
+                                  ? `Hafta ${period.split('-W')[1]} - ${period.split('-W')[0]}`
+                                  : format(new Date(period + '-01'), 'MMMM yyyy', { locale: tr })
+                                }
+                              </span>
+                              {period.includes('W') ? null : (
+                                <span className="text-xs text-gray-500 mt-0.5">
+                                  {format(new Date(period + '-01'), 'dd MMM yyyy', { locale: tr })}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           {platforms.map((platform) => {
                             const stat = periodStats.find((s: any) => s.platform === platform.name)
                             const value = stat?.followerCount || 0
                             
-                            // Önceki dönemi bul
-                            const prevPeriodIndex = allPeriods.indexOf(period) + 1
-                            const prevPeriod = allPeriods[prevPeriodIndex]
+                            // Önceki dönemi bul (bir önceki satır)
+                            const prevPeriodIndex = allPeriods.indexOf(period) - 1
+                            const prevPeriod = prevPeriodIndex >= 0 ? allPeriods[prevPeriodIndex] : null
                             const prevStat = prevPeriod 
                               ? allHistory.find(
                                   (s: any) => 
@@ -597,33 +628,37 @@ export default function SocialMediaPage() {
                             
                             return (
                               <td key={platform.name} className="px-6 py-4 text-center">
-                                <div className="flex flex-col items-center gap-1">
-                                  <span className="text-sm font-semibold text-gray-900">
-                                    {value.toLocaleString('tr-TR')}
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-base font-bold text-gray-900">
+                                      {value > 0 ? value.toLocaleString('tr-TR') : '-'}
+                                    </span>
                                     {prevValue > 0 && change.absoluteChange !== 0 && (
-                                      <span className={`ml-2 text-xs font-semibold ${
-                                        change.isPositive ? 'text-green-600' : 'text-red-600'
+                                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                        change.isPositive 
+                                          ? 'bg-green-100 text-green-700' 
+                                          : 'bg-red-100 text-red-700'
                                       }`}>
-                                        ({change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')})
+                                        {change.isPositive ? '+' : ''}{change.absoluteChange.toLocaleString('tr-TR')}
                                       </span>
                                     )}
-                                  </span>
+                                  </div>
                                   {prevValue > 0 && change.absoluteChange !== 0 && (
-                                    <span className={`text-xs font-medium flex items-center gap-1 ${
+                                    <div className={`text-xs font-medium flex items-center gap-1 ${
                                       change.isPositive ? 'text-green-600' : 'text-red-600'
                                     }`}>
                                       {change.isPositive ? (
-                                        <TrendingUp className="w-3 h-3" />
+                                        <TrendingUp className="w-4 h-4" />
                                       ) : (
-                                        <TrendingDown className="w-3 h-3" />
+                                        <TrendingDown className="w-4 h-4" />
                                       )}
-                                      {change.isPositive ? '+' : ''}{change.value.toFixed(1)}%
-                                    </span>
+                                      <span className="font-semibold">
+                                        {change.isPositive ? '+' : ''}{change.value.toFixed(1)}%
+                                      </span>
+                                    </div>
                                   )}
-                                  {stat?.updatedAt && (
-                                    <span className="text-xs text-gray-400 mt-1">
-                                      {formatDistanceToNow(new Date(stat.updatedAt), { addSuffix: true, locale: tr })}
-                                    </span>
+                                  {prevValue === 0 && value > 0 && (
+                                    <span className="text-xs text-gray-400 italic">İlk kayıt</span>
                                   )}
                                 </div>
                               </td>
