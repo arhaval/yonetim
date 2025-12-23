@@ -502,11 +502,6 @@ export default function StreamerDashboardPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {stream.status === 'pending' && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              ⏳ Onay Bekleniyor
-                            </span>
-                          )}
                           {stream.status === 'approved' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               ✅ Onaylandı

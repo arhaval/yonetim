@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Stream oluştur - status: "pending" olarak başlar (admin onaylayacak)
+    // Stream oluştur - status: "approved" olarak başlar (yayıncılar yayınları girince direkt onaylanır, admin sonra ücret belirler)
     const stream = await prisma.stream.create({
       data: {
         streamerId: data.streamerId,

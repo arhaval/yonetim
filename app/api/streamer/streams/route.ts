@@ -26,62 +26,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Yayıncı kendi yayınlarını görür (onaylanmış ve bekleyen)
-    let streams: any[] = []
-    try {
-      // Önce approved ve pending olanları çek
-      const approvedStreams = await prisma.stream.findMany({
-        where: { 
-          streamerId,
-          status: 'approved'
-        },
-        orderBy: { date: 'desc' },
-      })
-      
-      const pendingStreams = await prisma.stream.findMany({
-        where: { 
-          streamerId,
-          status: 'pending'
-        },
-        orderBy: { date: 'desc' },
-      })
-      
-      // Status null olanları da çek (eski yayınlar) - Prisma'da null kontrolü için equals kullan
-      let nullStatusStreams: any[] = []
-      try {
-        nullStatusStreams = await prisma.stream.findMany({
-          where: { 
-            streamerId,
-            status: null as any // Type assertion - Prisma nullable field için
-          },
-          orderBy: { date: 'desc' },
-        })
-      } catch (error: any) {
-        // Eğer null kontrolü çalışmazsa, tüm yayınları çek ve filtrele
-        console.warn('Null status kontrolü başarısız, alternatif yöntem kullanılıyor')
-        const allStreams = await prisma.stream.findMany({
-          where: { streamerId },
-          orderBy: { date: 'desc' },
-        })
-        nullStatusStreams = allStreams.filter(s => !s.status || s.status === null)
-      }
-      
-      // Hepsini birleştir ve tarihe göre sırala
-      streams = [...approvedStreams, ...pendingStreams, ...nullStatusStreams].sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-    } catch (error: any) {
-      // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
-      if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
-        console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
-        streams = await prisma.stream.findMany({
-          where: { streamerId },
-          orderBy: { date: 'desc' },
-        })
-      } else {
-        throw error
-      }
-    }
+    // Yayıncı kendi yayınlarını görür (tüm yayınlar - artık pending yok, direkt approved)
+    const streams = await prisma.stream.findMany({
+      where: { 
+        streamerId,
+      },
+      orderBy: { date: 'desc' },
+    })
 
     return NextResponse.json(streams)
   } catch (error) {
@@ -130,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Yayıncılar sadece temel bilgileri girer, finansal hesaplamalar admin tarafından yapılacak
-    // Stream oluştur (status: pending - admin onaylayacak)
+    // Stream oluştur (status: approved - direkt onaylanır, admin sonra ücret belirler)
     const stream = await prisma.stream.create({
       data: {
         streamerId,
