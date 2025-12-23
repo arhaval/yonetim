@@ -68,15 +68,20 @@ export default function ExportPDFButton({
         throw new Error('jsPDF modülü yüklenemedi')
       }
       
-      if (!autoTableModule || !autoTableModule.default) {
+      if (!autoTableModule) {
         throw new Error('jspdf-autotable modülü yüklenemedi')
       }
       
       const jsPDF = jsPDFModule.default
-      const autoTable = autoTableModule.default
+      // autoTable default export olmayabilir, doğrudan modülü kullan
+      const autoTable = (autoTableModule as any).default || autoTableModule
+      
+      if (typeof autoTable !== 'function') {
+        throw new Error('autoTable fonksiyonu bulunamadı')
+      }
       
       console.log('jsPDF loaded:', !!jsPDF)
-      console.log('autoTable loaded:', !!autoTable)
+      console.log('autoTable loaded:', typeof autoTable)
       
       const doc = new jsPDF({
         orientation: 'portrait',
