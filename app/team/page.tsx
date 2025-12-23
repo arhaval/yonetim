@@ -192,7 +192,7 @@ export default function TeamPage() {
               Tüm Ekip Yönetimi
             </h1>
             <p className="mt-2 text-sm text-gray-600">
-              Yöneticiler, Seslendirmenler ve diğer ekip üyelerini buradan yönetin.
+              Ekip üyeleri, yayıncılar, içerik üreticileri ve seslendirmenleri buradan yönetin.
             </p>
           </div>
           
