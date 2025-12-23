@@ -12,6 +12,8 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params)
     const { personType, personId } = resolvedParams
 
+    console.log('[Payment Approval API] Request:', { personType, personId })
+
     if (!personType || !personId) {
       return NextResponse.json(
         { error: 'Kişi tipi ve ID gereklidir' },
@@ -158,6 +160,8 @@ export async function GET(
         notes: s.notes,
       }))
     } else if (personType === 'teamMember') {
+      console.log('[Payment Approval API] Fetching team member:', personId)
+      
       // Ekip üyesi bilgilerini getir
       const teamMember = await prisma.teamMember.findUnique({
         where: { id: personId },
@@ -171,11 +175,14 @@ export async function GET(
       })
 
       if (!teamMember) {
+        console.error('[Payment Approval API] Team member not found:', personId)
         return NextResponse.json(
           { error: 'Ekip üyesi bulunamadı' },
           { status: 404 }
         )
       }
+
+      console.log('[Payment Approval API] Team member found:', teamMember.name)
 
       result.personInfo = {
         id: teamMember.id,
@@ -196,6 +203,8 @@ export async function GET(
           createdAt: 'desc',
         },
       })
+
+      console.log('[Payment Approval API] Found team payments:', teamPayments.length)
 
       result.teamPayments = teamPayments.map(tp => ({
         id: tp.id,

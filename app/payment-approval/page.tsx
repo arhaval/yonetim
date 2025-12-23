@@ -167,26 +167,32 @@ export default function PaymentApprovalPage() {
 
     setDataLoading(true)
     try {
-      const res = await fetch(`/api/payment-approval/${selectedPersonType}/${selectedPersonId}`)
+      const url = `/api/payment-approval/${selectedPersonType}/${selectedPersonId}`
+      console.log('Fetching person data:', { selectedPersonType, selectedPersonId, url })
+      
+      const res = await fetch(url)
+      const data = await res.json()
+      
       if (res.ok) {
-        const data = await res.json()
+        console.log('Person data received:', data)
         setStreams(data.streams || [])
         setScripts(data.scripts || [])
         setTeamPayments(data.teamPayments || [])
         setPersonInfo(data.personInfo)
       } else {
-        const error = await res.json()
-        alert(error.error || 'Veri getirilemedi')
+        console.error('API error:', data)
+        alert(data.error || 'Veri getirilemedi')
       }
     } catch (error) {
       console.error('Error fetching person data:', error)
-      alert('Veri getirilemedi')
+      alert(`Veri getirilemedi: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`)
     } finally {
       setDataLoading(false)
     }
   }
 
   const handlePersonSelect = (person: Person) => {
+    console.log('Person selected:', person)
     setSelectedPersonType(person.type)
     setSelectedPersonId(person.id)
     setSearchQuery('')
