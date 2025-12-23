@@ -24,40 +24,53 @@ async function main() {
   }
 
   try {
-    const whereClause = beforeDate ? { createdAt: { lt: beforeDate } } : {}
-    const deleteOptions = beforeDate ? { where: whereClause } : {}
-
     // 1. İlişkili kayıtları önce sil
     console.log('📺 Yayınlar siliniyor...')
-    const deletedStreams = await prisma.stream.deleteMany(deleteOptions)
+    const deletedStreams = beforeDate 
+      ? await prisma.stream.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.stream.deleteMany({})
     console.log(`✅ ${deletedStreams.count} yayın silindi`)
 
     console.log('💰 Ödemeler siliniyor...')
-    const deletedPayments = await prisma.payment.deleteMany(deleteOptions)
+    const deletedPayments = beforeDate
+      ? await prisma.payment.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.payment.deleteMany({})
     console.log(`✅ ${deletedPayments.count} ödeme silindi`)
 
     console.log('💼 Ekip ödemeleri siliniyor...')
-    const deletedTeamPayments = await prisma.teamPayment.deleteMany(deleteOptions)
+    const deletedTeamPayments = beforeDate
+      ? await prisma.teamPayment.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.teamPayment.deleteMany({})
     console.log(`✅ ${deletedTeamPayments.count} ekip ödemesi silindi`)
 
     console.log('💵 Finansal kayıtlar siliniyor...')
-    const deletedFinancialRecords = await prisma.financialRecord.deleteMany(deleteOptions)
+    const deletedFinancialRecords = beforeDate
+      ? await prisma.financialRecord.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.financialRecord.deleteMany({})
     console.log(`✅ ${deletedFinancialRecords.count} finansal kayıt silindi`)
 
     console.log('🎤 Seslendirme metinleri siliniyor...')
-    const deletedScripts = await prisma.voiceoverScript.deleteMany(deleteOptions)
+    const deletedScripts = beforeDate
+      ? await prisma.voiceoverScript.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.voiceoverScript.deleteMany({})
     console.log(`✅ ${deletedScripts.count} seslendirme metni silindi`)
 
     console.log('📋 Görevler siliniyor...')
-    const deletedTasks = await prisma.task.deleteMany(deleteOptions)
+    const deletedTasks = beforeDate
+      ? await prisma.task.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.task.deleteMany({})
     console.log(`✅ ${deletedTasks.count} görev silindi`)
 
     console.log('🌐 Dış yayınlar siliniyor...')
-    const deletedExternalStreams = await prisma.externalStream.deleteMany(deleteOptions)
+    const deletedExternalStreams = beforeDate
+      ? await prisma.externalStream.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.externalStream.deleteMany({})
     console.log(`✅ ${deletedExternalStreams.count} dış yayın silindi`)
 
     console.log('📊 Sosyal medya istatistikleri siliniyor...')
-    const deletedSocialMedia = await prisma.socialMediaStats.deleteMany(deleteOptions)
+    const deletedSocialMedia = beforeDate
+      ? await prisma.socialMediaStats.deleteMany({ where: { createdAt: { lt: beforeDate } } })
+      : await prisma.socialMediaStats.deleteMany({})
     console.log(`✅ ${deletedSocialMedia.count} sosyal medya kaydı silindi`)
 
     // 2. İçerikleri sil (opsiyonel - yorum satırını kaldırarak aktif edebilirsiniz)
