@@ -70,6 +70,8 @@ export default async function TeamMemberDetailPage({
   let pendingScripts = 0
   let totalEarnings = 0
   let financialRecords: any[] = []
+  let tasks: any[] = []
+  let payments: any[] = []
 
   if (isVoiceActor && voiceActor) {
     const scripts = voiceActor.scripts || []
@@ -94,8 +96,8 @@ export default async function TeamMemberDetailPage({
       orderBy: { date: 'desc' },
     }).catch(() => [])
   } else if (member) {
-    const tasks = member.tasks || []
-    const payments = member.payments || []
+    tasks = member.tasks || []
+    payments = member.payments || []
     pendingTasks = tasks.filter((t) => t.status === 'pending').length
     completedTasks = tasks.filter(
       (t) => t.status === 'completed'

@@ -210,7 +210,7 @@ export default async function StreamerDetailPage({
                   />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-2xl">
                     {streamer.name.charAt(0).toUpperCase()}
                   </span>
@@ -429,15 +429,15 @@ export default async function StreamerDetailPage({
 
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-200">
+            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                  <Video className="w-5 h-5 mr-2 text-indigo-600" />
+                  <Video className="w-5 h-5 mr-2 text-blue-600" />
                   Yayınlar ({streamer.streams.length})
                 </h3>
                 <Link
                   href={`/streams/new`}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Yeni Ekle
@@ -450,7 +450,7 @@ export default async function StreamerDetailPage({
           </div>
 
           <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-gray-200">
+            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
                 <ExternalLink className="w-5 h-5 mr-2 text-blue-600" />
                 Dış Yayınlar ({streamer.externalStreams.length})
@@ -506,9 +506,9 @@ export default async function StreamerDetailPage({
 
           {/* Finansal Kayıtlar */}
           <div className="bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
+            <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+                <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
                 Finansal Kayıtlar ({totalFinancialRecords > 0 ? `${skip + 1}-${Math.min(skip + recordsPerPage, totalFinancialRecords)} / ${totalFinancialRecords}` : 0})
               </h3>
             </div>
