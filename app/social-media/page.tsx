@@ -14,13 +14,6 @@ const platforms = [
   { name: 'TikTok', icon: Music, color: 'from-black to-gray-800' },
 ]
 
-// Hafta formatını oluştur (2024-W01 gibi)
-function getWeekString(date: Date): string {
-  const year = getYear(date)
-  const week = getWeek(date, { weekStartsOn: 1 })
-  return `${year}-W${week.toString().padStart(2, '0')}`
-}
-
 type ViewType = 'cards' | 'table'
 
 export default function SocialMediaPage() {
