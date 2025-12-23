@@ -50,7 +50,7 @@ export default async function StreamerDetailPage({
         orderBy: { date: 'desc' },
       })
     } catch (error: any) {
-      console.warn('Approved streams çekilemedi:', error.message)
+      console.warn('Streams çekilemedi:', error.message)
       allStreams = []
     }
 

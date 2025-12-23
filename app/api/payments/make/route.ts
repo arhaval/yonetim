@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       const endDate = new Date(year, monthNum, 0, 23, 59, 59)
 
       // O ay için bekleyen yayınları getir
-      const pendingStreams = await prisma.stream.findMany({
+      const unpaidStreams = await prisma.stream.findMany({
         where: {
           streamerId,
           status: 'approved',
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       let remainingAmount = amount
       
       // Yayınları sırayla ödendi olarak işaretle
-      for (const stream of pendingStreams) {
+      for (const stream of unpaidStreams) {
         if (remainingAmount <= 0) break
         
         if (remainingAmount >= stream.streamerEarning) {
