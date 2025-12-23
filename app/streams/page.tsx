@@ -126,6 +126,9 @@ export default function StreamsPage() {
                       Gelir
                     </th>
                     <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
+                      Ödeme Durumu
+                    </th>
+                    <th className="h-12 px-6 text-left align-middle font-semibold text-sm text-muted-foreground">
                       İşlemler
                     </th>
                   </tr>
@@ -198,6 +201,21 @@ export default function StreamsPage() {
                               maximumFractionDigits: 0,
                             })}
                           </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 align-middle">
+                        {stream.streamerEarning > 0 ? (
+                          stream.paymentStatus === 'paid' ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              ✅ Ödendi
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                              ⏳ Ödenmedi
+                            </span>
+                          )
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
                         )}

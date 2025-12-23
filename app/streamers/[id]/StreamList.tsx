@@ -42,7 +42,7 @@ export default function StreamList({ streams, streamerId }: { streams: any[], st
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       {/* Tarih ve Durum */}
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <p className="text-sm font-semibold text-gray-900">
                           {format(new Date(stream.date), 'dd MMM yyyy', {
                             locale: tr,
@@ -52,6 +52,17 @@ export default function StreamList({ streams, streamerId }: { streams: any[], st
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
                             Maliyet Bekleniyor
                           </span>
+                        )}
+                        {stream.streamerEarning > 0 && (
+                          stream.paymentStatus === 'paid' ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              ✅ Ödendi
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              ⏳ Ödenmedi
+                            </span>
+                          )
                         )}
                       </div>
 
