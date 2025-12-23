@@ -72,15 +72,16 @@ export default async function TeamMemberDetailPage({
   let financialRecords: any[] = []
 
   if (isVoiceActor && voiceActor) {
-    totalScripts = voiceActor.scripts.length
-    approvedScripts = voiceActor.scripts.filter(s => s.status === 'approved').length
-    pendingScripts = voiceActor.scripts.filter(s => s.status === 'pending').length
-    totalEarnings = voiceActor.scripts
+    const scripts = voiceActor.scripts || []
+    totalScripts = scripts.length
+    approvedScripts = scripts.filter(s => s.status === 'approved').length
+    pendingScripts = scripts.filter(s => s.status === 'pending').length
+    totalEarnings = scripts
       .filter(s => s.status === 'paid')
-      .reduce((sum, s) => sum + s.price, 0)
+      .reduce((sum, s) => sum + (s.price || 0), 0)
     
     // Ödenmemiş metinler için toplam ücret (onaylanmış veya ses dosyası yüklenmiş pending olanlar)
-    const unpaidScripts = voiceActor.scripts.filter(s => 
+    const unpaidScripts = scripts.filter(s => 
       s.status === 'approved' || (s.status === 'pending' && s.audioFile)
     )
     totalUnpaid = unpaidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
@@ -93,8 +94,10 @@ export default async function TeamMemberDetailPage({
       orderBy: { date: 'desc' },
     }).catch(() => [])
   } else if (member) {
-    pendingTasks = member.tasks.filter((t) => t.status === 'pending').length
-    completedTasks = member.tasks.filter(
+    const tasks = member.tasks || []
+    const payments = member.payments || []
+    pendingTasks = tasks.filter((t) => t.status === 'pending').length
+    completedTasks = tasks.filter(
       (t) => t.status === 'completed'
     ).length
 
@@ -298,11 +301,11 @@ export default async function TeamMemberDetailPage({
               <TeamPaymentCards
                 totalPaid={totalEarnings}
                 totalUnpaid={totalUnpaid}
-                scripts={voiceActor.scripts.map(s => ({
+                scripts={(voiceActor.scripts || []).map(s => ({
                   id: s.id,
                   title: s.title,
-                  price: s.price,
-                  status: s.status,
+                  price: s.price || 0,
+                  status: s.status || 'pending',
                   createdAt: s.createdAt,
                   audioFile: s.audioFile,
                 }))}
@@ -347,11 +350,11 @@ export default async function TeamMemberDetailPage({
                 </div>
               </div>
               <TeamPaymentCards
-                totalPaid={member.payments.filter(p => p.paidAt).reduce((sum, p) => sum + p.amount, 0)}
+                totalPaid={(member.payments || []).filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0)}
                 totalUnpaid={totalUnpaid}
-                payments={member.payments.map(p => ({
+                payments={(member.payments || []).map(p => ({
                   id: p.id,
-                  amount: p.amount,
+                  amount: p.amount || 0,
                   paidAt: p.paidAt,
                   description: p.description,
                   type: p.type,
@@ -371,11 +374,11 @@ export default async function TeamMemberDetailPage({
                 totalPaid={totalEarnings}
                 totalUnpaid={totalUnpaid}
                 payments={[]}
-                scripts={voiceActor.scripts.map(s => ({
+                scripts={(voiceActor.scripts || []).map(s => ({
                   id: s.id,
                   title: s.title,
                   price: s.price || 0,
-                  status: s.status,
+                  status: s.status || 'pending',
                   createdAt: s.createdAt,
                   audioFile: s.audioFile,
                 }))}
@@ -393,7 +396,7 @@ export default async function TeamMemberDetailPage({
                 </h3>
                 <div className="flow-root">
                   <ul className="-my-5 divide-y divide-gray-200">
-                    {voiceActor.scripts.map((script) => (
+                    {(voiceActor.scripts || []).map((script) => (
                       <li key={script.id} className="py-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -529,7 +532,7 @@ export default async function TeamMemberDetailPage({
                 </h3>
                 <div className="flow-root">
                   <ul className="-my-5 divide-y divide-gray-200">
-                    {member.tasks.map((task) => (
+                    {(member.tasks || []).map((task) => (
                       <li key={task.id} className="py-4">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -584,7 +587,7 @@ export default async function TeamMemberDetailPage({
                 </h3>
                 <div className="flow-root">
                   <ul className="-my-5 divide-y divide-gray-200">
-                    {member.payments.map((payment) => (
+                    {(member.payments || []).map((payment) => (
                       <li key={payment.id} className="py-4">
                         <div className="flex items-center justify-between">
                           <div>
