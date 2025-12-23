@@ -363,81 +363,93 @@ export default function CreatorDashboardPage() {
                       ))}
                   </div>
                 )}
-                {/* Diğer scriptler */}
-                {scripts
-                  .filter(s => !(s.audioFile && s.status === 'pending'))
-                  .map((script) => (
-                <div key={script.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Link
-                          href={`/voiceover-scripts/${script.id}`}
-                          className="text-lg font-semibold text-gray-900 hover:text-indigo-600"
-                        >
-                          {script.title}
-                        </Link>
-                        {script.status === 'paid' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Ödendi
-                          </span>
-                        ) : script.status === 'approved' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Onaylandı
-                          </span>
-                        ) : script.status === 'creator-approved' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            Admin Onayı Bekliyor
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Beklemede
-                          </span>
-                        )}
-                        {script.audioFile && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            <Download className="w-3 h-3 mr-1" />
-                            Ses Yüklendi
-                          </span>
-                        )}
+                {/* Diğer scriptler - Kart Tasarımı */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {scripts
+                      .filter(s => !(s.audioFile && s.status === 'pending'))
+                      .map((script) => (
+                      <div 
+                        key={script.id} 
+                        className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                        onClick={() => window.location.href = `/voiceover-scripts/${script.id}`}
+                      >
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors flex-1">
+                              {script.title}
+                            </h3>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {script.status === 'paid' ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Ödendi
+                              </span>
+                            ) : script.status === 'approved' ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Onaylandı
+                              </span>
+                            ) : script.status === 'creator-approved' ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                Admin Onayı Bekliyor
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Beklemede
+                              </span>
+                            )}
+                            {script.audioFile && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <Download className="w-3 h-3 mr-1" />
+                                Ses Yüklendi
+                              </span>
+                            )}
+                          </div>
+
+                          {/* HTML içeriğini düzgün göster */}
+                          <div 
+                            className="text-sm text-gray-600 line-clamp-3 prose prose-sm max-w-none mb-3"
+                            dangerouslySetInnerHTML={{ __html: script.text }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+
+                          <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
+                            <span>{format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}</span>
+                            {script.price > 0 && (
+                              <span className="font-semibold text-green-600">
+                                {script.price.toLocaleString('tr-TR', {
+                                  style: 'currency',
+                                  currency: 'TRY',
+                                  maximumFractionDigits: 0,
+                                })}
+                              </span>
+                            )}
+                          </div>
+
+                          {script.voiceActor && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              Seslendirmen: <span className="font-medium">{script.voiceActor.name}</span>
+                            </div>
+                          )}
+
+                          {script.audioFile && (
+                            <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                              <a
+                                href={script.audioFile}
+                                download
+                                className="inline-flex items-center w-full justify-center px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+                              >
+                                <Download className="w-3 h-3 mr-2" />
+                                Ses İndir
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{script.text}</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>{format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
-                        {script.voiceActor && (
-                          <>
-                            <span>•</span>
-                            <span>Seslendirmen: {script.voiceActor.name}</span>
-                          </>
-                        )}
-                        {script.price > 0 && (
-                          <>
-                            <span>•</span>
-                            <span className="font-semibold text-green-600">
-                              {script.price.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                              })}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    {script.audioFile && (
-                      <div className="ml-4">
-                        <a
-                          href={script.audioFile}
-                          download
-                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Ses İndir
-                        </a>
-                      </div>
-                    )}
+                    ))}
                   </div>
                 </div>
-                  ))}
               </>
             )}
           </div>

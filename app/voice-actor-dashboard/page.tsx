@@ -269,28 +269,34 @@ export default function VoiceActorDashboardPage() {
           </div>
         </div>
 
-        {/* Scripts List */}
+        {/* Scripts List - Card Design */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">Seslendirme Metinleri</h2>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="p-6">
             {scripts.length === 0 ? (
-              <div className="px-6 py-12 text-center">
+              <div className="text-center py-12">
                 <p className="text-gray-500">Henüz seslendirme metni eklenmemiş</p>
               </div>
             ) : (
-              scripts.map((script) => (
-                <div key={script.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {scripts.map((script) => (
+                  <div 
+                    key={script.id} 
+                    className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+                    onClick={() => handleOpenModal(script)}
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-3">
                         <h3 
-                          className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-indigo-600"
-                          onClick={() => handleOpenModal(script)}
+                          className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors flex-1"
                         >
                           {script.title}
                         </h3>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {script.status === 'paid' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <CheckCircle className="w-3 h-3 mr-1" />
@@ -299,7 +305,12 @@ export default function VoiceActorDashboardPage() {
                         ) : script.status === 'approved' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             <CheckCircle className="w-3 h-3 mr-1" />
-                            Tamamlandı
+                            Onaylandı
+                          </span>
+                        ) : script.status === 'creator-approved' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Creator Onayladı
                           </span>
                         ) : script.voiceActorId === voiceActor.id && script.audioFile ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -319,68 +330,58 @@ export default function VoiceActorDashboardPage() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500 flex-wrap">
+
+                      {/* HTML içeriğini düzgün göster */}
+                      <div 
+                        className="text-sm text-gray-600 line-clamp-3 prose prose-sm max-w-none mb-3"
+                        dangerouslySetInnerHTML={{ __html: script.text }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                         <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
                         </span>
-                        {script.contentType && (
-                          <>
-                            <span>•</span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border" style={{ 
-                              backgroundColor: script.contentType === 'reels' ? 'rgba(255, 46, 99, 0.1)' : script.contentType === 'kısa' ? 'rgba(8, 217, 214, 0.1)' : 'rgba(37, 42, 52, 0.1)',
-                              borderColor: script.contentType === 'reels' ? '#ff2e63' + '40' : script.contentType === 'kısa' ? '#08d9d6' + '40' : '#252a34' + '40',
-                              color: '#252a34'
-                            }}>
-                              {script.contentType === 'reels' ? 'Reels' : script.contentType === 'kısa' ? 'Kısa Video' : 'Uzun Video'}
-                            </span>
-                          </>
-                        )}
                         {script.price > 0 && (
-                          <>
-                            <span>•</span>
-                            <span className="font-semibold text-green-600">
-                              {script.price.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                              })}
-                            </span>
-                          </>
+                          <span className="font-semibold text-green-600">
+                            {script.price.toLocaleString('tr-TR', {
+                              style: 'currency',
+                              currency: 'TRY',
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
                         )}
                       </div>
-                      <p className="mt-2 text-sm text-gray-600 line-clamp-2">{script.text}</p>
-                    </div>
-                    <div className="ml-4 flex flex-col space-y-2">
-                      {!script.voiceActorId && (
-                        <button
-                          onClick={() => handleAssignScript(script.id)}
-                          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-                        >
-                          Bana Ata
-                        </button>
-                      )}
-                      {script.voiceActorId === voiceActor.id && !script.audioFile && (
-                        <button
-                          onClick={() => handleOpenModal(script)}
-                          className="px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-sm font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
-                        >
-                          Ses Yükle
-                        </button>
-                      )}
-                      {script.voiceActorId === voiceActor.id && script.audioFile && script.status === 'pending' && (
-                        <span className="px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-lg">
-                          Onay Bekleniyor
-                        </span>
-                      )}
-                      {script.voiceActorId === voiceActor.id && script.status === 'approved' && (
-                        <span className="px-4 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-lg">
-                          Tamamlandı
-                        </span>
-                      )}
+
+                      <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        {!script.voiceActorId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAssignScript(script.id)
+                            }}
+                            className="flex-1 px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+                          >
+                            Bana Ata
+                          </button>
+                        )}
+                        {script.voiceActorId === voiceActor.id && !script.audioFile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleOpenModal(script)
+                            }}
+                            className="flex-1 px-3 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-xs font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
+                          >
+                            Ses Yükle
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>
