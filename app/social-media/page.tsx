@@ -25,6 +25,7 @@ export default function SocialMediaPage() {
   const [allHistory, setAllHistory] = useState<any[]>([])
   const [inputValues, setInputValues] = useState<Record<string, number>>({})
   const [platformLastDates, setPlatformLastDates] = useState<Record<string, { lastEntry: string | null; previousEntry: string | null }>>({})
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchData()
