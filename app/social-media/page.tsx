@@ -4,7 +4,7 @@ import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
 import { format, differenceInDays, formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { Save, Instagram, Youtube, Twitter, Twitch, Music, Table2, Grid, TrendingUp, TrendingDown, AlertCircle, Clock } from 'lucide-react'
+import { Save, Instagram, Youtube, Twitter, Twitch, Music, Table2, Grid, TrendingUp, TrendingDown, AlertCircle, Clock, Trash2 } from 'lucide-react'
 
 const platforms = [
   { name: 'Instagram', icon: Instagram, color: 'from-pink-500 to-purple-500' },
@@ -106,6 +106,37 @@ export default function SocialMediaPage() {
       }
     } catch (error) {
       console.error('Error fetching history:', error)
+    }
+  }
+
+  const handleDeleteStat = async (statId: string) => {
+    if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+      return
+    }
+
+    setDeletingIds(prev => new Set(prev).add(statId))
+    try {
+      const response = await fetch(`/api/social-media/${statId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || 'Kayıt silinemedi')
+        return
+      }
+
+      // Başarılı silme sonrası verileri yenile
+      await fetchHistory()
+    } catch (error) {
+      console.error('Error deleting stat:', error)
+      alert('Kayıt silinirken bir hata oluştu')
+    } finally {
+      setDeletingIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(statId)
+        return newSet
+      })
     }
   }
   
@@ -416,7 +447,7 @@ export default function SocialMediaPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+                    <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold sticky left-0 bg-gradient-to-r from-blue-600 to-blue-500 z-10">
                       Tarih
@@ -429,6 +460,9 @@ export default function SocialMediaPage() {
                         </div>
                       </th>
                     ))}
+                    <th className="px-6 py-4 text-center text-sm font-semibold">
+                      İşlemler
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -523,6 +557,21 @@ export default function SocialMediaPage() {
                               </td>
                             )
                           })}
+                          <td className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              {dateStats.map((stat: any) => (
+                                <button
+                                  key={stat.id}
+                                  onClick={() => handleDeleteStat(stat.id)}
+                                  disabled={deletingIds.has(stat.id)}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={`${stat.platform} kaydını sil`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              ))}
+                            </div>
+                          </td>
                         </tr>
                       )
                     })

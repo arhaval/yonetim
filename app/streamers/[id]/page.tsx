@@ -2,11 +2,12 @@ import Layout from '@/components/Layout'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, ExternalLink, CreditCard, AlertCircle, Video, Calendar, Clock } from 'lucide-react'
+import { Plus, ExternalLink, CreditCard, AlertCircle, Video, Calendar, Clock, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import StreamList from './StreamList'
 import LoginCredentialsForm from '@/components/LoginCredentialsForm'
+import DeleteFinancialRecordButton from './DeleteFinancialRecordButton'
 
 // Sayfayı her istekte yenile (finansal kayıtlar için)
 export const dynamic = 'force-dynamic'
@@ -533,6 +534,9 @@ export default async function StreamerDetailPage({
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Durum
                         </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          İşlemler
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -563,6 +567,9 @@ export default async function StreamerDetailPage({
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                               ✅ Ödenmiş
                             </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-center">
+                            <DeleteFinancialRecordButton recordId={record.id} />
                           </td>
                         </tr>
                       ))}
