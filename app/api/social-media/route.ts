@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     const allHistory = searchParams.get('allHistory') === 'true' // Tüm tarihsel veriler için
 
     if (allHistory) {
-      // Tüm tarihsel verileri getir (tablo görünümü için)
+      // Tüm tarihsel verileri getir (tablo görünümü için) - tarihe göre sırala (en eski en üstte)
       const allStats = await prisma.socialMediaStats.findMany({
         orderBy: [
-          { createdAt: 'desc' },
+          { createdAt: 'asc' },
           { platform: 'asc' },
         ],
       })

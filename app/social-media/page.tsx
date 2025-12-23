@@ -563,65 +563,54 @@ export default function SocialMediaPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {(() => {
-                    // Tüm unique period'ları bul ve tarihe göre sırala (en eski en üstte)
-                    const allPeriods = Array.from(
-                      new Set(
-                        allHistory.map((stat: any) => stat.month || stat.week).filter(Boolean)
-                      )
-                    ).sort((a: any, b: any) => {
-                      // Tarihe göre sırala (en eski en üstte)
-                      if (a.includes('W') && b.includes('W')) {
-                        // Hafta formatı: 2024-W01
-                        const [yearA, weekA] = a.split('-W').map(Number)
-                        const [yearB, weekB] = b.split('-W').map(Number)
-                        if (yearA !== yearB) return yearA - yearB
-                        return weekA - weekB
-                      } else if (a.includes('W')) {
-                        // Hafta önce gelir
-                        return -1
-                      } else if (b.includes('W')) {
-                        return 1
-                      } else {
-                        // Ay formatı: 2024-01
-                        return a.localeCompare(b)
+                    // Tüm kayıtları tarihe göre grupla (aynı tarihte girilen kayıtlar aynı satırda)
+                    const dateGroups: Record<string, any[]> = {}
+                    
+                    allHistory.forEach((stat: any) => {
+                      // Kayıt tarihini al (createdAt veya updatedAt)
+                      const recordDate = stat.createdAt || stat.updatedAt
+                      if (!recordDate) return
+                      
+                      // Tarihi formatla (24.12.2025 gibi)
+                      const dateKey = format(new Date(recordDate), 'dd.MM.yyyy')
+                      
+                      if (!dateGroups[dateKey]) {
+                        dateGroups[dateKey] = []
                       }
+                      dateGroups[dateKey].push(stat)
+                    })
+                    
+                    // Tarihleri sırala (en eski en üstte)
+                    const sortedDates = Object.keys(dateGroups).sort((a, b) => {
+                      const dateA = new Date(a.split('.').reverse().join('-'))
+                      const dateB = new Date(b.split('.').reverse().join('-'))
+                      return dateA.getTime() - dateB.getTime()
                     })
 
-                    return allPeriods.map((period: string) => {
-                      const periodStats = allHistory.filter(
-                        (stat: any) => (stat.month || stat.week) === period
-                      )
+                    return sortedDates.map((dateKey, dateIndex) => {
+                      const dateStats = dateGroups[dateKey]
                       
                       return (
-                        <tr key={period} className="hover:bg-gray-50 transition-colors">
+                        <tr key={dateKey} className="hover:bg-gray-50 transition-colors">
                           <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white z-10 border-r border-gray-200">
                             <div className="flex flex-col">
-                              <span className="font-semibold">
-                                {period.includes('W') 
-                                  ? `Hafta ${period.split('-W')[1]} - ${period.split('-W')[0]}`
-                                  : format(new Date(period + '-01'), 'MMMM yyyy', { locale: tr })
-                                }
+                              <span className="font-semibold text-base">
+                                {dateKey}
                               </span>
-                              {period.includes('W') ? null : (
-                                <span className="text-xs text-gray-500 mt-0.5">
-                                  {format(new Date(period + '-01'), 'dd MMM yyyy', { locale: tr })}
-                                </span>
-                              )}
+                              <span className="text-xs text-gray-500 mt-0.5">
+                                {format(new Date(dateKey.split('.').reverse().join('-')), 'EEEE', { locale: tr })}
+                              </span>
                             </div>
                           </td>
                           {platforms.map((platform) => {
-                            const stat = periodStats.find((s: any) => s.platform === platform.name)
+                            const stat = dateStats.find((s: any) => s.platform === platform.name)
                             const value = stat?.followerCount || 0
                             
-                            // Önceki dönemi bul (bir önceki satır)
-                            const prevPeriodIndex = allPeriods.indexOf(period) - 1
-                            const prevPeriod = prevPeriodIndex >= 0 ? allPeriods[prevPeriodIndex] : null
-                            const prevStat = prevPeriod 
-                              ? allHistory.find(
-                                  (s: any) => 
-                                    (s.month || s.week) === prevPeriod && 
-                                    s.platform === platform.name
-                                )
+                            // Önceki tarihi bul (bir önceki satır)
+                            const prevDateIndex = dateIndex - 1
+                            const prevDateKey = prevDateIndex >= 0 ? sortedDates[prevDateIndex] : null
+                            const prevStat = prevDateKey 
+                              ? dateGroups[prevDateKey]?.find((s: any) => s.platform === platform.name)
                               : null
                             const prevValue = prevStat?.followerCount || 0
                             const change = calculateChange(value, prevValue)
