@@ -139,44 +139,24 @@ export default async function StreamerDetailPage({
     _sum: { amount: true },
   }).catch(() => ({ _sum: { amount: null } }))
 
-  // Toplam finansal kayıt sayısı (FinancialRecord + Payout)
-  const [financialRecordsCount, payoutsCount] = await Promise.all([
-    prisma.financialRecord.count({
-      where: { streamerId: streamer.id },
-    }).catch(() => 0),
-    prisma.payout.count({
-      where: {
-        recipientType: 'streamer',
-        recipientId: streamer.id,
-      },
-    }).catch(() => 0),
-  ])
-  
-  const totalFinancialRecords = financialRecordsCount + payoutsCount
-  const totalPages = Math.ceil(totalFinancialRecords / recordsPerPage)
-  
-  // Finansal kayıtları getir (bu yayıncıya ait olanlar) - sayfalama ile
+  // Finansal kayıtları getir (bu yayıncıya ait olanlar) - tümünü çek
   const financialRecords = await prisma.financialRecord.findMany({
     where: {
       streamerId: streamer.id,
     },
     orderBy: { date: 'desc' },
-    skip,
-    take: recordsPerPage,
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
     return []
   })
   
-  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar) - sayfalama ile
+  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar) - tümünü çek
   const payouts = await prisma.payout.findMany({
     where: {
       recipientType: 'streamer',
       recipientId: streamer.id,
     },
     orderBy: { createdAt: 'desc' },
-    skip,
-    take: recordsPerPage,
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching payouts for ${streamer.id}:`, error)
     return []
@@ -200,8 +180,12 @@ export default async function StreamerDetailPage({
     ...payoutRecords.filter(p => !financialRecords.some(fr => fr.relatedPaymentId === p.id.replace('payout-', '')))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   
+  // Toplam kayıt sayısı
+  const totalFinancialRecords = allFinancialRecords.length
+  const totalPages = Math.ceil(totalFinancialRecords / recordsPerPage)
+  
   // Sayfalama için sadece mevcut sayfadaki kayıtları göster
-  const paginatedRecords = allFinancialRecords.slice(0, recordsPerPage)
+  const paginatedRecords = allFinancialRecords.slice(skip, skip + recordsPerPage)
 
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 
