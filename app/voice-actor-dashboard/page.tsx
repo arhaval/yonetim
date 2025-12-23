@@ -528,7 +528,10 @@ export default function VoiceActorDashboardPage() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Seslendirme Metni:</h3>
                   <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedScript.text}</p>
+                    <div 
+                      className="text-sm text-gray-900 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: selectedScript.text }}
+                    />
                   </div>
                 </div>
 

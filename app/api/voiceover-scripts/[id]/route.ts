@@ -63,16 +63,17 @@ export async function GET(
   }
 }
 
-// Metni güncelle (ses upload, onay, ücret)
+// Metni güncelle (ses upload, onay, ücret, metin düzenleme)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const cookieStore = await cookies()
+    const userId = cookieStore.get('user-id')?.value
     const voiceActorId = cookieStore.get('voice-actor-id')?.value
 
-    if (!voiceActorId) {
+    if (!userId && !voiceActorId) {
       return NextResponse.json(
         { error: 'Yetkisiz erişim' },
         { status: 401 }
@@ -80,7 +81,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { audioFile, price, status } = body
+    const { audioFile, price, status, title, text } = body
 
     // Mevcut metni kontrol et
     const existingScript = await prisma.voiceoverScript.findUnique({
@@ -94,18 +95,35 @@ export async function PUT(
       )
     }
 
-    // Seslendirmen sadece kendine atanan metinleri güncelleyebilir
-    if (existingScript.voiceActorId !== voiceActorId) {
-      return NextResponse.json(
-        { error: 'Bu metin size atanmamış' },
-        { status: 403 }
-      )
+    // Admin kontrolü
+    let isAdmin = false
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      })
+      isAdmin = user?.role === 'admin'
     }
 
     const updateData: any = {}
-    if (audioFile !== undefined) updateData.audioFile = audioFile
-    if (price !== undefined) updateData.price = price
-    if (status !== undefined) updateData.status = status
+
+    // Admin metin içeriğini düzenleyebilir
+    if (isAdmin) {
+      if (title !== undefined) updateData.title = title
+      if (text !== undefined) updateData.text = text
+      if (price !== undefined) updateData.price = price
+      if (status !== undefined) updateData.status = status
+    }
+
+    // Seslendirmen sadece ses dosyası yükleyebilir
+    if (voiceActorId) {
+      if (existingScript.voiceActorId !== voiceActorId) {
+        return NextResponse.json(
+          { error: 'Bu metin size atanmamış' },
+          { status: 403 }
+        )
+      }
+      if (audioFile !== undefined) updateData.audioFile = audioFile
+    }
 
     const script = await prisma.voiceoverScript.update({
       where: { id: params.id },
@@ -125,9 +143,6 @@ export async function PUT(
         },
       },
     })
-
-    // Seslendirmen sadece ses dosyası yükleyebilir, onay ve ücret admin tarafından yapılır
-    // Bu endpoint artık sadece ses dosyası yükleme için kullanılıyor
 
     return NextResponse.json({
       message: 'Metin başarıyla güncellendi',

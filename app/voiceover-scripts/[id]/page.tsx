@@ -124,6 +124,13 @@ export default async function VoiceoverScriptDetailPage({
 
         {/* Admin Actions */}
         <div className="flex items-center gap-4 mb-6">
+          <Link
+            href={`/voiceover-scripts/${script.id}/edit`}
+            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Düzenle
+          </Link>
           <ApproveScriptButton scriptId={script.id} currentStatus={script.status} currentPrice={script.price} />
           <DeleteScriptButton scriptId={script.id} />
         </div>
@@ -135,7 +142,10 @@ export default async function VoiceoverScriptDetailPage({
             Seslendirme Metni
           </h2>
           <div className="p-6 bg-gray-50 rounded-lg">
-            <p className="text-base text-gray-900 whitespace-pre-wrap leading-relaxed">{script.text}</p>
+            <div 
+              className="text-base text-gray-900 leading-relaxed prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: script.text }}
+            />
           </div>
         </div>
 

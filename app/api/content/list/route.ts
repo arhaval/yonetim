@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
 
     let whereClause: any = {}
 
+    // Sadece admin tarafından manuel eklenen içerikler (creatorId null olanlar)
+    // Seslendirme metinleri ve otomatik eklenen içerikler buraya düşmez
+    whereClause.creatorId = null
+
     // Platform filtresi - büyük/küçük harf duyarsız eşleşme
     if (platform) {
       // "YouTube" veya "youtube" -> "YouTube"
