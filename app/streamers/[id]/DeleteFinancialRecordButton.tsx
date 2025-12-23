@@ -15,7 +15,18 @@ export default function DeleteFinancialRecordButton({ recordId }: { recordId: st
 
     setDeleting(true)
     try {
-      const response = await fetch(`/api/financial-records/${recordId}`, {
+      // Eğer payout kaydıysa (payout- prefix'i varsa), farklı endpoint kullan
+      let endpoint = `/api/financial-records/${recordId}`
+      
+      // Payout kaydı kontrolü
+      if (recordId.startsWith('payout-')) {
+        // Payout kayıtları silinemez, sadece finansal kayıtlar silinebilir
+        alert('Bu ödeme kaydı silinemez. Sadece finansal kayıtlar silinebilir.')
+        setDeleting(false)
+        return
+      }
+
+      const response = await fetch(endpoint, {
         method: 'DELETE',
       })
 
@@ -33,6 +44,11 @@ export default function DeleteFinancialRecordButton({ recordId }: { recordId: st
     } finally {
       setDeleting(false)
     }
+  }
+
+  // Payout kayıtları için silme butonu gösterme
+  if (recordId.startsWith('payout-')) {
+    return null
   }
 
   return (

@@ -140,6 +140,42 @@ export default function SocialMediaPage() {
       })
     }
   }
+
+  const handleDeleteDate = async (dateKey: string) => {
+    if (!confirm(`${dateKey} tarihindeki tüm sosyal medya kayıtlarını silmek istediğinizden emin misiniz?`)) {
+      return
+    }
+
+    setDeletingIds(prev => new Set(prev).add(dateKey))
+    try {
+      const response = await fetch('/api/social-media/delete-by-date', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: dateKey }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || 'Kayıtlar silinemedi')
+        return
+      }
+
+      const result = await response.json()
+      alert(`${result.deletedCount} kayıt başarıyla silindi`)
+      
+      // Başarılı silme sonrası verileri yenile
+      await fetchHistory()
+    } catch (error) {
+      console.error('Error deleting stats by date:', error)
+      alert('Kayıtlar silinirken bir hata oluştu')
+    } finally {
+      setDeletingIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(dateKey)
+        return newSet
+      })
+    }
+  }
   
   // Tarih farkını hesapla ve formatla
   const getDaysSinceLastEntry = (platform: string): number | null => {
@@ -559,19 +595,15 @@ export default function SocialMediaPage() {
                             )
                           })}
                           <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              {dateStats.map((stat: any) => (
-                                <button
-                                  key={stat.id}
-                                  onClick={() => handleDeleteStat(stat.id)}
-                                  disabled={deletingIds.has(stat.id)}
-                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title={`${stat.platform} kaydını sil`}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              ))}
-                            </div>
+                            <button
+                              onClick={() => handleDeleteDate(dateKey)}
+                              disabled={deletingIds.has(dateKey)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+                              title={`${dateKey} tarihindeki tüm kayıtları sil`}
+                            >
+                              <Trash2 className="w-4 h-4 inline mr-1" />
+                              <span className="hidden sm:inline">Tümünü Sil</span>
+                            </button>
                           </td>
                         </tr>
                       )
