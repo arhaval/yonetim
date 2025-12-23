@@ -2,7 +2,7 @@
 
 import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
-import { format, subMonths, subWeeks, getWeek, getYear, differenceInDays, formatDistanceToNow } from 'date-fns'
+import { format, differenceInDays, formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { Save, Instagram, Youtube, Twitter, Twitch, Music, Table2, Grid, TrendingUp, TrendingDown, AlertCircle, Clock } from 'lucide-react'
 
@@ -21,12 +21,9 @@ function getWeekString(date: Date): string {
   return `${year}-W${week.toString().padStart(2, '0')}`
 }
 
-type PeriodType = 'month' | 'week'
 type ViewType = 'cards' | 'table'
 
 export default function SocialMediaPage() {
-  const [periodType, setPeriodType] = useState<PeriodType>('month')
-  const [selectedPeriod, setSelectedPeriod] = useState(format(new Date(), 'yyyy-MM'))
   const [viewType, setViewType] = useState<ViewType>('cards')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -38,24 +35,26 @@ export default function SocialMediaPage() {
 
   useEffect(() => {
     fetchData()
-  }, [periodType, selectedPeriod])
+  }, [])
 
   useEffect(() => {
     if (viewType === 'table') {
       fetchHistory()
+    } else {
+      fetchData()
     }
   }, [viewType])
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      const periodParam = periodType === 'week' ? `week=${selectedPeriod}` : `month=${selectedPeriod}`
-      const response = await fetch(`/api/social-media?periodType=${periodType}&${periodParam}`)
+      // Son kayıtları getir (her platform için en son girilen değer)
+      const response = await fetch('/api/social-media?latest=true')
       const data = await response.json()
 
       const currentStats: Record<string, { followerCount: number; target: number | null }> = {}
       platforms.forEach((platform) => {
-        const stat = data.currentPeriod?.find((s: any) => s.platform === platform.name)
+        const stat = data.latestStats?.find((s: any) => s.platform === platform.name)
         currentStats[platform.name] = {
           followerCount: stat?.followerCount || 0,
           target: stat?.target || null,
@@ -69,9 +68,10 @@ export default function SocialMediaPage() {
         }, {} as Record<string, number>)
       )
 
+      // Önceki kayıtları getir (karşılaştırma için)
       const prevStats: Record<string, number> = {}
       platforms.forEach((platform) => {
-        const stat = data.previousPeriod?.find((s: any) => s.platform === platform.name)
+        const stat = data.previousStats?.find((s: any) => s.platform === platform.name)
         prevStats[platform.name] = stat?.followerCount || 0
       })
       setPreviousStats(prevStats)
@@ -147,8 +147,6 @@ export default function SocialMediaPage() {
     setSaving(true)
     try {
       const statsToSave = platforms.map((platform) => ({
-        month: periodType === 'month' ? selectedPeriod : null,
-        week: periodType === 'week' ? selectedPeriod : null,
         platform: platform.name,
         followerCount: inputValues[platform.name] || stats[platform.name]?.followerCount || 0,
         target: stats[platform.name]?.target || null,
@@ -172,53 +170,6 @@ export default function SocialMediaPage() {
     }
   }
 
-  const initializePeriod = async () => {
-    try {
-      const response = await fetch('/api/social-media/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month: periodType === 'month' ? selectedPeriod : null, week: periodType === 'week' ? selectedPeriod : null }),
-      })
-
-      if (response.ok) {
-        alert('Başlangıç değerleri eklendi!')
-        await fetchData()
-      } else {
-        alert('Hata: Başlangıç değerleri eklenemedi')
-      }
-    } catch (error) {
-      alert('Hata: Başlangıç değerleri eklenemedi')
-    }
-  }
-
-  const copyFromPreviousPeriod = async () => {
-    if (!confirm(`Önceki ${periodType === 'month' ? 'ayın' : 'haftanın'} verilerini bu ${periodType === 'month' ? 'aya' : 'haftaya'} kopyalamak istediğinizden emin misiniz? Mevcut veriler güncellenecektir.`)) {
-      return
-    }
-
-    try {
-      const response = await fetch('/api/social-media/copy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          targetMonth: periodType === 'month' ? selectedPeriod : null,
-          targetWeek: periodType === 'week' ? selectedPeriod : null,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        alert(data.message || 'Önceki dönemin verileri kopyalandı!')
-        await fetchData()
-      } else {
-        alert(data.error || 'Hata: Veriler kopyalanamadı')
-      }
-    } catch (error) {
-      alert('Hata: Veriler kopyalanamadı')
-    }
-  }
-
   const calculateChange = (current: number, previous: number) => {
     if (previous === 0) return { value: 0, isPositive: current > 0, absoluteChange: current }
     const change = ((current - previous) / previous) * 100
@@ -226,28 +177,6 @@ export default function SocialMediaPage() {
     return { value: Math.abs(change), isPositive: change >= 0, absoluteChange }
   }
 
-  const getPeriodOptions = () => {
-    const options = []
-    const now = new Date()
-    
-    if (periodType === 'month') {
-      for (let i = 0; i < 12; i++) {
-        const date = subMonths(now, i)
-        const value = format(date, 'yyyy-MM')
-        const label = format(date, 'MMMM yyyy', { locale: tr })
-        options.push({ value, label })
-      }
-    } else {
-      for (let i = 0; i < 12; i++) {
-        const date = subWeeks(now, i)
-        const value = getWeekString(date)
-        const weekNum = getWeek(date, { weekStartsOn: 1 })
-        const label = `${getYear(date)} - Hafta ${weekNum}`
-        options.push({ value, label })
-      }
-    }
-    return options
-  }
 
   const handleInputChange = (platform: string, value: string) => {
     const numValue = parseInt(value) || 0
@@ -269,14 +198,10 @@ export default function SocialMediaPage() {
     return allHistory
       .filter((stat: any) => stat.platform === platform)
       .sort((a: any, b: any) => {
-        // Önce month'a göre, sonra week'e göre sırala
-        if (a.month && b.month) {
-          return b.month.localeCompare(a.month)
-        }
-        if (a.week && b.week) {
-          return b.week.localeCompare(a.week)
-        }
-        return 0
+        // Tarihe göre sırala (en eski en üstte)
+        const dateA = new Date(a.createdAt || a.updatedAt)
+        const dateB = new Date(b.createdAt || b.updatedAt)
+        return dateA.getTime() - dateB.getTime()
       })
   }
 
@@ -302,46 +227,10 @@ export default function SocialMediaPage() {
               Sosyal Medya Takibi
             </h1>
             <p className="mt-2 text-base text-muted-foreground">
-              {periodType === 'month' ? 'Aylık' : 'Haftalık'} sosyal medya takipçi sayılarını güncelleyin ve takip edin
+              Sosyal medya takipçi sayılarını güncelleyin ve takip edin
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2">
-            <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setPeriodType('month')}
-                className={`px-3 py-1 rounded text-sm font-medium transition-all ${
-                  periodType === 'month'
-                    ? 'bg-white shadow text-indigo-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Aylık
-              </button>
-              <button
-                onClick={() => {
-                  setPeriodType('week')
-                  setSelectedPeriod(getWeekString(new Date()))
-                }}
-                className={`px-3 py-1 rounded text-sm font-medium transition-all ${
-                  periodType === 'week'
-                    ? 'bg-white shadow text-indigo-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Haftalık
-              </button>
-            </div>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="border border-gray-300 rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              {getPeriodOptions().map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
             <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewType('cards')}
@@ -369,18 +258,6 @@ export default function SocialMediaPage() {
                 <Table2 className="w-4 h-4" />
               </button>
             </div>
-            <button
-              onClick={copyFromPreviousPeriod}
-              className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all text-sm"
-            >
-              Önceki Dönemden Kopyala
-            </button>
-            <button
-              onClick={initializePeriod}
-              className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transition-all text-sm"
-            >
-              Başlangıç Değerleri
-            </button>
             <button
               onClick={handleSave}
               disabled={saving}

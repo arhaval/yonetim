@@ -12,9 +12,8 @@ function getWeekString(date: Date): string {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const periodType = searchParams.get('periodType') || 'month' // 'month' veya 'week'
-    const period = searchParams.get('period') || (periodType === 'week' ? getWeekString(new Date()) : format(new Date(), 'yyyy-MM'))
     const allHistory = searchParams.get('allHistory') === 'true' // Tüm tarihsel veriler için
+    const latest = searchParams.get('latest') === 'true' // Son kayıtlar için
 
     if (allHistory) {
       // Tüm tarihsel verileri getir (tablo görünümü için) - tarihe göre sırala (en eski en üstte)
@@ -32,8 +31,8 @@ export async function GET(request: NextRequest) {
       platforms.forEach(platform => {
         const platformStats = allStats.filter(s => s.platform === platform)
         platformLastDates[platform] = {
-          lastEntry: platformStats[0]?.updatedAt || platformStats[0]?.createdAt || null,
-          previousEntry: platformStats[1]?.updatedAt || platformStats[1]?.createdAt || null,
+          lastEntry: platformStats[platformStats.length - 1]?.updatedAt || platformStats[platformStats.length - 1]?.createdAt || null,
+          previousEntry: platformStats[platformStats.length - 2]?.updatedAt || platformStats[platformStats.length - 2]?.createdAt || null,
         }
       })
       
@@ -43,47 +42,59 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Mevcut dönem verilerini al
-    const whereClause = periodType === 'week' 
-      ? { week: period, month: null }
-      : { month: period, week: null }
+    if (latest) {
+      // Her platform için en son kayıtları getir
+      const platforms = ['Instagram', 'YouTube', 'X', 'Twitch', 'TikTok']
+      const latestStats: any[] = []
+      const previousStats: any[] = []
+      const platformLastDates: Record<string, { lastEntry: Date | null; previousEntry: Date | null }> = {}
+      
+      for (const platform of platforms) {
+        const platformStats = await prisma.socialMediaStats.findMany({
+          where: { platform },
+          orderBy: { createdAt: 'desc' },
+          take: 2,
+        })
+        
+        if (platformStats.length > 0) {
+          latestStats.push(platformStats[0])
+        }
+        if (platformStats.length > 1) {
+          previousStats.push(platformStats[1])
+        }
+        
+        platformLastDates[platform] = {
+          lastEntry: platformStats[0]?.updatedAt || platformStats[0]?.createdAt || null,
+          previousEntry: platformStats[1]?.updatedAt || platformStats[1]?.createdAt || null,
+        }
+      }
 
-    const stats = await prisma.socialMediaStats.findMany({
-      where: whereClause,
-      orderBy: { platform: 'asc' },
-    })
-
-    // Önceki dönemin son değerlerini al
-    let previousPeriod: string
-    if (periodType === 'week') {
-      const currentDate = new Date()
-      // Hafta string'ini parse et
-      const [year, week] = period.split('-W').map(Number)
-      const date = new Date(year, 0, 1 + (week - 1) * 7)
-      previousPeriod = getWeekString(subWeeks(date, 1))
-    } else {
-      previousPeriod = format(subMonths(new Date(period + '-01'), 1), 'yyyy-MM')
+      return NextResponse.json({
+        latestStats,
+        previousStats,
+        platformLastDates,
+      })
     }
 
-    const previousWhereClause = periodType === 'week'
-      ? { week: previousPeriod, month: null }
-      : { month: previousPeriod, week: null }
-
-    const previousStats = await prisma.socialMediaStats.findMany({
-      where: previousWhereClause,
-      orderBy: { platform: 'asc' },
-    })
-
-    // Her platform için son girilen tarihleri hesapla
-    const platformLastDates: Record<string, { lastEntry: Date | null; previousEntry: Date | null }> = {}
+    // Varsayılan: Son kayıtları getir
     const platforms = ['Instagram', 'YouTube', 'X', 'Twitch', 'TikTok']
+    const latestStats: any[] = []
+    const previousStats: any[] = []
+    const platformLastDates: Record<string, { lastEntry: Date | null; previousEntry: Date | null }> = {}
     
     for (const platform of platforms) {
       const platformStats = await prisma.socialMediaStats.findMany({
         where: { platform },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: 2,
       })
+      
+      if (platformStats.length > 0) {
+        latestStats.push(platformStats[0])
+      }
+      if (platformStats.length > 1) {
+        previousStats.push(platformStats[1])
+      }
       
       platformLastDates[platform] = {
         lastEntry: platformStats[0]?.updatedAt || platformStats[0]?.createdAt || null,
@@ -92,8 +103,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      currentPeriod: stats,
-      previousPeriod: previousStats,
+      latestStats,
+      previousStats,
       platformLastDates,
     })
   } catch (error) {
@@ -109,24 +120,13 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Upsert işlemi - varsa güncelle, yoksa oluştur
+    // Her kayıt için yeni bir kayıt oluştur (tarih bazlı)
     const stats = await Promise.all(
       data.stats.map((stat: any) =>
-        prisma.socialMediaStats.upsert({
-          where: {
-            month_week_platform: {
-              month: stat.month || null,
-              week: stat.week || null,
-              platform: stat.platform,
-            },
-          },
-          update: {
-            followerCount: stat.followerCount,
-            target: stat.target || null,
-          },
-          create: {
-            month: stat.month || null,
-            week: stat.week || null,
+        prisma.socialMediaStats.create({
+          data: {
+            month: null,
+            week: null,
             platform: stat.platform,
             followerCount: stat.followerCount,
             target: stat.target || null,
