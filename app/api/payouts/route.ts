@@ -68,6 +68,45 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Payout API] ✅ Created payout:`, payout.id)
 
+    // FinancialRecord da oluştur (finansal sekmesinde görünmesi için)
+    const financialRecordData: any = {
+      type: 'expense',
+      category: data.category || 'maaş',
+      amount: amount,
+      description: data.description || `Ödeme kaydı - ${recipientType}`,
+      date: new Date(data.date),
+      occurredAt: paidAt || new Date(data.date),
+      entryType: 'payout',
+      direction: 'OUT',
+    }
+
+    // Recipient ID'yi ekle
+    if (recipientType === 'streamer') {
+      financialRecordData.streamerId = recipientId
+    } else if (recipientType === 'teamMember') {
+      financialRecordData.teamMemberId = recipientId
+    } else if (recipientType === 'contentCreator') {
+      financialRecordData.contentCreatorId = recipientId
+    } else if (recipientType === 'voiceActor') {
+      financialRecordData.voiceActorId = recipientId
+    }
+
+    // RelatedPaymentId olarak payout ID'sini ekle
+    financialRecordData.relatedPaymentId = payout.id
+
+    try {
+      const financialRecord = await prisma.financialRecord.create({
+        data: financialRecordData,
+      })
+      console.log(`[Payout API] ✅ Created financial record:`, financialRecord.id)
+    } catch (financialError: any) {
+      console.error('❌ Error creating financial record:', {
+        error: financialError.message,
+        code: financialError.code,
+      })
+      // FinancialRecord oluşturma hatası payout'u etkilemesin ama logla
+    }
+
     // İlgili kullanıcının profil sayfasını revalidate et
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'

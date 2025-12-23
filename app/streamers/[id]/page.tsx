@@ -135,22 +135,6 @@ export default async function StreamerDetailPage({
   }).catch(() => ({ _sum: { amount: null } }))
 
   // Finansal kayıtları getir (bu yayıncıya ait olanlar)
-  // Debug: Önce tüm finansal kayıtları kontrol et
-  const allFinancialRecords = await prisma.financialRecord.findMany({
-    select: {
-      id: true,
-      streamerId: true,
-      type: true,
-      category: true,
-      amount: true,
-    },
-    orderBy: { date: 'desc' },
-    take: 10, // Son 10 kaydı kontrol et
-  }).catch(() => [])
-  
-  console.log(`[Streamer Profile] All recent financial records:`, allFinancialRecords)
-  console.log(`[Streamer Profile] Looking for records with streamerId: ${streamer.id}`)
-  
   const financialRecords = await prisma.financialRecord.findMany({
     where: {
       streamerId: streamer.id,
@@ -158,6 +142,18 @@ export default async function StreamerDetailPage({
     orderBy: { date: 'desc' },
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
+    return []
+  })
+  
+  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar)
+  const payouts = await prisma.payout.findMany({
+    where: {
+      recipientType: 'streamer',
+      recipientId: streamer.id,
+    },
+    orderBy: { createdAt: 'desc' },
+  }).catch((error) => {
+    console.error(`[Streamer Profile] Error fetching payouts for ${streamer.id}:`, error)
     return []
   })
   
@@ -275,7 +271,7 @@ export default async function StreamerDetailPage({
             totalUnpaid={totalUnpaid}
             payments={streamer.payments}
             streams={streamer.streams}
-            financialRecords={financialRecords}
+            financialRecords={allFinancialRecords}
           />
         </div>
 
@@ -464,7 +460,7 @@ export default async function StreamerDetailPage({
             <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
                 <CreditCard className="w-5 h-5 mr-2 text-green-600" />
-                Finansal Kayıtlar ({financialRecords.length})
+                Finansal Kayıtlar ({allFinancialRecords.length})
               </h3>
             </div>
             {financialRecords.length > 0 ? (
