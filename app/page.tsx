@@ -231,9 +231,6 @@ function calculateChange(current: number, previous: number): { value: number; is
   return { value: Math.abs(change), isPositive: change >= 0, absoluteChange }
 }
 
-// Cache ana sayfa için 60 saniye
-export const revalidate = 60
-
 export default async function DashboardPage() {
   // Hata yönetimi ile stats çek
   let stats: any
