@@ -463,7 +463,7 @@ export default async function StreamerDetailPage({
                 Finansal Kayıtlar ({allFinancialRecords.length})
               </h3>
             </div>
-            {financialRecords.length > 0 ? (
+            {allFinancialRecords.length > 0 ? (
               <div className="p-6">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -487,7 +487,7 @@ export default async function StreamerDetailPage({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {financialRecords.map((record) => (
+                      {allFinancialRecords.map((record) => (
                         <tr key={record.id} className="hover:bg-gray-50">
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {format(new Date(record.date), 'dd MMM yyyy', { locale: tr })}
