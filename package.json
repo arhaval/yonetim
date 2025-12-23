@@ -24,7 +24,9 @@
     "test-direct": "tsx scripts/test-direct-connection.ts",
     "reset-all-data": "tsx scripts/reset-all-data.ts",
     "delete-streamer": "tsx scripts/delete-streamer.ts",
-    "cleanup-old-data": "tsx scripts/cleanup-old-data.ts"
+    "cleanup-old-data": "tsx scripts/cleanup-old-data.ts",
+    "cleanup-test-streamers": "tsx scripts/cleanup-test-streamers.ts",
+    "cleanup-streamer-data": "tsx scripts/cleanup-streamer-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
