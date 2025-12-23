@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { Video, DollarSign, TrendingUp, Eye, Heart, MessageCircle, Share2, Users, BarChart3, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
+import ExportPDFButton from './ExportPDFButton'
 
 type FilterType = 'monthly' | 'total'
 type TabType = 'overview' | 'streams' | 'content'
@@ -162,7 +163,7 @@ export default function ReportsPage() {
               Detaylı istatistikler ve analizler
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center space-x-2">
               <label className="text-sm font-semibold text-gray-700">Filtre:</label>
               <select
@@ -190,6 +191,16 @@ export default function ReportsPage() {
                 </select>
               </div>
             )}
+            <ExportPDFButton
+              filter={filter}
+              selectedMonth={selectedMonth}
+              stats={safeStats}
+              contentStats={contentStats}
+              topStreamers={topStreamers}
+              topContentByViews={topContentByViews}
+              topContent={topContent}
+              contentByPlatform={contentByPlatform}
+            />
           </div>
         </div>
 
