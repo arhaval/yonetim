@@ -307,7 +307,10 @@ export default function CreatorDashboardPage() {
                                   Ses Yüklendi
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{script.text}</p>
+                              <div 
+                                className="text-sm text-gray-600 mb-2 line-clamp-2 prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: script.text }}
+                              />
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 <span>{format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
                                 {script.voiceActor && (
