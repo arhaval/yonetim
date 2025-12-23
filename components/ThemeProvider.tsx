@@ -59,7 +59,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
+    // Build sırasında veya ThemeProvider olmadan kullanılırsa varsayılan değerleri döndür
+    return {
+      theme: 'light' as Theme,
+      toggleTheme: () => {},
+    }
   }
   return context
 }

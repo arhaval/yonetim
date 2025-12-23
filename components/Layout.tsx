@@ -21,10 +21,22 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { theme, toggleTheme } = useTheme()
   const [user, setUser] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // useTheme hook'unu optional hale getir (build sırasında hata vermemesi için)
+  let theme: 'light' | 'dark' = 'light'
+  let toggleTheme: () => void = () => {}
+  
+  try {
+    const themeContext = useTheme()
+    theme = themeContext.theme
+    toggleTheme = themeContext.toggleTheme
+  } catch (e) {
+    // ThemeProvider yoksa varsayılan değerleri kullan
+    console.warn('ThemeProvider not found, using default theme')
+  }
 
   useEffect(() => {
     // Timeout ile fetch
