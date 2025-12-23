@@ -25,38 +25,39 @@ async function main() {
 
   try {
     const whereClause = beforeDate ? { createdAt: { lt: beforeDate } } : {}
+    const deleteOptions = beforeDate ? { where: whereClause } : {}
 
     // 1. İlişkili kayıtları önce sil
     console.log('📺 Yayınlar siliniyor...')
-    const deletedStreams = await prisma.stream.deleteMany(whereClause)
+    const deletedStreams = await prisma.stream.deleteMany(deleteOptions)
     console.log(`✅ ${deletedStreams.count} yayın silindi`)
 
     console.log('💰 Ödemeler siliniyor...')
-    const deletedPayments = await prisma.payment.deleteMany(whereClause)
+    const deletedPayments = await prisma.payment.deleteMany(deleteOptions)
     console.log(`✅ ${deletedPayments.count} ödeme silindi`)
 
     console.log('💼 Ekip ödemeleri siliniyor...')
-    const deletedTeamPayments = await prisma.teamPayment.deleteMany(whereClause)
+    const deletedTeamPayments = await prisma.teamPayment.deleteMany(deleteOptions)
     console.log(`✅ ${deletedTeamPayments.count} ekip ödemesi silindi`)
 
     console.log('💵 Finansal kayıtlar siliniyor...')
-    const deletedFinancialRecords = await prisma.financialRecord.deleteMany(whereClause)
+    const deletedFinancialRecords = await prisma.financialRecord.deleteMany(deleteOptions)
     console.log(`✅ ${deletedFinancialRecords.count} finansal kayıt silindi`)
 
     console.log('🎤 Seslendirme metinleri siliniyor...')
-    const deletedScripts = await prisma.voiceoverScript.deleteMany(whereClause)
+    const deletedScripts = await prisma.voiceoverScript.deleteMany(deleteOptions)
     console.log(`✅ ${deletedScripts.count} seslendirme metni silindi`)
 
     console.log('📋 Görevler siliniyor...')
-    const deletedTasks = await prisma.task.deleteMany(whereClause)
+    const deletedTasks = await prisma.task.deleteMany(deleteOptions)
     console.log(`✅ ${deletedTasks.count} görev silindi`)
 
     console.log('🌐 Dış yayınlar siliniyor...')
-    const deletedExternalStreams = await prisma.externalStream.deleteMany(whereClause)
+    const deletedExternalStreams = await prisma.externalStream.deleteMany(deleteOptions)
     console.log(`✅ ${deletedExternalStreams.count} dış yayın silindi`)
 
     console.log('📊 Sosyal medya istatistikleri siliniyor...')
-    const deletedSocialMedia = await prisma.socialMediaStats.deleteMany(whereClause)
+    const deletedSocialMedia = await prisma.socialMediaStats.deleteMany(deleteOptions)
     console.log(`✅ ${deletedSocialMedia.count} sosyal medya kaydı silindi`)
 
     // 2. İçerikleri sil (opsiyonel - yorum satırını kaldırarak aktif edebilirsiniz)
