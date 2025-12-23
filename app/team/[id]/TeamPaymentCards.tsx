@@ -15,6 +15,14 @@ interface TeamPaymentCardsProps {
     type?: string | null
     period?: string | null
   }>
+  payouts?: Array<{
+    id: string
+    amount: number
+    paidAt: Date | null
+    description?: string | null
+    type?: string | null
+    period?: string | null
+  }>
   scripts?: Array<{
     id: string
     title: string
@@ -30,6 +38,8 @@ interface TeamPaymentCardsProps {
     date: Date
     description?: string | null
     category?: string | null
+    entryType?: string | null
+    direction?: string | null
   }>
 }
 
@@ -37,6 +47,7 @@ export default function TeamPaymentCards({
   totalPaid,
   totalUnpaid,
   payments = [],
+  payouts = [],
   scripts = [],
   financialRecords = [],
 }: TeamPaymentCardsProps) {
@@ -106,9 +117,14 @@ export default function TeamPaymentCards({
         isOpen={showPaidModal}
         onClose={() => setShowPaidModal(false)}
         title="Ödenen Ödemeler"
-        payments={payments.filter(p => p.paidAt)}
+        payments={[
+          ...payments.filter(p => p.paidAt),
+          ...payouts.filter(p => p.paidAt),
+        ]}
         scripts={scripts.filter(s => s.status === 'paid')}
-        financialRecords={financialRecords.filter(fr => fr.type === 'expense')}
+        financialRecords={financialRecords.filter(fr => 
+          fr.type === 'expense' && (fr.entryType === 'payout' || fr.direction === 'OUT')
+        )}
       />
 
       <PaymentDetailsModal

@@ -121,6 +121,16 @@ export default async function TeamMemberDetailPage({
       orderBy: { date: 'desc' },
     }).catch(() => [])
 
+    // Payout kayıtlarını getir (bu ekip üyesine ait olanlar)
+    const payouts = await prisma.payout.findMany({
+      where: {
+        recipientType: 'teamMember',
+        recipientId: member.id,
+        status: 'paid',
+      },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => [])
+
     totalUnpaid = unpaidPayments._sum.amount || 0
   }
 
@@ -353,7 +363,16 @@ export default async function TeamMemberDetailPage({
                 </div>
               </div>
               <TeamPaymentCards
-                totalPaid={payments.filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0)}
+                totalPaid={
+                  // TeamPayment ödenenler
+                  payments.filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0) +
+                  // FinancialRecord ödenenler (expense ve payout tipindeki)
+                  financialRecords
+                    .filter(fr => fr.type === 'expense' && (fr.entryType === 'payout' || fr.direction === 'OUT'))
+                    .reduce((sum, fr) => sum + (fr.amount || 0), 0) +
+                  // Payout kayıtları (paid status)
+                  payouts.reduce((sum, p) => sum + (p.amount || 0), 0)
+                }
                 totalUnpaid={totalUnpaid}
                 payments={payments.map(p => ({
                   id: p.id,
@@ -362,6 +381,14 @@ export default async function TeamMemberDetailPage({
                   description: p.description,
                   type: p.type,
                   period: p.period,
+                }))}
+                payouts={payouts.map(p => ({
+                  id: p.id,
+                  amount: p.amount,
+                  paidAt: p.paidAt || p.createdAt,
+                  description: p.note || 'Manuel ödeme',
+                  type: 'payout',
+                  period: null,
                 }))}
                 financialRecords={financialRecords}
               />
