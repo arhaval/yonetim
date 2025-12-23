@@ -157,11 +157,23 @@ export default async function StreamerDetailPage({
     return []
   })
   
-  console.log(`[Streamer Profile] Found ${financialRecords.length} financial records for streamer ${streamer.id}`, {
-    streamerId: streamer.id,
-    streamerName: streamer.name,
-    records: financialRecords.map(r => ({ id: r.id, type: r.type, category: r.category, amount: r.amount, streamerId: r.streamerId })),
-  })
+  // Payout'ları FinancialRecord formatına çevir (görünüm için)
+  const payoutRecords = payouts.map(payout => ({
+    id: `payout-${payout.id}`,
+    type: 'expense' as const,
+    category: 'Ödeme',
+    amount: payout.amount,
+    date: payout.paidAt || payout.createdAt,
+    description: payout.note || 'Manuel ödeme kaydı',
+    entryType: 'payout',
+    direction: 'OUT' as const,
+  }))
+  
+  // FinancialRecords ve Payout kayıtlarını birleştir (Payout'lar zaten FinancialRecord olarak kaydedildiği için duplicate olmaması için kontrol et)
+  const allFinancialRecords = [
+    ...financialRecords,
+    ...payoutRecords.filter(p => !financialRecords.some(fr => fr.relatedPaymentId === p.id.replace('payout-', '')))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 
