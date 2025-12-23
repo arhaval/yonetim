@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Plus, LogOut, Video, Image, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark, FileText, Download, CheckCircle, Clock } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import RichTextEditor from '@/components/RichTextEditor'
 
 export default function CreatorDashboardPage() {
   const router = useRouter()
@@ -13,17 +14,10 @@ export default function CreatorDashboardPage() {
   const [contents, setContents] = useState<any[]>([])
   const [scripts, setScripts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
   const [showScriptForm, setShowScriptForm] = useState(false)
   const [scriptFormData, setScriptFormData] = useState({
     title: '',
     text: '',
-  })
-  const [formData, setFormData] = useState({
-    title: '',
-    contentType: 'uzun', // uzun, kısa, reels
-    voiceoverText: '', // Seslendirme metni
-    publishDate: new Date().toISOString().split('T')[0],
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -112,84 +106,6 @@ export default function CreatorDashboardPage() {
   }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-
-    if (!formData.title.trim()) {
-      alert('Lütfen başlık girin')
-      setSubmitting(false)
-      return
-    }
-
-    if (!formData.voiceoverText.trim()) {
-      alert('Lütfen seslendirme metni girin')
-      setSubmitting(false)
-      return
-    }
-
-    try {
-      // Önce içeriği oluştur
-      const contentRes = await fetch('/api/creator/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          type: formData.contentType === 'reels' ? 'reel' : formData.contentType === 'kısa' ? 'shorts' : 'video',
-          platform: formData.contentType === 'reels' ? 'Instagram' : 'YouTube',
-          url: null,
-          publishDate: formData.publishDate,
-          views: 0,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-        }),
-      })
-
-      const contentData = await contentRes.json()
-
-      if (!contentRes.ok) {
-        alert(contentData.error || 'İçerik eklenirken bir hata oluştu')
-        setSubmitting(false)
-        return
-      }
-
-      // Sonra seslendirme metnini oluştur
-      const scriptRes = await fetch('/api/voiceover-scripts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          text: formData.voiceoverText,
-          contentType: formData.contentType, // uzun, kısa, reels
-        }),
-      })
-
-      const scriptData = await scriptRes.json()
-
-      if (scriptRes.ok) {
-        alert('İçerik ve seslendirme metni başarıyla oluşturuldu!')
-        setShowForm(false)
-        setFormData({
-          title: '',
-          contentType: 'uzun',
-          voiceoverText: '',
-          publishDate: new Date().toISOString().split('T')[0],
-        })
-        if (creator) {
-          loadContents(creator.id)
-          loadScripts()
-        }
-      } else {
-        alert(scriptData.error || 'Seslendirme metni oluşturulurken bir hata oluştu')
-      }
-    } catch (error) {
-      alert('Bir hata oluştu')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
@@ -267,15 +183,8 @@ export default function CreatorDashboardPage() {
         </div>
 
         {/* Action Buttons */}
-        {!showForm && !showScriptForm && (
-          <div className="mb-6 flex space-x-4">
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Yeni İçerik Ekle
-            </button>
+        {!showScriptForm && (
+          <div className="mb-6">
             <button
               onClick={() => setShowScriptForm(true)}
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
@@ -283,101 +192,6 @@ export default function CreatorDashboardPage() {
               <FileText className="w-5 h-5 mr-2" />
               Yeni Metin Oluştur
             </button>
-          </div>
-        )}
-
-        {/* Add Content Form */}
-        {showForm && (
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Yeni İçerik ve Seslendirme Metni Ekle</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    İçerik Başlığı *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="İçerik başlığını girin"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    İçerik Tipi *
-                  </label>
-                  <select
-                    required
-                    value={formData.contentType}
-                    onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  >
-                    <option value="uzun">Uzun Video</option>
-                    <option value="kısa">Kısa Video</option>
-                    <option value="reels">Reels</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">Bu bilgi seslendirmen tarafından görülecektir</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 inline mr-2" />
-                    Yayın Tarihi *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.publishDate}
-                    onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Seslendirme Metni *
-                  </label>
-                  <textarea
-                    required
-                    value={formData.voiceoverText}
-                    onChange={(e) => setFormData({ ...formData, voiceoverText: e.target.value })}
-                    placeholder="Seslendirmen için metin yazın..."
-                    rows={10}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir. İstatistikler (beğeni, görüntülenme vb.) otomatik olarak 0 olarak kaydedilecektir.</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false)
-                    setFormData({
-                      title: '',
-                      contentType: 'uzun',
-                      voiceoverText: '',
-                      publishDate: new Date().toISOString().split('T')[0],
-                    })
-                  }}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
-                </button>
-              </div>
-            </form>
           </div>
         )}
 
@@ -404,15 +218,13 @@ export default function CreatorDashboardPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Metin *
                 </label>
-                <textarea
-                  required
+                <RichTextEditor
                   value={scriptFormData.text}
-                  onChange={(e) => setScriptFormData({ ...scriptFormData, text: e.target.value })}
-                  rows={12}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
+                  onChange={(value) => setScriptFormData({ ...scriptFormData, text: value })}
                   placeholder="Seslendirme metnini buraya yazın..."
+                  className="w-full"
                 />
-                <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir</p>
+                <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir. Yazı stili, boyutu ve kalın/ince ayarlarını kullanabilirsiniz.</p>
               </div>
 
               <div className="flex items-center justify-end space-x-4">
