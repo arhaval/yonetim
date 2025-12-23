@@ -357,7 +357,7 @@ export default function SocialMediaPage() {
                     {previous > 0 && (
                       <div className="mt-2 flex items-center justify-between text-xs">
                         <span className="text-gray-500">
-                          Önceki {periodType === 'month' ? 'ay' : 'hafta'}: {previous.toLocaleString('tr-TR')}
+                          Önceki kayıt: {previous.toLocaleString('tr-TR')}
                         </span>
                         {change.absoluteChange !== 0 && (
                           <span className={`font-semibold flex items-center gap-1 ${
