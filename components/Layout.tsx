@@ -3,9 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle, CheckCircle, Moon, Sun } from 'lucide-react'
+import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle, CheckCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useTheme } from './ThemeProvider'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -21,7 +20,6 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { theme, toggleTheme } = useTheme()
   const [user, setUser] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -65,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-slate-900 transition-colors">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
@@ -207,32 +205,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar - Büyütülmüş */}
-        <header className="sticky top-0 z-30 backdrop-blur-lg border-b border-gray-200 dark:border-slate-700 shadow-sm bg-white/90 dark:bg-slate-900/90">
+        <header className="sticky top-0 z-30 backdrop-blur-lg border-b border-gray-200 shadow-sm bg-white/90">
           <div className="px-5 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
               >
                 <Menu className="w-6 h-6" />
               </button>
               <div className="flex-1 lg:ml-0 ml-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-gray-900">
                   {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                  title={theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'}
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="w-5 h-5" />
-                  ) : (
-                    <Moon className="w-5 h-5" />
-                  )}
-                </button>
               </div>
               <div className="flex items-center space-x-3">
                 {/* Logo - Sağ tarafta */}
@@ -252,13 +237,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   />
                 </div>
                 {user && (
-                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-md border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-md border bg-blue-50 border-blue-200">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
                       <span className="text-white text-sm font-medium">
                         {user.name?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <span className="text-base font-medium text-gray-700 dark:text-gray-200">{user.name}</span>
+                    <span className="text-base font-medium text-gray-700">{user.name}</span>
                   </div>
                 )}
               </div>
@@ -267,7 +252,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content - Büyütülmüş */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-900 transition-colors">
+        <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="max-w-7xl mx-auto py-6 px-5 sm:px-6 lg:px-8">
             <div className="fade-in">
               {children}
