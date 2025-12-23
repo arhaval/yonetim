@@ -6,7 +6,6 @@ import { Plus, ExternalLink, CreditCard, AlertCircle, Video, Calendar, Clock } f
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import StreamList from './StreamList'
-import PaymentCards from './PaymentCards'
 import LoginCredentialsForm from '@/components/LoginCredentialsForm'
 
 // Sayfayı her istekte yenile (finansal kayıtlar için)
@@ -134,16 +133,24 @@ export default async function StreamerDetailPage({
     _sum: { amount: true },
   }).catch(() => ({ _sum: { amount: null } }))
 
-  // Finansal kayıtları getir (bu yayıncıya ait olanlar)
+  // Finansal kayıtları getir (bu yayıncıya ait olanlar) - sayfalama ile
   const financialRecords = await prisma.financialRecord.findMany({
     where: {
       streamerId: streamer.id,
     },
     orderBy: { date: 'desc' },
+    take: 50, // Son 50 kayıt
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
     return []
   })
+  
+  // Toplam finansal kayıt sayısı
+  const totalFinancialRecords = await prisma.financialRecord.count({
+    where: {
+      streamerId: streamer.id,
+    },
+  }).catch(() => 0)
   
   // Payout kayıtlarını da getir (bu yayıncıya ait olanlar)
   const payouts = await prisma.payout.findMany({
@@ -278,13 +285,38 @@ export default async function StreamerDetailPage({
               </dl>
             </div>
           </div>
-          <PaymentCards
-            totalEarning={totalStreamerEarning._sum.streamerEarning || 0}
-            totalUnpaid={totalUnpaid}
-            payments={streamer.payments}
-            streams={streamer.streams}
-            financialRecords={allFinancialRecords}
-          />
+          <div className="bg-white overflow-hidden shadow rounded-lg border-l-4 border-green-500">
+            <div className="p-5">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Toplam Alacak
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold text-green-600">
+                  {(totalStreamerEarning._sum.streamerEarning || 0).toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                </dd>
+              </dl>
+            </div>
+          </div>
+          <div className="bg-white overflow-hidden shadow rounded-lg border-l-4 border-red-500">
+            <div className="p-5">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Ödenmemiş
+                </dt>
+                <dd className="mt-1 text-3xl font-semibold text-red-600">
+                  {totalUnpaid.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                </dd>
+              </dl>
+            </div>
+          </div>
         </div>
 
         {/* Giriş Bilgileri */}
@@ -472,7 +504,7 @@ export default async function StreamerDetailPage({
             <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
                 <CreditCard className="w-5 h-5 mr-2 text-green-600" />
-                Finansal Kayıtlar ({allFinancialRecords.length})
+                Finansal Kayıtlar ({totalFinancialRecords > 50 ? `50 / ${totalFinancialRecords}` : allFinancialRecords.length})
               </h3>
             </div>
             {allFinancialRecords.length > 0 ? (
