@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle } from 'lucide-react'
+import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle, CheckCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const navigation = [
@@ -15,6 +15,7 @@ const navigation = [
   { name: 'İçerik Üreticileri', href: '/content-creators', icon: UserCircle },
   { name: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: FileText },
   { name: 'Ödemeler', href: '/payments', icon: DollarSign },
+  { name: 'Ödeme Onay', href: '/payment-approval', icon: CheckCircle },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
   { name: 'Ekip', href: '/team', icon: UserCheck },
   { name: 'Raporlar', href: '/reports', icon: BarChart3 },
