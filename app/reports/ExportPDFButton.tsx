@@ -63,14 +63,30 @@ export default function ExportPDFButton({
       // Dynamic import for client-side only
       const jsPDFModule = await import('jspdf')
       const autoTableModule = await import('jspdf-autotable')
+      
+      if (!jsPDFModule || !jsPDFModule.default) {
+        throw new Error('jsPDF modülü yüklenemedi')
+      }
+      
+      if (!autoTableModule || !autoTableModule.default) {
+        throw new Error('jspdf-autotable modülü yüklenemedi')
+      }
+      
       const jsPDF = jsPDFModule.default
       const autoTable = autoTableModule.default
+      
+      console.log('jsPDF loaded:', !!jsPDF)
+      console.log('autoTable loaded:', !!autoTable)
       
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       })
+      
+      if (!doc || !doc.internal) {
+        throw new Error('PDF dokümanı oluşturulamadı')
+      }
       
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
@@ -275,17 +291,22 @@ export default function ExportPDFButton({
       }
 
       // Sayfa numaraları ekle
-      const totalPages = (doc as any).internal.getNumberOfPages()
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i)
-        doc.setFontSize(10)
-        doc.setFont('helvetica', 'normal')
-        doc.text(
-          `Sayfa ${i} / ${totalPages}`,
-          pageWidth / 2,
-          pageHeight - 10,
-          { align: 'center' }
-        )
+      try {
+        const totalPages = (doc as any).internal?.getNumberOfPages?.() || doc.internal.pages?.length || 1
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i)
+          doc.setFontSize(10)
+          doc.setFont('helvetica', 'normal')
+          doc.text(
+            `Sayfa ${i} / ${totalPages}`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: 'center' }
+          )
+        }
+      } catch (pageError) {
+        console.warn('Sayfa numaraları eklenirken hata:', pageError)
+        // Sayfa numarası eklenemezse devam et
       }
 
       // PDF'i indir
