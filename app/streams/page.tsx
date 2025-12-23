@@ -82,9 +82,9 @@ export default function StreamsPage() {
         </div>
 
         {streams.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-12 text-center">
+            <Calendar className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               Henüz kayıtlı yayın yok
             </h3>
             <p className="text-sm text-gray-500 mb-6">

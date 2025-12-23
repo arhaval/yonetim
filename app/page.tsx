@@ -384,7 +384,7 @@ export default async function DashboardPage() {
 
         {/* Main Stats - Büyütülmüş */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}></div>
             <div className="relative p-6">
               <div className="flex items-center justify-between">
@@ -392,14 +392,14 @@ export default async function DashboardPage() {
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalStreamers}</p>
-                  <p className="text-sm text-gray-500 mt-1.5">Toplam Yayıncı</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalStreamers}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Toplam Yayıncı</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
             <div className="relative p-6">
               <div className="flex items-center justify-between">
@@ -407,14 +407,14 @@ export default async function DashboardPage() {
                   <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900">{stats.activeStreamers}</p>
-                  <p className="text-sm text-gray-500 mt-1.5">Aktif Yayıncı</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.activeStreamers}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Aktif Yayıncı</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
             <div className="relative p-6">
               <div className="flex items-center justify-between">
@@ -422,14 +422,14 @@ export default async function DashboardPage() {
                   <Video className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalContent}</p>
-                  <p className="text-sm text-gray-500 mt-1.5">Toplam İçerik</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalContent}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Toplam İçerik</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200">
+          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative p-6">
               <div className="flex items-center justify-between">
@@ -437,14 +437,14 @@ export default async function DashboardPage() {
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {stats.monthlyRevenue.toLocaleString('tr-TR', {
                       style: 'currency',
                       currency: 'TRY',
                       maximumFractionDigits: 0,
                     })}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1.5">Aylık Gelir</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Aylık Gelir</p>
                 </div>
               </div>
             </div>
@@ -453,10 +453,10 @@ export default async function DashboardPage() {
 
         {/* Financial Overview - Büyütülmüş */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className={`bg-white rounded-xl shadow-md p-6 border-l-4 ${
+          <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border-l-4 ${
             stats.monthlyRevenue - stats.monthlyExpense >= 0 ? 'border-green-500' : 'border-red-500'
-          } hover:shadow-lg transition-all`}>
-            <p className="text-base font-medium text-gray-500 mb-3">Aylık Net Gelir</p>
+          } hover:shadow-lg transition-all border-gray-200 dark:border-slate-700`}>
+            <p className="text-base font-medium text-gray-500 dark:text-gray-400 mb-3">Aylık Net Gelir</p>
             <p className={`text-3xl font-bold ${
               stats.monthlyRevenue - stats.monthlyExpense >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
@@ -467,8 +467,8 @@ export default async function DashboardPage() {
               })}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-all">
-            <p className="text-base font-medium text-gray-500 mb-3">Aylık Gider</p>
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-all border-gray-200 dark:border-slate-700">
+            <p className="text-base font-medium text-gray-500 dark:text-gray-400 mb-3">Aylık Gider</p>
             <p className="text-3xl font-bold text-orange-600">
               {stats.monthlyExpense.toLocaleString('tr-TR', {
                 style: 'currency',
@@ -480,9 +480,9 @@ export default async function DashboardPage() {
         </div>
 
         {/* Ödeme Özeti - Büyütülmüş */}
-        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
               <CreditCard className="w-6 h-6 mr-2 text-indigo-600" />
               Ödeme Özeti
             </h2>
@@ -500,8 +500,8 @@ export default async function DashboardPage() {
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-base font-medium text-gray-600 mb-2">Toplam Borç</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-base font-medium text-gray-600 dark:text-gray-400 mb-2">Toplam Borç</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stats.totalDue.toLocaleString('tr-TR', {
                   style: 'currency',
                   currency: 'TRY',
