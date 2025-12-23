@@ -47,14 +47,19 @@ export default function ExportPDFButton({
   const generatePDF = async () => {
     setExporting(true)
     try {
+      console.log('Starting PDF generation...')
+      
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       })
+      
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
       let yPos = 20
+      
+      console.log('PDF document created, page size:', pageWidth, 'x', pageHeight)
 
       // Başlık
       doc.setFontSize(20)
@@ -268,10 +273,17 @@ export default function ExportPDFButton({
 
       // PDF'i indir
       const fileName = `rapor_${filter === 'monthly' ? selectedMonth : 'tum_zamanlar'}_${format(new Date(), 'yyyyMMdd')}.pdf`
+      console.log('Saving PDF with filename:', fileName)
       doc.save(fileName)
-    } catch (error) {
+      console.log('PDF saved successfully')
+    } catch (error: any) {
       console.error('PDF oluşturma hatası:', error)
-      alert('PDF oluşturulurken bir hata oluştu')
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      })
+      alert(`PDF oluşturulurken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
       setExporting(false)
     }

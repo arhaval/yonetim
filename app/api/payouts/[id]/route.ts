@@ -15,8 +15,36 @@ export async function DELETE(
 
     const { id } = await Promise.resolve(params)
 
-    // Payout kaydını bul (FinancialRecord tablosunda)
-    const payout = await prisma.financialRecord.findFirst({
+    console.log('Deleting payout with ID:', id)
+
+    // Önce Payout tablosunda kontrol et
+    const payoutRecord = await prisma.payout.findUnique({
+      where: { id },
+    })
+
+    if (payoutRecord) {
+      // Payout tablosundan sil
+      await prisma.payout.delete({
+        where: { id },
+      })
+
+      // İlgili FinancialRecord'u da sil (varsa)
+      await prisma.financialRecord.deleteMany({
+        where: {
+          relatedPaymentId: id,
+          entryType: 'payout',
+        },
+      })
+
+      console.log('Payout deleted successfully')
+      return NextResponse.json({
+        success: true,
+        message: 'Ödeme kaydı başarıyla silindi',
+      })
+    }
+
+    // Eğer Payout tablosunda yoksa, FinancialRecord tablosunda ara
+    const financialRecord = await prisma.financialRecord.findFirst({
       where: {
         id,
         entryType: 'payout',
@@ -24,17 +52,30 @@ export async function DELETE(
       },
     })
 
-    if (!payout) {
-      return NextResponse.json(
-        { error: 'Ödeme kaydı bulunamadı' },
-        { status: 404 }
-      )
+    if (financialRecord) {
+      // FinancialRecord'dan sil
+      await prisma.financialRecord.delete({
+        where: { id },
+      })
+
+      // İlgili Payout kaydını da sil (varsa)
+      if (financialRecord.relatedPaymentId) {
+        await prisma.payout.deleteMany({
+          where: { id: financialRecord.relatedPaymentId },
+        })
+      }
+
+      console.log('FinancialRecord payout deleted successfully')
+      return NextResponse.json({
+        success: true,
+        message: 'Ödeme kaydı başarıyla silindi',
+      })
     }
 
-    // Payout kaydını sil
-    await prisma.financialRecord.delete({
-      where: { id },
-    })
+    return NextResponse.json(
+      { error: 'Ödeme kaydı bulunamadı' },
+      { status: 404 }
+    )
 
     return NextResponse.json({
       success: true,
