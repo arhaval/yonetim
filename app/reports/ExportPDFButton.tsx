@@ -2,10 +2,21 @@
 
 import { useState } from 'react'
 import { Download, FileText } from 'lucide-react'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+
+// Dynamic import for jsPDF to avoid SSR issues
+let jsPDF: any
+let autoTable: any
+
+if (typeof window !== 'undefined') {
+  import('jspdf').then((module) => {
+    jsPDF = module.default
+  })
+  import('jspdf-autotable').then((module) => {
+    autoTable = module.default
+  })
+}
 
 interface ExportPDFButtonProps {
   filter: 'monthly' | 'total'
@@ -48,6 +59,12 @@ export default function ExportPDFButton({
     setExporting(true)
     try {
       console.log('Starting PDF generation...')
+      
+      // Dynamic import for client-side only
+      const jsPDFModule = await import('jspdf')
+      const autoTableModule = await import('jspdf-autotable')
+      const jsPDF = jsPDFModule.default
+      const autoTable = autoTableModule.default
       
       const doc = new jsPDF({
         orientation: 'portrait',
@@ -101,7 +118,7 @@ export default function ExportPDFButton({
         margin: { left: 14, right: 14 },
       })
 
-      yPos = (doc as any).lastAutoTable.finalY + 15
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
 
       // Yayın İstatistikleri
       if (yPos > pageHeight - 40) {
@@ -131,7 +148,7 @@ export default function ExportPDFButton({
         margin: { left: 14, right: 14 },
       })
 
-      yPos = (doc as any).lastAutoTable.finalY + 15
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
 
       // En Aktif Yayıncılar
       if (topStreamers.length > 0) {
@@ -160,7 +177,7 @@ export default function ExportPDFButton({
           margin: { left: 14, right: 14 },
         })
 
-        yPos = (doc as any).lastAutoTable.finalY + 15
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
       }
 
       // İçerik İstatistikleri
@@ -195,7 +212,7 @@ export default function ExportPDFButton({
         margin: { left: 14, right: 14 },
       })
 
-      yPos = (doc as any).lastAutoTable.finalY + 15
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
 
       // En Çok Görüntülenen İçerikler
       if (topContentByViews.length > 0) {
@@ -226,7 +243,7 @@ export default function ExportPDFButton({
           columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 40 }, 2: { cellWidth: 40 } },
         })
 
-        yPos = (doc as any).lastAutoTable.finalY + 15
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
       }
 
       // Platform Dağılımı
