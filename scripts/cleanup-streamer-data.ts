@@ -78,33 +78,27 @@ async function main() {
       console.log(`🧹 ${streamer.name} için kayıtlar temizleniyor...`)
 
       // Yayınları sil
-      const streamWhere = beforeDate
-        ? { streamerId: streamer.id, createdAt: { lt: beforeDate } }
-        : { streamerId: streamer.id }
-      
-      const deletedStreams = await prisma.stream.deleteMany(streamWhere)
+      const deletedStreams = beforeDate
+        ? await prisma.stream.deleteMany({ where: { streamerId: streamer.id, createdAt: { lt: beforeDate } } })
+        : await prisma.stream.deleteMany({ where: { streamerId: streamer.id } })
       totalDeleted.streams += deletedStreams.count
       if (deletedStreams.count > 0) {
         console.log(`   ✓ ${deletedStreams.count} yayın silindi`)
       }
 
       // Ödemeleri sil
-      const paymentWhere = beforeDate
-        ? { streamerId: streamer.id, createdAt: { lt: beforeDate } }
-        : { streamerId: streamer.id }
-      
-      const deletedPayments = await prisma.payment.deleteMany(paymentWhere)
+      const deletedPayments = beforeDate
+        ? await prisma.payment.deleteMany({ where: { streamerId: streamer.id, createdAt: { lt: beforeDate } } })
+        : await prisma.payment.deleteMany({ where: { streamerId: streamer.id } })
       totalDeleted.payments += deletedPayments.count
       if (deletedPayments.count > 0) {
         console.log(`   ✓ ${deletedPayments.count} ödeme silindi`)
       }
 
       // Finansal kayıtları sil
-      const financialWhere = beforeDate
-        ? { streamerId: streamer.id, createdAt: { lt: beforeDate } }
-        : { streamerId: streamer.id }
-      
-      const deletedFinancial = await prisma.financialRecord.deleteMany(financialWhere)
+      const deletedFinancial = beforeDate
+        ? await prisma.financialRecord.deleteMany({ where: { streamerId: streamer.id, createdAt: { lt: beforeDate } } })
+        : await prisma.financialRecord.deleteMany({ where: { streamerId: streamer.id } })
       totalDeleted.financialRecords += deletedFinancial.count
       if (deletedFinancial.count > 0) {
         console.log(`   ✓ ${deletedFinancial.count} finansal kayıt silindi`)
