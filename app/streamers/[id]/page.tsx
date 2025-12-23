@@ -14,10 +14,16 @@ export const revalidate = 0
 
 export default async function StreamerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }> | { id: string }
+  searchParams?: Promise<{ page?: string }> | { page?: string }
 }) {
   const { id } = await Promise.resolve(params)
+  const resolvedSearchParams = await Promise.resolve(searchParams || {})
+  const currentPage = parseInt(resolvedSearchParams.page || '1', 10)
+  const recordsPerPage = 20
+  const skip = (currentPage - 1) * recordsPerPage
   let streamer = null
   let totalStreams = 0
   let totalExternalStreams = 0
@@ -133,32 +139,44 @@ export default async function StreamerDetailPage({
     _sum: { amount: true },
   }).catch(() => ({ _sum: { amount: null } }))
 
+  // Toplam finansal kayıt sayısı (FinancialRecord + Payout)
+  const [financialRecordsCount, payoutsCount] = await Promise.all([
+    prisma.financialRecord.count({
+      where: { streamerId: streamer.id },
+    }).catch(() => 0),
+    prisma.payout.count({
+      where: {
+        recipientType: 'streamer',
+        recipientId: streamer.id,
+      },
+    }).catch(() => 0),
+  ])
+  
+  const totalFinancialRecords = financialRecordsCount + payoutsCount
+  const totalPages = Math.ceil(totalFinancialRecords / recordsPerPage)
+  
   // Finansal kayıtları getir (bu yayıncıya ait olanlar) - sayfalama ile
   const financialRecords = await prisma.financialRecord.findMany({
     where: {
       streamerId: streamer.id,
     },
     orderBy: { date: 'desc' },
-    take: 50, // Son 50 kayıt
+    skip,
+    take: recordsPerPage,
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
     return []
   })
   
-  // Toplam finansal kayıt sayısı
-  const totalFinancialRecords = await prisma.financialRecord.count({
-    where: {
-      streamerId: streamer.id,
-    },
-  }).catch(() => 0)
-  
-  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar)
+  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar) - sayfalama ile
   const payouts = await prisma.payout.findMany({
     where: {
       recipientType: 'streamer',
       recipientId: streamer.id,
     },
     orderBy: { createdAt: 'desc' },
+    skip,
+    take: recordsPerPage,
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching payouts for ${streamer.id}:`, error)
     return []
@@ -176,11 +194,14 @@ export default async function StreamerDetailPage({
     direction: 'OUT' as const,
   }))
   
-  // FinancialRecords ve Payout kayıtlarını birleştir (Payout'lar zaten FinancialRecord olarak kaydedildiği için duplicate olmaması için kontrol et)
+  // FinancialRecords ve Payout kayıtlarını birleştir ve sırala
   const allFinancialRecords = [
     ...financialRecords,
     ...payoutRecords.filter(p => !financialRecords.some(fr => fr.relatedPaymentId === p.id.replace('payout-', '')))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  
+  // Sayfalama için sadece mevcut sayfadaki kayıtları göster
+  const paginatedRecords = allFinancialRecords.slice(0, recordsPerPage)
 
   const totalUnpaid = (unpaidStreams._sum.streamerEarning || 0) + (unpaidPayments._sum.amount || 0)
 
@@ -504,7 +525,7 @@ export default async function StreamerDetailPage({
             <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
                 <CreditCard className="w-5 h-5 mr-2 text-green-600" />
-                Finansal Kayıtlar ({totalFinancialRecords > 50 ? `50 / ${totalFinancialRecords}` : allFinancialRecords.length})
+                Finansal Kayıtlar ({totalFinancialRecords > 0 ? `${skip + 1}-${Math.min(skip + recordsPerPage, totalFinancialRecords)} / ${totalFinancialRecords}` : 0})
               </h3>
             </div>
             {allFinancialRecords.length > 0 ? (
@@ -531,7 +552,7 @@ export default async function StreamerDetailPage({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {allFinancialRecords.map((record) => (
+                      {paginatedRecords.map((record) => (
                         <tr key={record.id} className="hover:bg-gray-50">
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {format(new Date(record.date), 'dd MMM yyyy', { locale: tr })}
@@ -564,6 +585,61 @@ export default async function StreamerDetailPage({
                     </tbody>
                   </table>
                 </div>
+                
+                {/* Sayfalama */}
+                {totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700">
+                        Sayfa {currentPage} / {totalPages}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {currentPage > 1 && (
+                        <Link
+                          href={`/streamers/${id}?page=${currentPage - 1}`}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Önceki
+                        </Link>
+                      )}
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        
+                        return (
+                          <Link
+                            key={pageNum}
+                            href={`/streamers/${id}?page=${pageNum}`}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                              currentPage === pageNum
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </Link>
+                        )
+                      })}
+                      {currentPage < totalPages && (
+                        <Link
+                          href={`/streamers/${id}?page=${currentPage + 1}`}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Sonraki
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-6 text-center">
