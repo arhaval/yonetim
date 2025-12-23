@@ -123,7 +123,7 @@ export default function TeamPaymentCards({
         ]}
         scripts={scripts.filter(s => s.status === 'paid')}
         financialRecords={financialRecords.filter(fr => 
-          fr.type === 'expense' && (fr.entryType === 'payout' || fr.direction === 'OUT')
+          fr.type === 'expense'
         )}
       />
 

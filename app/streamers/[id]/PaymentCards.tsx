@@ -61,7 +61,7 @@ export default function PaymentCards({
           <dl>
             <dt className="text-sm font-medium text-gray-500 truncate flex items-center space-x-1">
               <DollarSign className="w-4 h-4" />
-              <span>Toplam Alacak</span>
+              <span>Ödenen</span>
             </dt>
             <dd className="mt-1 text-3xl font-semibold text-green-600">
               {totalEarning.toLocaleString('tr-TR', {

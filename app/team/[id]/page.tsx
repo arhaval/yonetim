@@ -366,9 +366,9 @@ export default async function TeamMemberDetailPage({
                 totalPaid={
                   // TeamPayment ödenenler
                   payments.filter(p => p.paidAt).reduce((sum, p) => sum + (p.amount || 0), 0) +
-                  // FinancialRecord ödenenler (expense ve payout tipindeki)
+                  // FinancialRecord ödenenler (expense tipindeki tüm kayıtlar)
                   financialRecords
-                    .filter(fr => fr.type === 'expense' && (fr.entryType === 'payout' || fr.direction === 'OUT'))
+                    .filter(fr => fr.type === 'expense')
                     .reduce((sum, fr) => sum + (fr.amount || 0), 0) +
                   // Payout kayıtları (paid status)
                   payouts.reduce((sum, p) => sum + (p.amount || 0), 0)

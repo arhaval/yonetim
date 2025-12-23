@@ -178,7 +178,7 @@ export default function StreamerDashboardPage() {
             <CardContent>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <StatCard
-                  title="Toplam Alacak"
+                  title="Ödenen"
                   value={paymentInfo.totalDue.toLocaleString('tr-TR', {
                     style: 'currency',
                     currency: 'TRY',

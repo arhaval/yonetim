@@ -295,7 +295,7 @@ export default async function StreamerDetailPage({
             <div className="p-5">
               <dl>
                 <dt className="text-sm font-medium text-gray-500 truncate">
-                  Toplam Alacak
+                  Ödenen
                 </dt>
                 <dd className="mt-1 text-3xl font-semibold text-green-600">
                   {(totalStreamerEarning._sum.streamerEarning || 0).toLocaleString('tr-TR', {

@@ -39,6 +39,8 @@ interface PaymentDetailsModalProps {
     date: Date
     description?: string | null
     category?: string | null
+    entryType?: string | null
+    direction?: string | null
   }>
 }
 
