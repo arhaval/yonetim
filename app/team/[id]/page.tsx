@@ -73,6 +73,7 @@ export default async function TeamMemberDetailPage({
   let financialRecords: any[] = []
   let tasks: any[] = []
   let payments: any[] = []
+  let payouts: any[] = []
 
   if (isVoiceActor && voiceActor) {
     const scripts = voiceActor.scripts || []
@@ -122,7 +123,7 @@ export default async function TeamMemberDetailPage({
     }).catch(() => [])
 
     // Payout kayıtlarını getir (bu ekip üyesine ait olanlar)
-    const payouts = await prisma.payout.findMany({
+    payouts = await prisma.payout.findMany({
       where: {
         recipientType: 'teamMember',
         recipientId: member.id,
