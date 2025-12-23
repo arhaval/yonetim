@@ -23,7 +23,8 @@
     "check-db": "tsx scripts/check-supabase-status.ts",
     "test-direct": "tsx scripts/test-direct-connection.ts",
     "reset-all-data": "tsx scripts/reset-all-data.ts",
-    "delete-streamer": "tsx scripts/delete-streamer.ts"
+    "delete-streamer": "tsx scripts/delete-streamer.ts",
+    "cleanup-old-data": "tsx scripts/cleanup-old-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
