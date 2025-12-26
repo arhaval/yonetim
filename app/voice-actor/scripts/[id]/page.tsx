@@ -99,9 +99,8 @@ export default function VoiceActorScriptDetailPage() {
       setShowUploadForm(!data.audioFile)
     } catch (error) {
       console.error('Error loading script:', error)
-      alert('Bir hata oluştu')
-      router.push('/voice-actor-dashboard')
-    } finally {
+      // Hata durumunda dashboard'a yönlendirme YOK - sadece alert
+      alert('Metin yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.')
       setLoading(false)
     }
   }
@@ -303,8 +302,22 @@ export default function VoiceActorScriptDetailPage() {
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  console.log('Upload button clicked, current showUploadForm:', showUploadForm)
-                  setShowUploadForm(!showUploadForm)
+                  e.nativeEvent.stopImmediatePropagation()
+                  console.log('=== UPLOAD BUTTON CLICKED ===')
+                  console.log('Current showUploadForm:', showUploadForm)
+                  console.log('Script ID:', scriptId)
+                  try {
+                    setShowUploadForm((prev) => {
+                      console.log('Setting showUploadForm to:', !prev)
+                      return !prev
+                    })
+                  } catch (err) {
+                    console.error('Error in setShowUploadForm:', err)
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                 }}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
               >
