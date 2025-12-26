@@ -11,12 +11,14 @@ interface LogEntry {
   stack?: string
 }
 
-// Debug modu kontrolü
+// Debug modu kontrolü - HER ZAMAN TRUE (test için)
 const isDebugMode = () => {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined') return true // SSR'da da true dön ki render edilsin
   const urlParams = new URLSearchParams(window.location.search)
   const isDev = process.env.NODE_ENV === 'development'
-  return isDev || urlParams.get('debug') === '1'
+  const hasDebugParam = urlParams.get('debug') === '1'
+  // HER ZAMAN TRUE - test için
+  return true // isDev || hasDebugParam
 }
 
 export function DebugConsoleOverlay() {
@@ -47,7 +49,10 @@ export function DebugConsoleOverlay() {
 
   // Console monkey-patch
   useEffect(() => {
-    if (!isDebugMode() || isPatchingRef.current) return
+    if (!mounted) return
+    if (isPatchingRef.current) return
+    
+    console.log('[Debug Console] Setting up console patch...')
 
     isPatchingRef.current = true
     originalConsoleRef.current = {
