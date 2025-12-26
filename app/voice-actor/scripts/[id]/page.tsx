@@ -7,9 +7,13 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 
 export default function VoiceActorScriptDetailPage() {
+  console.log('=== PAGE RENDERED ===')
+  
   const router = useRouter()
   const params = useParams()
-  const scriptId = params.id as string
+  const scriptId = params?.id as string
+
+  console.log('Script ID:', scriptId)
 
   const [script, setScript] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -17,43 +21,57 @@ export default function VoiceActorScriptDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [showUploadForm, setShowUploadForm] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
 
   // Authentication kontrolü - sadece bir kez
   useEffect(() => {
+    console.log('=== AUTH EFFECT RUNNING ===')
     let mounted = true
 
     const authenticate = async () => {
       try {
+        console.log('Fetching auth...')
         const res = await fetch('/api/voice-actor-auth/me', {
           credentials: 'include',
           cache: 'no-store',
         })
 
+        console.log('Auth response status:', res.status)
+
         if (!res.ok) {
+          console.log('Auth failed, redirecting to login')
           if (mounted) {
             setIsAuthenticated(false)
+            setAuthLoading(false)
             router.push('/voice-actor-login')
           }
           return
         }
 
         const data = await res.json()
+        console.log('Auth data:', data)
+
         if (!data.voiceActor) {
+          console.log('No voice actor, redirecting to login')
           if (mounted) {
             setIsAuthenticated(false)
+            setAuthLoading(false)
             router.push('/voice-actor-login')
           }
           return
         }
 
+        console.log('Auth successful!')
         if (mounted) {
           setIsAuthenticated(true)
+          setAuthLoading(false)
           loadScriptData()
         }
       } catch (error) {
         console.error('Auth error:', error)
         if (mounted) {
           setIsAuthenticated(false)
+          setAuthLoading(false)
           router.push('/voice-actor-login')
         }
       }
@@ -67,26 +85,39 @@ export default function VoiceActorScriptDetailPage() {
   }, [router])
 
   const loadScriptData = useCallback(async () => {
-    if (!scriptId) return
+    console.log('=== LOADING SCRIPT DATA ===')
+    console.log('Script ID:', scriptId)
+    
+    if (!scriptId) {
+      console.error('No script ID!')
+      setLoading(false)
+      return
+    }
 
     try {
+      console.log('Fetching script...')
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
         credentials: 'include',
         cache: 'no-store',
       })
 
+      console.log('Script response status:', res.status)
+
       if (!res.ok) {
         if (res.status === 401) {
+          console.log('Unauthorized, redirecting to login')
           router.push('/voice-actor-login')
           return
         }
         const data = await res.json()
+        console.error('Script fetch error:', data.error)
         alert(data.error || 'Metin bulunamadı')
         setLoading(false)
         return
       }
 
       const data = await res.json()
+      console.log('Script loaded:', data)
       setScript(data)
       setDriveLink(data.audioFile || '')
       setShowUploadForm(!data.audioFile)
@@ -105,12 +136,13 @@ export default function VoiceActorScriptDetailPage() {
       e.nativeEvent.stopImmediatePropagation()
     }
     
-    console.log('=== TOGGLE UPLOAD FORM ===')
-    console.log('Current state:', showUploadForm)
+    console.log('=== TOGGLE UPLOAD FORM CLICKED ===')
+    console.log('Current showUploadForm:', showUploadForm)
+    console.log('Event:', e)
     
     setShowUploadForm(prev => {
       const newValue = !prev
-      console.log('New state:', newValue)
+      console.log('Setting showUploadForm to:', newValue)
       return newValue
     })
   }, [showUploadForm])
@@ -196,12 +228,27 @@ export default function VoiceActorScriptDetailPage() {
     }
   }, [scriptId, loadScriptData])
 
-  if (loading || !isAuthenticated) {
+  console.log('Render state:', { loading, isAuthenticated, authLoading, script: !!script })
+
+  if (authLoading || loading) {
+    console.log('Showing loading screen')
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Yükleniyor...</p>
+          <p className="mt-2 text-xs text-gray-400">Auth: {authLoading ? 'Checking...' : isAuthenticated ? 'OK' : 'Failed'}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    console.log('Not authenticated, should redirect')
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="text-center">
+          <p className="text-gray-600">Yetkilendirme kontrol ediliyor...</p>
         </div>
       </div>
     )
