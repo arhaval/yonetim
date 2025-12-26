@@ -237,15 +237,23 @@ export function DebugConsoleOverlay() {
 
     return () => {
       // Restore original console
-      if (originalConsoleRef.current) {
-        console.log = originalConsoleRef.current.log
-        console.info = originalConsoleRef.current.info
-        console.warn = originalConsoleRef.current.warn
-        console.error = originalConsoleRef.current.error
-        console.debug = originalConsoleRef.current.debug
+      try {
+        if (originalConsoleRef.current) {
+          console.log = originalConsoleRef.current.log
+          console.info = originalConsoleRef.current.info
+          console.warn = originalConsoleRef.current.warn
+          console.error = originalConsoleRef.current.error
+          console.debug = originalConsoleRef.current.debug
+        }
+      } catch (err) {
+        // Restore sırasında hata olursa sessizce geç
       }
-      window.removeEventListener('error', handleError)
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+      try {
+        window.removeEventListener('error', handleError)
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+      } catch (err) {
+        // Remove listener sırasında hata olursa sessizce geç
+      }
       isPatchingRef.current = false
     }
   }, [addLog, mounted])
