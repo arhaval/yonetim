@@ -26,12 +26,19 @@ export function DebugConsoleOverlay() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [autoScroll, setAutoScroll] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const logContainerRef = useRef<HTMLDivElement>(null)
   const originalConsoleRef = useRef<any>(null)
   const isPatchingRef = useRef(false)
 
   // Son 300 log'u tut
   const MAX_LOGS = 300
+
+  // Mount kontrolü
+  useEffect(() => {
+    setMounted(true)
+    console.log('[Debug Console] Component mounted and ready!')
+  }, [])
 
   const addLog = useCallback((entry: LogEntry) => {
     setLogs(prev => {
@@ -156,6 +163,8 @@ export function DebugConsoleOverlay() {
     window.addEventListener('error', handleError)
     window.addEventListener('unhandledrejection', handleUnhandledRejection)
 
+    console.log('[Debug Console] Console patch completed successfully!')
+
     return () => {
       // Restore original console
       if (originalConsoleRef.current) {
@@ -169,7 +178,7 @@ export function DebugConsoleOverlay() {
       window.removeEventListener('unhandledrejection', handleUnhandledRejection)
       isPatchingRef.current = false
     }
-  }, [addLog])
+  }, [addLog, mounted])
 
   // Filter logs
   const filteredLogs = logs.filter(log => {
@@ -209,7 +218,16 @@ export function DebugConsoleOverlay() {
     })
   }
 
-  if (!isDebugMode()) return null
+  // Mount kontrolü
+  if (!mounted) {
+    return null
+  }
+
+  const shouldShow = isDebugMode()
+  
+  if (!shouldShow) {
+    return null
+  }
 
   return (
     <>
