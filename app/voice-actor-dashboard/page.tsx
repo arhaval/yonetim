@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, FileText, User, Calendar, CheckCircle, Upload, X, Clock, Download, DollarSign, Mic, Eye, Heart, MessageCircle, Share2, Bookmark, Video, Image, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LogOut, FileText, User, Calendar, CheckCircle, Clock, Download, DollarSign, Mic, Eye, Heart, MessageCircle, Share2, Bookmark, Video, Image, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 
@@ -12,10 +12,6 @@ export default function VoiceActorDashboardPage() {
   const [scripts, setScripts] = useState<any[]>([])
   const [contents, setContents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedScript, setSelectedScript] = useState<any>(null)
-  const [showModal, setShowModal] = useState(false)
-  const [driveLink, setDriveLink] = useState('')
-  const [submitting, setSubmitting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const scriptsPerPage = 12
 
@@ -93,53 +89,6 @@ export default function VoiceActorDashboardPage() {
     }
   }
 
-  const handleOpenModal = (script: any) => {
-    setSelectedScript(script)
-    setShowModal(true)
-    setDriveLink(script.audioFile || '')
-  }
-
-  const handleSaveAudio = async () => {
-    if (!selectedScript) return
-
-    if (!driveLink || !driveLink.trim()) {
-      alert('Lütfen Google Drive linkini girin')
-      return
-    }
-
-    // Google Drive link formatını kontrol et
-    const driveLinkPattern = /(https?:\/\/)?(drive\.google\.com|docs\.google\.com).*/
-    if (!driveLinkPattern.test(driveLink.trim())) {
-      alert('Lütfen geçerli bir Google Drive linki girin')
-      return
-    }
-
-    setSubmitting(true)
-
-    try {
-      const res = await fetch(`/api/voiceover-scripts/${selectedScript.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioFile: driveLink.trim() }),
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        alert('Google Drive linki başarıyla kaydedildi! Admin onayı bekleniyor.')
-        setShowModal(false)
-        setSelectedScript(null)
-        setDriveLink('')
-        loadScripts()
-      } else {
-        alert(data.error || 'Link kaydedilirken bir hata oluştu')
-      }
-    } catch (error) {
-      alert('Bir hata oluştu')
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -297,7 +246,7 @@ export default function VoiceActorDashboardPage() {
                   <div 
                     key={script.id} 
                     className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
-                    onClick={() => handleOpenModal(script)}
+                    onClick={() => router.push(`/voice-actor/scripts/${script.id}`)}
                   >
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-3">
@@ -382,7 +331,7 @@ export default function VoiceActorDashboardPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleOpenModal(script)
+                              router.push(`/voice-actor/scripts/${script.id}`)
                             }}
                             className="flex-1 px-3 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white text-xs font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
                           >
@@ -579,91 +528,6 @@ export default function VoiceActorDashboardPage() {
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && selectedScript && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">{selectedScript.title}</h2>
-                <button
-                  onClick={() => {
-                    setShowModal(false)
-                    setSelectedScript(null)
-                    setDriveLink('')
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Seslendirme Metni:</h3>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div 
-                      className="text-sm text-gray-900 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: selectedScript.text }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Upload className="w-4 h-4 inline mr-2" />
-                    Google Drive Linki *
-                  </label>
-                  <input
-                    type="url"
-                    value={driveLink}
-                    onChange={(e) => setDriveLink(e.target.value)}
-                    placeholder="https://drive.google.com/file/d/..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                  <p className="mt-2 text-xs text-gray-500">
-                    Ses dosyanızı Google Drive'a yükleyin ve paylaşım linkini buraya yapıştırın
-                  </p>
-                  {selectedScript.audioFile && (
-                    <div className="mt-2 flex items-center space-x-2">
-                      <span className="text-sm text-green-600">✓ Link kaydedilmiş</span>
-                      <a
-                        href={selectedScript.audioFile}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Linki Aç
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-end space-x-4 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowModal(false)
-                      setSelectedScript(null)
-                      setDriveLink('')
-                    }}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                  >
-                    İptal
-                  </button>
-                  <button
-                    onClick={handleSaveAudio}
-                    disabled={submitting || !driveLink.trim()}
-                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? 'Kaydediliyor...' : 'Kaydet'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
