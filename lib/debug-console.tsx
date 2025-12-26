@@ -41,21 +41,31 @@ export function DebugConsoleOverlay() {
   }, [])
 
   const addLog = useCallback((entry: LogEntry) => {
+    // Mount kontrolü - sadece mount olduktan sonra log ekle
+    if (!mounted) return
+    
     try {
-      setLogs(prev => {
+      // setTimeout ile async yap ki React state update'i bloklamasın
+      setTimeout(() => {
         try {
-          const newLogs = [...prev, entry]
-          return newLogs.slice(-MAX_LOGS)
+          setLogs(prev => {
+            try {
+              const newLogs = [...prev, entry]
+              return newLogs.slice(-MAX_LOGS)
+            } catch (err) {
+              // State update hatası - fallback
+              return prev
+            }
+          })
         } catch (err) {
-          // State update hatası - fallback
-          return prev
+          // setLogs hatası - sessizce geç
         }
-      })
+      }, 0)
     } catch (err) {
       // addLog hatası - sessizce geç
       // Orijinal console'a yazmaya devam edecek
     }
-  }, [])
+  }, [mounted])
 
   // Auto scroll
   useEffect(() => {

@@ -132,19 +132,22 @@ export default function VoiceActorScriptDetailPage() {
   const handleToggleUploadForm = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation()
-    }
+    e.nativeEvent?.stopImmediatePropagation()
+    
+    // Sayfa yenilenmesini engelle
+    if (e.defaultPrevented) return
     
     console.log('=== TOGGLE UPLOAD FORM CLICKED ===')
     console.log('Current showUploadForm:', showUploadForm)
-    console.log('Event:', e)
     
     setShowUploadForm(prev => {
       const newValue = !prev
       console.log('Setting showUploadForm to:', newValue)
       return newValue
     })
+    
+    // Return false da ekle
+    return false
   }, [showUploadForm])
 
   const handleSaveAudio = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
