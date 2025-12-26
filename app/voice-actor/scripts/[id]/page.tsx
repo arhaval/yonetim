@@ -375,7 +375,16 @@ export default function VoiceActorScriptDetailPage() {
             {script.voiceActorId && (
               <button
                 type="button"
-                onClick={handleToggleUploadForm}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  e.nativeEvent?.stopImmediatePropagation()
+                  handleToggleUploadForm(e)
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
               >
                 {script.audioFile ? (
