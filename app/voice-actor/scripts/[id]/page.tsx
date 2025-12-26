@@ -88,10 +88,17 @@ export default function VoiceActorScriptDetailPage() {
         setShowUploadForm(false)
         loadScript()
       } else {
+        // 401 hatası durumunda login sayfasına yönlendir
+        if (res.status === 401) {
+          alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
+          router.push('/voice-actor-login')
+          return
+        }
         alert(data.error || 'Link kaydedilirken bir hata oluştu')
       }
     } catch (error) {
-      alert('Bir hata oluştu')
+      console.error('Error saving audio:', error)
+      alert('Bir hata oluştu. Lütfen tekrar deneyin.')
     } finally {
       setSubmitting(false)
     }

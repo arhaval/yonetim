@@ -5,9 +5,10 @@ import { cookies } from 'next/headers'
 // Metin detayını getir
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const { id } = await Promise.resolve(params)
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
     const creatorId = cookieStore.get('creator-id')?.value
@@ -21,7 +22,7 @@ export async function GET(
     }
 
     const script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         creator: {
           select: {
@@ -66,9 +67,10 @@ export async function GET(
 // Metni güncelle (ses upload, onay, ücret, metin düzenleme)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const { id } = await Promise.resolve(params)
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
     const voiceActorId = cookieStore.get('voice-actor-id')?.value
@@ -85,7 +87,7 @@ export async function PUT(
 
     // Mevcut metni kontrol et
     const existingScript = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingScript) {
@@ -126,7 +128,7 @@ export async function PUT(
     }
 
     const script = await prisma.voiceoverScript.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         creator: {
@@ -160,9 +162,10 @@ export async function PUT(
 // Metni sil (sadece admin)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const { id } = await Promise.resolve(params)
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
 
@@ -187,7 +190,7 @@ export async function DELETE(
 
     // Metni sil
     await prisma.voiceoverScript.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({
