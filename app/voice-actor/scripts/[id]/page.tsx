@@ -26,10 +26,19 @@ export default function VoiceActorScriptDetailPage() {
     try {
       const res = await fetch('/api/voice-actor-auth/me', {
         credentials: 'include', // Cookie'leri gönder
+        cache: 'no-store', // Cache'i bypass et
       })
+      
+      if (!res.ok) {
+        console.error('Auth check failed:', res.status)
+        router.push('/voice-actor-login')
+        return
+      }
+
       const data = await res.json()
 
       if (!data.voiceActor) {
+        console.error('No voice actor found in response')
         router.push('/voice-actor-login')
         return
       }
@@ -38,6 +47,8 @@ export default function VoiceActorScriptDetailPage() {
       loadScript()
     } catch (error) {
       console.error('Auth check error:', error)
+      // Hata durumunda hemen login sayfasına yönlendirme, önce kullanıcıya bilgi ver
+      alert('Oturum kontrolü başarısız. Lütfen tekrar giriş yapın.')
       router.push('/voice-actor-login')
     }
   }
@@ -46,23 +57,27 @@ export default function VoiceActorScriptDetailPage() {
     try {
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
         credentials: 'include', // Cookie'leri gönder
+        cache: 'no-store', // Cache'i bypass et
       })
-      const data = await res.json()
-
-      if (res.ok) {
-        setScript(data)
-        setDriveLink(data.audioFile || '')
-        setShowUploadForm(!data.audioFile)
-      } else {
+      
+      if (!res.ok) {
         // 401 hatası durumunda login sayfasına yönlendir
         if (res.status === 401) {
           alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
           router.push('/voice-actor-login')
           return
         }
+        const data = await res.json()
         alert(data.error || 'Metin bulunamadı')
         router.push('/voice-actor-dashboard')
+        setLoading(false)
+        return
       }
+
+      const data = await res.json()
+      setScript(data)
+      setDriveLink(data.audioFile || '')
+      setShowUploadForm(!data.audioFile)
     } catch (error) {
       console.error('Error loading script:', error)
       alert('Bir hata oluştu')
@@ -265,7 +280,13 @@ export default function VoiceActorScriptDetailPage() {
             </h2>
             {script.voiceActorId && (
               <button
-                onClick={() => setShowUploadForm(!showUploadForm)}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  console.log('Upload button clicked, current showUploadForm:', showUploadForm)
+                  setShowUploadForm(!showUploadForm)
+                }}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
               >
                 {script.audioFile ? (
