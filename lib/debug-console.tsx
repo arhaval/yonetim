@@ -59,80 +59,150 @@ export function DebugConsoleOverlay() {
     if (!mounted) return
     if (isPatchingRef.current) return
     
-    console.log('[Debug Console] Setting up console patch...')
+    try {
+      console.log('[Debug Console] Setting up console patch...')
 
-    isPatchingRef.current = true
-    originalConsoleRef.current = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug,
-    }
+      isPatchingRef.current = true
+      
+      // Orijinal console metodlarını sakla
+      const originalLog = console.log.bind(console)
+      const originalInfo = console.info.bind(console)
+      const originalWarn = console.warn.bind(console)
+      const originalError = console.error.bind(console)
+      const originalDebug = console.debug.bind(console)
 
-    const createLogEntry = (
-      level: LogEntry['level'],
-      ...args: any[]
-    ): LogEntry => {
-      const message = args
-        .map(arg => {
-          if (typeof arg === 'string') return arg
-          if (arg instanceof Error) return arg.message
-          try {
-            return JSON.stringify(arg, null, 2)
-          } catch {
-            return String(arg)
+      originalConsoleRef.current = {
+        log: originalLog,
+        info: originalInfo,
+        warn: originalWarn,
+        error: originalError,
+        debug: originalDebug,
+      }
+
+      const createLogEntry = (
+        level: LogEntry['level'],
+        ...args: any[]
+      ): LogEntry => {
+        try {
+          const message = args
+            .map(arg => {
+              if (typeof arg === 'string') return arg
+              if (arg instanceof Error) return arg.message
+              try {
+                return JSON.stringify(arg, null, 2)
+              } catch {
+                return String(arg)
+              }
+            })
+            .join(' ')
+
+          let stack: string | undefined
+          if (level === 'error' && args[0] instanceof Error) {
+            stack = args[0].stack
+          } else {
+            try {
+              const error = new Error()
+              stack = error.stack
+            } catch {
+              stack = undefined
+            }
           }
-        })
-        .join(' ')
 
-      let stack: string | undefined
-      if (level === 'error' && args[0] instanceof Error) {
-        stack = args[0].stack
-      } else {
-        const error = new Error()
-        stack = error.stack
+          return {
+            id: `${Date.now()}-${Math.random()}`,
+            timestamp: Date.now(),
+            level,
+            message,
+            args,
+            stack,
+          }
+        } catch (err) {
+          // Fallback entry
+          return {
+            id: `${Date.now()}-${Math.random()}`,
+            timestamp: Date.now(),
+            level,
+            message: String(args[0] || 'Unknown'),
+            args: [],
+            stack: undefined,
+          }
+        }
       }
 
-      return {
-        id: `${Date.now()}-${Math.random()}`,
-        timestamp: Date.now(),
-        level,
-        message,
-        args,
-        stack,
+      // Patch console methods - güvenli wrapper
+      console.log = (...args: any[]) => {
+        try {
+          const entry = createLogEntry('log', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Hata durumunda sadece orijinal console'a yaz
+        }
+        try {
+          originalLog(...args)
+        } catch (err) {
+          // Orijinal console da hata verirse sessizce geç
+        }
       }
-    }
 
-    // Patch console methods
-    console.log = (...args: any[]) => {
-      const entry = createLogEntry('log', ...args)
-      addLog(entry)
-      originalConsoleRef.current.log(...args)
-    }
+      console.info = (...args: any[]) => {
+        try {
+          const entry = createLogEntry('info', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Hata durumunda sadece orijinal console'a yaz
+        }
+        try {
+          originalInfo(...args)
+        } catch (err) {
+          // Orijinal console da hata verirse sessizce geç
+        }
+      }
 
-    console.info = (...args: any[]) => {
-      const entry = createLogEntry('info', ...args)
-      addLog(entry)
-      originalConsoleRef.current.info(...args)
-    }
+      console.warn = (...args: any[]) => {
+        try {
+          const entry = createLogEntry('warn', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Hata durumunda sadece orijinal console'a yaz
+        }
+        try {
+          originalWarn(...args)
+        } catch (err) {
+          // Orijinal console da hata verirse sessizce geç
+        }
+      }
 
-    console.warn = (...args: any[]) => {
-      const entry = createLogEntry('warn', ...args)
-      addLog(entry)
-      originalConsoleRef.current.warn(...args)
-    }
+      console.error = (...args: any[]) => {
+        try {
+          const entry = createLogEntry('error', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Hata durumunda sadece orijinal console'a yaz
+        }
+        try {
+          originalError(...args)
+        } catch (err) {
+          // Orijinal console da hata verirse sessizce geç
+        }
+      }
 
-    console.error = (...args: any[]) => {
-      const entry = createLogEntry('error', ...args)
-      addLog(entry)
-      originalConsoleRef.current.error(...args)
-    }
-
-    console.debug = (...args: any[]) => {
-      const entry = createLogEntry('debug', ...args)
-      addLog(entry)
-      originalConsoleRef.current.debug(...args)
+      console.debug = (...args: any[]) => {
+        try {
+          const entry = createLogEntry('debug', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Hata durumunda sadece orijinal console'a yaz
+        }
+        try {
+          originalDebug(...args)
+        } catch (err) {
+          // Orijinal console da hata verirse sessizce geç
+        }
+      }
+    } catch (err) {
+      console.error('[Debug Console] Error setting up patch:', err)
+      isPatchingRef.current = false
+      return
     }
 
     // Global error handlers
