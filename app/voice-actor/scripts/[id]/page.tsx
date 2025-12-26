@@ -19,11 +19,14 @@ export default function VoiceActorScriptDetailPage() {
 
   useEffect(() => {
     checkAuth()
-  }, [scriptId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/voice-actor-auth/me')
+      const res = await fetch('/api/voice-actor-auth/me', {
+        credentials: 'include', // Cookie'leri gönder
+      })
       const data = await res.json()
 
       if (!data.voiceActor) {
@@ -31,15 +34,19 @@ export default function VoiceActorScriptDetailPage() {
         return
       }
 
+      // Auth başarılıysa script'i yükle
       loadScript()
     } catch (error) {
+      console.error('Auth check error:', error)
       router.push('/voice-actor-login')
     }
   }
 
   const loadScript = async () => {
     try {
-      const res = await fetch(`/api/voiceover-scripts/${scriptId}`)
+      const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
+        credentials: 'include', // Cookie'leri gönder
+      })
       const data = await res.json()
 
       if (res.ok) {
@@ -47,6 +54,12 @@ export default function VoiceActorScriptDetailPage() {
         setDriveLink(data.audioFile || '')
         setShowUploadForm(!data.audioFile)
       } else {
+        // 401 hatası durumunda login sayfasına yönlendir
+        if (res.status === 401) {
+          alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
+          router.push('/voice-actor-login')
+          return
+        }
         alert(data.error || 'Metin bulunamadı')
         router.push('/voice-actor-dashboard')
       }
@@ -78,6 +91,7 @@ export default function VoiceActorScriptDetailPage() {
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Cookie'leri gönder
         body: JSON.stringify({ audioFile: driveLink.trim() }),
       })
 
@@ -86,7 +100,18 @@ export default function VoiceActorScriptDetailPage() {
       if (res.ok) {
         alert('Google Drive linki başarıyla kaydedildi! Admin onayı bekleniyor.')
         setShowUploadForm(false)
-        loadScript()
+        // State'i doğrudan güncelle, loadScript çağırma (checkAuth tetiklenmesin)
+        if (data.script) {
+          setScript(data.script)
+          setDriveLink(data.script.audioFile || '')
+        } else {
+          // Eğer script dönmüyorsa, sadece audioFile'ı güncelle
+          setScript((prev: any) => ({
+            ...prev,
+            audioFile: driveLink.trim(),
+            status: prev?.status || 'pending'
+          }))
+        }
       } else {
         // 401 hatası durumunda login sayfasına yönlendir
         if (res.status === 401) {
@@ -109,6 +134,7 @@ export default function VoiceActorScriptDetailPage() {
       const res = await fetch('/api/voiceover-scripts/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Cookie'leri gönder
         body: JSON.stringify({ scriptId }),
       })
 
