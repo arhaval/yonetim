@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { DebugConsoleOverlay } from "@/lib/debug-console";
 
 export const metadata: Metadata = {
   title: "Arhaval Denetim Merkezi",
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="tr">
       <body>
         {children}
+        <DebugConsoleOverlay />
       </body>
     </html>
   );

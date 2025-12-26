@@ -26,8 +26,9 @@ const nextConfig = {
   // Compression
   compress: true,
   // Production'da console.log'ları kaldır (performans için)
+  // NOT: Debug modu için ?debug=1 parametresi ile console'lar görünebilir
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
+    removeConsole: process.env.NODE_ENV === 'production' && process.env.ENABLE_DEBUG !== 'true' ? {
       exclude: ['error', 'warn'], // Error ve warn'ları tut
     } : false,
   },
