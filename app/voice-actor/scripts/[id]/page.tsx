@@ -16,6 +16,7 @@ export default function VoiceActorScriptDetailPage() {
   const [driveLink, setDriveLink] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showUploadForm, setShowUploadForm] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
     checkAuth()
@@ -23,30 +24,45 @@ export default function VoiceActorScriptDetailPage() {
   }, [])
 
   const checkAuth = async () => {
+    // Eğer zaten kontrol edildiyse tekrar etme
+    if (authChecked) {
+      console.log('Auth already checked, skipping')
+      return
+    }
+
     try {
+      console.log('Checking authentication...')
       const res = await fetch('/api/voice-actor-auth/me', {
         credentials: 'include', // Cookie'leri gönder
         cache: 'no-store', // Cache'i bypass et
       })
       
+      console.log('Auth response status:', res.status)
+      
       if (!res.ok) {
         console.error('Auth check failed:', res.status)
+        setAuthChecked(true)
         router.push('/voice-actor-login')
         return
       }
 
       const data = await res.json()
+      console.log('Auth response data:', data)
 
       if (!data.voiceActor) {
         console.error('No voice actor found in response')
+        setAuthChecked(true)
         router.push('/voice-actor-login')
         return
       }
 
+      console.log('Auth successful, loading script...')
+      setAuthChecked(true)
       // Auth başarılıysa script'i yükle
       loadScript()
     } catch (error) {
       console.error('Auth check error:', error)
+      setAuthChecked(true)
       // Hata durumunda hemen login sayfasına yönlendirme, önce kullanıcıya bilgi ver
       alert('Oturum kontrolü başarısız. Lütfen tekrar giriş yapın.')
       router.push('/voice-actor-login')
