@@ -351,7 +351,7 @@ export default function VoiceActorScriptDetailPage() {
         </div>
 
         {/* Upload Form */}
-        {showUploadForm && script.voiceActorId && (
+        {showUploadForm && script && script.voiceActorId && (
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border-2 border-pink-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 flex items-center">
