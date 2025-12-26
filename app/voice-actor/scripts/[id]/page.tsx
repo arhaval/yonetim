@@ -79,13 +79,16 @@ export default function VoiceActorScriptDetailPage() {
       if (!res.ok) {
         // 401 hatası durumunda login sayfasına yönlendir
         if (res.status === 401) {
+          console.error('Unauthorized access, redirecting to login')
           alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
           router.push('/voice-actor-login')
+          setLoading(false)
           return
         }
         const data = await res.json()
+        console.error('Error loading script:', data.error)
+        // Hata durumunda dashboard'a yönlendirme, sadece alert göster
         alert(data.error || 'Metin bulunamadı')
-        router.push('/voice-actor-dashboard')
         setLoading(false)
         return
       }

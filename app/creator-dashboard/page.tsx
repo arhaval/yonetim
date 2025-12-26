@@ -143,11 +143,20 @@ export default function CreatorDashboardPage() {
                   alt="Arhaval Logo" 
                   className="w-full h-full object-contain"
                   onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    if (target.parentElement) {
-                      target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
-                      target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                    try {
+                      const target = e.target as HTMLImageElement
+                      if (target) {
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = '<span class="text-gray-900 font-bold text-xl">A</span>'
+                          if (parent.style) {
+                            parent.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
+                          }
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Error handling image onError:', error)
                     }
                   }}
                 />
