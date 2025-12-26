@@ -41,10 +41,20 @@ export function DebugConsoleOverlay() {
   }, [])
 
   const addLog = useCallback((entry: LogEntry) => {
-    setLogs(prev => {
-      const newLogs = [...prev, entry]
-      return newLogs.slice(-MAX_LOGS)
-    })
+    try {
+      setLogs(prev => {
+        try {
+          const newLogs = [...prev, entry]
+          return newLogs.slice(-MAX_LOGS)
+        } catch (err) {
+          // State update hatası - fallback
+          return prev
+        }
+      })
+    } catch (err) {
+      // addLog hatası - sessizce geç
+      // Orijinal console'a yazmaya devam edecek
+    }
   }, [])
 
   // Auto scroll
@@ -146,57 +156,57 @@ export function DebugConsoleOverlay() {
 
       console.info = (...args: any[]) => {
         try {
-          const entry = createLogEntry('info', ...args)
-          addLog(entry)
-        } catch (err) {
-          // Hata durumunda sadece orijinal console'a yaz
-        }
-        try {
           originalInfo(...args)
         } catch (err) {
           // Orijinal console da hata verirse sessizce geç
+        }
+        try {
+          const entry = createLogEntry('info', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Overlay'e ekleme hatası - sessizce geç
         }
       }
 
       console.warn = (...args: any[]) => {
         try {
-          const entry = createLogEntry('warn', ...args)
-          addLog(entry)
-        } catch (err) {
-          // Hata durumunda sadece orijinal console'a yaz
-        }
-        try {
           originalWarn(...args)
         } catch (err) {
           // Orijinal console da hata verirse sessizce geç
+        }
+        try {
+          const entry = createLogEntry('warn', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Overlay'e ekleme hatası - sessizce geç
         }
       }
 
       console.error = (...args: any[]) => {
         try {
-          const entry = createLogEntry('error', ...args)
-          addLog(entry)
-        } catch (err) {
-          // Hata durumunda sadece orijinal console'a yaz
-        }
-        try {
           originalError(...args)
         } catch (err) {
           // Orijinal console da hata verirse sessizce geç
+        }
+        try {
+          const entry = createLogEntry('error', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Overlay'e ekleme hatası - sessizce geç
         }
       }
 
       console.debug = (...args: any[]) => {
         try {
-          const entry = createLogEntry('debug', ...args)
-          addLog(entry)
-        } catch (err) {
-          // Hata durumunda sadece orijinal console'a yaz
-        }
-        try {
           originalDebug(...args)
         } catch (err) {
           // Orijinal console da hata verirse sessizce geç
+        }
+        try {
+          const entry = createLogEntry('debug', ...args)
+          addLog(entry)
+        } catch (err) {
+          // Overlay'e ekleme hatası - sessizce geç
         }
       }
     } catch (err) {
