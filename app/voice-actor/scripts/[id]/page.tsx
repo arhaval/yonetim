@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, FileText, Upload, X, Download, CheckCircle, Clock, User, Calendar, DollarSign, Mic, Save } from 'lucide-react'
 import { format } from 'date-fns'
@@ -16,78 +16,71 @@ export default function VoiceActorScriptDetailPage() {
   const [driveLink, setDriveLink] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showUploadForm, setShowUploadForm] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // Authentication kontrolü - sadece bir kez
   useEffect(() => {
-    checkAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    let mounted = true
 
-  const checkAuth = async () => {
-    // Eğer zaten kontrol edildiyse tekrar etme
-    if (authChecked) {
-      console.log('Auth already checked, skipping')
-      return
+    const authenticate = async () => {
+      try {
+        const res = await fetch('/api/voice-actor-auth/me', {
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (!res.ok) {
+          if (mounted) {
+            setIsAuthenticated(false)
+            router.push('/voice-actor-login')
+          }
+          return
+        }
+
+        const data = await res.json()
+        if (!data.voiceActor) {
+          if (mounted) {
+            setIsAuthenticated(false)
+            router.push('/voice-actor-login')
+          }
+          return
+        }
+
+        if (mounted) {
+          setIsAuthenticated(true)
+          loadScriptData()
+        }
+      } catch (error) {
+        console.error('Auth error:', error)
+        if (mounted) {
+          setIsAuthenticated(false)
+          router.push('/voice-actor-login')
+        }
+      }
     }
 
-    try {
-      console.log('Checking authentication...')
-      const res = await fetch('/api/voice-actor-auth/me', {
-        credentials: 'include', // Cookie'leri gönder
-        cache: 'no-store', // Cache'i bypass et
-      })
-      
-      console.log('Auth response status:', res.status)
-      
-      if (!res.ok) {
-        console.error('Auth check failed:', res.status)
-        setAuthChecked(true)
-        router.push('/voice-actor-login')
-        return
-      }
+    authenticate()
 
-      const data = await res.json()
-      console.log('Auth response data:', data)
-
-      if (!data.voiceActor) {
-        console.error('No voice actor found in response')
-        setAuthChecked(true)
-        router.push('/voice-actor-login')
-        return
-      }
-
-      console.log('Auth successful, loading script...')
-      setAuthChecked(true)
-      // Auth başarılıysa script'i yükle
-      loadScript()
-    } catch (error) {
-      console.error('Auth check error:', error)
-      setAuthChecked(true)
-      // Hata durumunda hemen login sayfasına yönlendirme, önce kullanıcıya bilgi ver
-      alert('Oturum kontrolü başarısız. Lütfen tekrar giriş yapın.')
-      router.push('/voice-actor-login')
+    return () => {
+      mounted = false
     }
-  }
+  }, [router])
 
-  const loadScript = async () => {
+  const loadScriptData = useCallback(async () => {
+    if (!scriptId) return
+
     try {
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
-        credentials: 'include', // Cookie'leri gönder
-        cache: 'no-store', // Cache'i bypass et
+        credentials: 'include',
+        cache: 'no-store',
       })
-      
+
       if (!res.ok) {
-        // 401 hatası durumunda login sayfasına yönlendir
         if (res.status === 401) {
-          console.error('Unauthorized access, redirecting to login')
-          alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
           router.push('/voice-actor-login')
-          setLoading(false)
           return
         }
         const data = await res.json()
-        console.error('Error loading script:', data.error)
-        // Hata durumunda dashboard'a yönlendirme, sadece alert göster
         alert(data.error || 'Metin bulunamadı')
         setLoading(false)
         return
@@ -99,19 +92,38 @@ export default function VoiceActorScriptDetailPage() {
       setShowUploadForm(!data.audioFile)
     } catch (error) {
       console.error('Error loading script:', error)
-      // Hata durumunda dashboard'a yönlendirme YOK - sadece alert
       alert('Metin yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.')
+    } finally {
       setLoading(false)
     }
-  }
+  }, [scriptId, router])
 
-  const handleSaveAudio = async () => {
+  const handleToggleUploadForm = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation()
+    }
+    
+    console.log('=== TOGGLE UPLOAD FORM ===')
+    console.log('Current state:', showUploadForm)
+    
+    setShowUploadForm(prev => {
+      const newValue = !prev
+      console.log('New state:', newValue)
+      return newValue
+    })
+  }, [showUploadForm])
+
+  const handleSaveAudio = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
     if (!driveLink || !driveLink.trim()) {
       alert('Lütfen Google Drive linkini girin')
       return
     }
 
-    // Google Drive link formatını kontrol et
     const driveLinkPattern = /(https?:\/\/)?(drive\.google\.com|docs\.google\.com).*/
     if (!driveLinkPattern.test(driveLink.trim())) {
       alert('Lütfen geçerli bir Google Drive linki girin')
@@ -124,7 +136,7 @@ export default function VoiceActorScriptDetailPage() {
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Cookie'leri gönder
+        credentials: 'include',
         body: JSON.stringify({ audioFile: driveLink.trim() }),
       })
 
@@ -133,12 +145,10 @@ export default function VoiceActorScriptDetailPage() {
       if (res.ok) {
         alert('Google Drive linki başarıyla kaydedildi! Admin onayı bekleniyor.')
         setShowUploadForm(false)
-        // State'i doğrudan güncelle, loadScript çağırma (checkAuth tetiklenmesin)
         if (data.script) {
           setScript(data.script)
           setDriveLink(data.script.audioFile || '')
         } else {
-          // Eğer script dönmüyorsa, sadece audioFile'ı güncelle
           setScript((prev: any) => ({
             ...prev,
             audioFile: driveLink.trim(),
@@ -146,7 +156,6 @@ export default function VoiceActorScriptDetailPage() {
           }))
         }
       } else {
-        // 401 hatası durumunda login sayfasına yönlendir
         if (res.status === 401) {
           alert('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.')
           router.push('/voice-actor-login')
@@ -160,14 +169,17 @@ export default function VoiceActorScriptDetailPage() {
     } finally {
       setSubmitting(false)
     }
-  }
+  }, [driveLink, scriptId, router])
 
-  const handleAssignScript = async () => {
+  const handleAssignScript = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+
     try {
       const res = await fetch('/api/voiceover-scripts/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Cookie'leri gönder
+        credentials: 'include',
         body: JSON.stringify({ scriptId }),
       })
 
@@ -175,16 +187,16 @@ export default function VoiceActorScriptDetailPage() {
 
       if (res.ok) {
         alert('Metin başarıyla size atandı!')
-        loadScript()
+        loadScriptData()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
     } catch (error) {
       alert('Bir hata oluştu')
     }
-  }
+  }, [scriptId, loadScriptData])
 
-  if (loading) {
+  if (loading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         <div className="text-center">
@@ -196,7 +208,19 @@ export default function VoiceActorScriptDetailPage() {
   }
 
   if (!script) {
-    return null
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="text-center">
+          <p className="text-gray-600">Metin bulunamadı</p>
+          <button
+            onClick={() => router.push('/voice-actor-dashboard')}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg"
+          >
+            Dashboard'a Dön
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -205,6 +229,7 @@ export default function VoiceActorScriptDetailPage() {
         {/* Header */}
         <div className="mb-6">
           <button
+            type="button"
             onClick={() => router.push('/voice-actor-dashboard')}
             className="text-sm text-indigo-600 hover:text-indigo-800 mb-4 inline-flex items-center transition-colors"
           >
@@ -279,6 +304,7 @@ export default function VoiceActorScriptDetailPage() {
             {/* Assign Button */}
             {!script.voiceActorId && (
               <button
+                type="button"
                 onClick={handleAssignScript}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center"
               >
@@ -289,7 +315,7 @@ export default function VoiceActorScriptDetailPage() {
           </div>
         </div>
 
-        {/* Script Content - Reading Optimized */}
+        {/* Script Content */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center">
@@ -299,26 +325,7 @@ export default function VoiceActorScriptDetailPage() {
             {script.voiceActorId && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  e.nativeEvent.stopImmediatePropagation()
-                  console.log('=== UPLOAD BUTTON CLICKED ===')
-                  console.log('Current showUploadForm:', showUploadForm)
-                  console.log('Script ID:', scriptId)
-                  try {
-                    setShowUploadForm((prev) => {
-                      console.log('Setting showUploadForm to:', !prev)
-                      return !prev
-                    })
-                  } catch (err) {
-                    console.error('Error in setShowUploadForm:', err)
-                  }
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
+                onClick={handleToggleUploadForm}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-medium rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-200"
               >
                 {script.audioFile ? (
@@ -336,7 +343,6 @@ export default function VoiceActorScriptDetailPage() {
             )}
           </div>
 
-          {/* Rich Text Display - Optimized for Reading */}
           <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 border-2 border-gray-200">
             <div 
               className="text-lg text-gray-900 leading-relaxed prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:mb-4 prose-strong:font-semibold prose-strong:text-gray-900 prose-ul:list-disc prose-ul:ml-6 prose-ol:list-decimal prose-ol:ml-6"
@@ -359,6 +365,7 @@ export default function VoiceActorScriptDetailPage() {
                 Ses Dosyası Yükle
               </h3>
               <button
+                type="button"
                 onClick={() => setShowUploadForm(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -405,12 +412,14 @@ export default function VoiceActorScriptDetailPage() {
 
               <div className="flex items-center justify-end space-x-4 pt-4">
                 <button
+                  type="button"
                   onClick={() => setShowUploadForm(false)}
                   className="px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
                 >
                   İptal
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveAudio}
                   disabled={submitting || !driveLink.trim()}
                   className="px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg hover:from-pink-700 hover:to-rose-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-all duration-200 flex items-center"
@@ -460,4 +469,3 @@ export default function VoiceActorScriptDetailPage() {
     </div>
   )
 }
-
