@@ -584,45 +584,40 @@ export default function VoiceoverScriptsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {isAdmin && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                        <button
-                          onClick={handleSelectAll}
-                          className="flex items-center justify-center"
-                          title={selectedIds.size === scripts.length ? 'Tümünü kaldır' : 'Tümünü seç'}
-                        >
-                          {selectedIds.size === scripts.length ? (
-                            <CheckSquare2 className="w-5 h-5 text-indigo-600" />
-                          ) : (
-                            <Square className="w-5 h-5 text-gray-400" />
-                          )}
-                        </button>
-                      </th>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <button
+                        onClick={handleSelectAll}
+                        className="flex items-center justify-center"
+                        title={selectedIds.size === scripts.length ? 'Tümünü kaldır' : 'Tümünü seç'}
+                      >
+                        {selectedIds.size === scripts.length ? (
+                          <CheckSquare2 className="w-5 h-5 text-indigo-600" />
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Durum
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Başlık
                     </th>
-                    {!isVoiceActor && (
-                      <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Oluşturan
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Seslendiren
-                        </th>
-                      </>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Oluşturan
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Seslendiren
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ses Linki
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Tarih
                     </th>
-                    {!isVoiceActor && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fiyat
-                      </th>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Fiyat
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Aksiyonlar
                     </th>

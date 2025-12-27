@@ -262,20 +262,18 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   {format(new Date(script.createdAt), 'dd MMMM yyyy HH:mm', { locale: tr })}
                 </span>
               </div>
-              {!isVoiceActor && (
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <DollarSign className="w-4 h-4" />
-                  <span>
-                    <span className="font-medium">Fiyat:</span>{' '}
-                    {script.price > 0
-                      ? script.price.toLocaleString('tr-TR', {
-                          style: 'currency',
-                          currency: 'TRY',
-                        })
-                      : '-'}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <DollarSign className="w-4 h-4" />
+                <span>
+                  <span className="font-medium">Fiyat:</span>{' '}
+                  {script.price > 0
+                    ? script.price.toLocaleString('tr-TR', {
+                        style: 'currency',
+                        currency: 'TRY',
+                      })
+                    : '-'}
+                </span>
+              </div>
             </div>
 
             {/* Metin İçeriği */}
