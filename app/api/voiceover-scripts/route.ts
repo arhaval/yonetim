@@ -23,11 +23,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
-    const statusFilter = searchParams.get('status') // pending, audio-uploaded, approved, paid, archived
+    const statusFilter = searchParams.get('status') // WAITING_VOICE, VOICE_UPLOADED, APPROVED, REJECTED, PAID, ARCHIVED
     const voiceActorId = searchParams.get('voiceActorId')
     const search = searchParams.get('search')
     const dateFrom = searchParams.get('dateFrom')
     const dateTo = searchParams.get('dateTo')
+    const excludeArchivedParam = searchParams.get('excludeArchived')
+    const excludeArchived = excludeArchivedParam === 'true'
 
     const skip = (page - 1) * limit
 
