@@ -3,7 +3,7 @@
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2, Square, CheckSquare2 } from 'lucide-react'
+import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2, Square, CheckSquare2, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
