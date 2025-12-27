@@ -29,7 +29,9 @@ const nextConfig = {
   poweredByHeader: false,
   // Link prefetching - sayfa geçişlerini hızlandır
   experimental: {
-    ...nextConfig.experimental,
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
   // Production'da console.log'ları kaldır (performans için)
