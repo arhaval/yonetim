@@ -2,7 +2,7 @@ import Layout from '@/components/Layout'
 import { prisma } from '@/lib/prisma'
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, Twitter, Twitch, Music, Target, BarChart3, AlertCircle, CreditCard } from 'lucide-react'
+import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, Twitter, Twitch, Music, Target, BarChart3, AlertCircle, CreditCard, FileText } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -261,6 +261,52 @@ export default async function DashboardPage() {
     }
   }
 
+  // Bekleyen ödemeler ve bugün yapılacaklar için veriler
+  let pendingPayments: any[] = []
+  let pendingScripts: any[] = []
+  let todayStreams: any[] = []
+  
+  try {
+    // Bekleyen ödemeler (pending status)
+    pendingPayments = await prisma.stream.findMany({
+      where: { paymentStatus: 'pending' },
+      take: 5,
+      orderBy: { date: 'desc' },
+      include: { streamer: { select: { id: true, name: true } } },
+    }).catch(() => [])
+    
+    // Bekleyen script onayları
+    pendingScripts = await prisma.voiceoverScript.findMany({
+      where: { status: { in: ['pending', 'creator-approved'] } },
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: { 
+        creator: { select: { id: true, name: true } },
+        voiceActor: { select: { id: true, name: true } },
+      },
+    }).catch(() => [])
+    
+    // Bugünkü yayınlar
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    todayStreams = await prisma.stream.findMany({
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+      take: 5,
+      orderBy: { date: 'asc' },
+      include: { streamer: { select: { id: true, name: true } } },
+    }).catch(() => [])
+  } catch (error) {
+    console.error('Error fetching dashboard widgets:', error)
+  }
+
   // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
   let recentStreams: any[] = []
   try {
@@ -354,98 +400,73 @@ export default async function DashboardPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Hero Section - Büyütülmüş */}
-        <div className="relative overflow-hidden rounded-xl shadow-lg p-6 md:p-8 text-white" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #2563eb 100%)' }}>
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl md:text-4xl font-semibold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
+        {/* Hero Section - Sadeleştirilmiş */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-slate-700">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Arhaval Denetim Merkezi
               </h1>
-              <p className="text-base md:text-lg text-blue-100 flex items-center">
-                <Calendar className="w-5 h-5 mr-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
                 {currentMonth} - Genel Bakış
               </p>
-            </div>
-            <div className="hidden md:flex items-center justify-center w-20 h-20 bg-white/20 rounded-xl backdrop-blur-md border border-white/30 shadow-lg p-3">
-              <Image 
-                src="/arhaval-logo.png"
-                alt="Arhaval Logo" 
-                width={64}
-                height={64}
-                className="w-full h-full object-contain"
-                style={{ maxWidth: '100%', maxHeight: '100%' }}
-                loading="lazy"
-                priority={false}
-              />
             </div>
           </div>
         </div>
 
         {/* Main Stats - Büyütülmüş */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%)' }}></div>
-            <div className="relative p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalStreamers}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Toplam Yayıncı</p>
-                </div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalStreamers}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Toplam Yayıncı</p>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
-            <div className="relative p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-                  <CheckCircle2 className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.activeStreamers}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Aktif Yayıncı</p>
-                </div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeStreamers}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Aktif Yayıncı</p>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, rgba(8, 217, 214, 0.05) 0%, rgba(255, 46, 99, 0.05) 100%)' }}></div>
-            <div className="relative p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)' }}>
-                  <Video className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalContent}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Toplam İçerik</p>
-                </div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <Video className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalContent}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Toplam İçerik</p>
               </div>
             </div>
           </div>
 
-          <div className="group relative bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-200 dark:border-slate-700">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="relative p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.monthlyRevenue.toLocaleString('tr-TR', {
-                      style: 'currency',
-                      currency: 'TRY',
-                      maximumFractionDigits: 0,
-                    })}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5">Aylık Gelir</p>
-                </div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {stats.monthlyRevenue.toLocaleString('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    maximumFractionDigits: 0,
+                  })}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Aylık Gelir</p>
               </div>
             </div>
           </div>
@@ -607,6 +628,190 @@ export default async function DashboardPage() {
               )
             })}
           </div>
+        </div>
+
+        {/* Hızlı Erişim Butonları - Büyük ve Göze Çarpan */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Hızlı İşlemler</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              href="/payment-approval"
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                {pendingPayments.length > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {pendingPayments.length}
+                  </span>
+                )}
+              </div>
+              <p className="font-semibold text-base text-gray-900 dark:text-white">Ödeme Yap</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bekleyen ödemeler</p>
+            </Link>
+            <Link
+              href="/financial"
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <p className="font-semibold text-base text-gray-900 dark:text-white">Finansal Kayıt</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gelir/Gider ekle</p>
+            </Link>
+            <Link
+              href="/voiceover-scripts"
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                {pendingScripts.length > 0 && (
+                  <span className="bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {pendingScripts.length}
+                  </span>
+                )}
+              </div>
+              <p className="font-semibold text-base text-gray-900 dark:text-white">Script Onayla</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bekleyen scriptler</p>
+            </Link>
+            <Link
+              href="/streams"
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <Video className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                {todayStreams.length > 0 && (
+                  <span className="bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {todayStreams.length}
+                  </span>
+                )}
+              </div>
+              <p className="font-semibold text-base text-gray-900 dark:text-white">Yayınlar</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bugün {todayStreams.length} yayın</p>
+            </Link>
+          </div>
+        </div>
+
+        {/* Dashboard Widget'ları - Bekleyen İşlemler */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Bekleyen Ödemeler Widget */}
+          {pendingPayments.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
+                  Bekleyen Ödemeler
+                </h3>
+                <Link
+                  href="/payment-approval"
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Tümünü Gör →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {pendingPayments.slice(0, 3).map((stream: any) => (
+                  <div key={stream.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{stream.streamer?.name || 'Bilinmeyen'}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
+                      </p>
+                    </div>
+                    <p className="font-bold text-red-600">
+                      {stream.streamerEarning?.toLocaleString('tr-TR', {
+                        style: 'currency',
+                        currency: 'TRY',
+                        maximumFractionDigits: 0,
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bekleyen Script Onayları Widget */}
+          {pendingScripts.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-purple-500" />
+                  Bekleyen Script Onayları
+                </h3>
+                <Link
+                  href="/voiceover-scripts"
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Tümünü Gör →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {pendingScripts.slice(0, 3).map((script: any) => (
+                  <div key={script.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{script.title || 'Başlıksız'}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {script.creator?.name || 'Bilinmeyen'} → {script.voiceActor?.name || 'Bilinmeyen'}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      script.status === 'creator-approved' 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {script.status === 'creator-approved' ? 'Admin Onayı Bekliyor' : 'Creator Onayı Bekliyor'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bugünkü Yayınlar Widget */}
+          {todayStreams.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-indigo-500" />
+                  Bugünkü Yayınlar
+                </h3>
+                <Link
+                  href="/streams"
+                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Tümünü Gör →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {todayStreams.slice(0, 3).map((stream: any) => (
+                  <div key={stream.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{stream.streamer?.name || 'Bilinmeyen'}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {stream.matchInfo || 'Yayın'} - {stream.duration || 0} dk
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      stream.paymentStatus === 'paid' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {stream.paymentStatus === 'paid' ? 'Ödendi' : 'Bekliyor'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Links - Büyütülmüş */}

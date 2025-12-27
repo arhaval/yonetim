@@ -87,7 +87,8 @@ export async function POST(
       },
     })
 
-    // Finansal kayıt oluştur (gider olarak)
+    // Finansal kayıt oluştur (gider olarak) - Sadece voice actor için
+    // Creator maaş alıyor, script ücretinden pay almıyor
     let financialRecordId = null
     if (updatedScript.voiceActorId) {
       try {
@@ -99,7 +100,7 @@ export async function POST(
             description: `Seslendirme: ${updatedScript.title} - ${updatedScript.voiceActor?.name || 'Bilinmeyen'}`,
             date: new Date(),
             voiceActorId: updatedScript.voiceActorId || null,
-            contentCreatorId: updatedScript.creatorId || null,
+            // contentCreatorId kaldırıldı - creator maaş alıyor
           },
         })
         financialRecordId = financialRecord.id

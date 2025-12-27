@@ -71,7 +71,8 @@ export async function POST(
       },
     })
 
-    // Finansal kayıt oluştur (gider)
+    // Finansal kayıt oluştur (gider) - Sadece voice actor için
+    // Creator maaş alıyor, script ücretinden pay almıyor
     await prisma.financialRecord.create({
       data: {
         type: 'expense',
@@ -80,7 +81,7 @@ export async function POST(
         description: `Seslendirme ücreti - ${script.title}${script.voiceActor ? ` (${script.voiceActor.name})` : ''}`,
         date: new Date(),
         voiceActorId: script.voiceActorId || null,
-        contentCreatorId: script.creatorId || null,
+        // contentCreatorId kaldırıldı - creator maaş alıyor
       },
     })
 
