@@ -277,7 +277,7 @@ export default async function DashboardPage() {
     
     // Bekleyen script onayları
     pendingScripts = await prisma.voiceoverScript.findMany({
-      where: { status: { in: ['pending', 'creator-approved'] } },
+      where: { status: { in: ['WAITING_VOICE', 'VOICE_UPLOADED'] } },
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: { 
