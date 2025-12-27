@@ -10,11 +10,18 @@ interface Script {
   title: string
   text: string
   status: 'WAITING_VOICE' | 'VOICE_UPLOADED' | 'APPROVED' | 'REJECTED' | 'PAID' | 'ARCHIVED'
-  price: number
-  audioFile: string | null
+  price: number | null
+  audioFile: string | null // Deprecated - use voiceLink
+  voiceLink: string | null // Ses linki
   contentType: string | null
   notes: string | null
   rejectionReason: string | null
+  producerApproved: boolean
+  producerApprovedAt: string | null
+  producerApprovedBy: string | null
+  adminApproved: boolean
+  adminApprovedAt: string | null
+  adminApprovedBy: string | null
   createdAt: string
   updatedAt: string
   creator: {
@@ -38,7 +45,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
   const [notes, setNotes] = useState(script.notes || '')
-  const [audioFileLink, setAudioFileLink] = useState(script.audioFile || '')
+  const [audioFileLink, setAudioFileLink] = useState(script.voiceLink || script.audioFile || '')
 
   const handleApprove = async () => {
     if (price <= 0) {
