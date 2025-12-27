@@ -47,10 +47,19 @@ export async function POST(
       )
     }
 
-    // Status VOICE_UPLOADED olmalı (ses yüklenmiş, creator onayı bekliyor)
-    if (script.status !== 'VOICE_UPLOADED') {
+    // Status WAITING_VOICE veya VOICE_UPLOADED olabilir (ses yüklenmiş olmalı)
+    if (!script.audioFile) {
       return NextResponse.json(
-        { error: 'Bu metin ses yüklenmiş durumunda olmalı' },
+        { error: 'Ses dosyası henüz yüklenmemiş' },
+        { status: 400 }
+      )
+    }
+    
+    // Eğer WAITING_VOICE ise VOICE_UPLOADED'a çevir (creator onayı)
+    // Eğer zaten VOICE_UPLOADED ise hata verme (tekrar onaylanabilir)
+    if (script.status !== 'WAITING_VOICE' && script.status !== 'VOICE_UPLOADED') {
+      return NextResponse.json(
+        { error: 'Bu metin zaten işlenmiş' },
         { status: 400 }
       )
     }
@@ -66,11 +75,11 @@ export async function POST(
       status: script.status,
     }
 
-    // Creator onayını ver (status: creator-approved)
+    // Creator onayını ver (status: VOICE_UPLOADED - ses yüklendi, admin onayı bekliyor)
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id: params.id },
       data: {
-        status: 'creator-approved',
+        status: 'VOICE_UPLOADED',
       },
       include: {
         creator: {
