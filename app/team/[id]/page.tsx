@@ -458,7 +458,7 @@ export default async function TeamMemberDetailPage({
                             <p className="text-sm text-gray-600 mb-2 line-clamp-2">{script.text}</p>
                             <div className="flex items-center space-x-4 text-xs text-gray-500">
                               <span>{format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}</span>
-                              {script.price > 0 && (
+                              {script.price && script.price > 0 && (
                                 <>
                                   <span>•</span>
                                   <span className="font-semibold text-green-600">
