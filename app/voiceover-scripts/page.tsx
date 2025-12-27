@@ -466,10 +466,9 @@ export default function VoiceoverScriptsPage() {
           </div>
         )}
 
-        {/* Filtre Barı - Seslendirmen için gizle */}
-        {!isVoiceActor && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Filtre Barı */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Durum Filtresi */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

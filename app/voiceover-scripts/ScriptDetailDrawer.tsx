@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, Play, Pause, ExternalLink } from 'lucide-react'
+import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 
@@ -160,6 +160,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       return
     }
 
+    // Link format doğrulama
+    if (!audioFileLink.startsWith('http://') && !audioFileLink.startsWith('https://')) {
+      alert('Link http:// veya https:// ile başlamalıdır')
+      return
+    }
+
     setLoading(true)
     try {
       const res = await fetch(`/api/voiceover-scripts/${script.id}`, {
@@ -171,47 +177,45 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const data = await res.json()
 
       if (res.ok) {
-        alert('Ses dosyası başarıyla kaydedildi')
-        setShowAudioUpload(false)
+        alert('Ses linki başarıyla kaydedildi')
         onUpdate()
       } else {
-        alert(data.error || 'Ses dosyası kaydedilemedi')
+        alert(data.error || 'Ses linki kaydedilemedi')
       }
     } catch (error) {
       console.error('Error saving audio:', error)
-      alert('Ses dosyası kaydedilirken bir hata oluştu')
+      alert('Ses linki kaydedilirken bir hata oluştu')
     } finally {
       setLoading(false)
     }
   }
 
-  const handlePlayAudio = () => {
-    if (!script.audioFile) return
-
-    if (audioElement) {
-      if (isPlaying) {
-        audioElement.pause()
-        setIsPlaying(false)
-      } else {
-        audioElement.play()
-        setIsPlaying(true)
-      }
-    } else {
-      const audio = new Audio(script.audioFile)
-      audio.addEventListener('ended', () => setIsPlaying(false))
-      audio.addEventListener('pause', () => setIsPlaying(false))
-      audio.addEventListener('play', () => setIsPlaying(true))
-      setAudioElement(audio)
-      audio.play()
-      setIsPlaying(true)
+  const handlePay = async () => {
+    if (!confirm('Bu metnin ödemesini yapmak istediğinize emin misiniz?')) {
+      return
     }
-  }
 
-  const handleStopAudio = () => {
-    if (audioElement) {
-      audioElement.pause()
-      audioElement.currentTime = 0
-      setIsPlaying(false)
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert('Metin ödendi olarak işaretlendi')
+        onUpdate()
+        onClose()
+      } else {
+        alert(data.error || 'Ödeme işlemi başarısız')
+      }
+    } catch (error) {
+      console.error('Error paying script:', error)
+      alert('Ödeme işlemi sırasında bir hata oluştu')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -288,65 +292,15 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               />
             </div>
 
-            {/* Ses Dosyası */}
+            {/* Ses Linki */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
                 <Mic className="w-5 h-5 mr-2" />
-                Ses Dosyası
+                Ses Linki
               </h3>
-              {script.audioFile ? (
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={isPlaying ? handleStopAudio : handlePlayAudio}
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                    >
-                      {isPlaying ? (
-                        <Pause className="w-5 h-5" />
-                      ) : (
-                        <Play className="w-5 h-5" />
-                      )}
-                    </button>
-                    <a
-                      href={script.audioFile}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-800"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>Ses dosyasını aç</span>
-                    </a>
-                  </div>
-                  {isVoiceActor && (
-                    <button
-                      onClick={() => {
-                        setShowAudioUpload(true)
-                        setAudioFileLink(script.audioFile || '')
-                      }}
-                      className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 underline"
-                    >
-                      Ses Dosyasını Değiştir
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800 mb-2">Henüz ses dosyası yüklenmemiş</p>
-                  {isVoiceActor && (
-                    <button
-                      onClick={() => setShowAudioUpload(true)}
-                      className="text-sm text-indigo-600 hover:text-indigo-800 underline"
-                    >
-                      Ses Dosyası Yükle
-                    </button>
-                  )}
-                </div>
-              )}
-              
-              {/* Ses Yükleme Formu - Sadece seslendirmen için */}
-              {isVoiceActor && showAudioUpload && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 space-y-3">
-                  <label className="block text-sm font-medium text-gray-900">
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Google Drive Linki
                   </label>
                   <input
@@ -356,31 +310,39 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     placeholder="https://drive.google.com/file/d/..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                   />
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handleSaveAudio}
-                      disabled={loading || !audioFileLink.trim()}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Mic className="w-4 h-4 mr-2" />
-                      )}
-                      Kaydet
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAudioUpload(false)
-                        setAudioFileLink(script.audioFile || '')
-                      }}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      İptal
-                    </button>
-                  </div>
+                  {audioFileLink && !audioFileLink.startsWith('http://') && !audioFileLink.startsWith('https://') && (
+                    <p className="mt-1 text-sm text-red-600">Link http:// veya https:// ile başlamalıdır</p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">
+                    💡 Not: Google Drive linkinin "Herkesle paylaş" olarak ayarlandığından emin olun
+                  </p>
                 </div>
-              )}
+                <button
+                  onClick={handleSaveAudio}
+                  disabled={loading || !audioFileLink.trim() || (!audioFileLink.startsWith('http://') && !audioFileLink.startsWith('https://'))}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Linki Kaydet
+                </button>
+                {script.audioFile && (
+                  <div className="mt-2">
+                    <a
+                      href={script.audioFile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Mevcut linki aç
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Reddetme Nedeni */}
@@ -391,8 +353,8 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               </div>
             )}
 
-            {/* Fiyat Girişi (Onay için) - Sadece admin için */}
-            {!isVoiceActor && script.status === 'VOICE_UPLOADED' && (
+            {/* Fiyat Girişi (Onay için) */}
+            {script.status === 'VOICE_UPLOADED' && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Fiyat</h3>
                 <div className="flex items-center space-x-2">
@@ -465,6 +427,21 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     <XCircle className="w-4 h-4 mr-2" />
                   )}
                   Reddet
+                </button>
+              )}
+
+              {script.status === 'APPROVED' && (
+                <button
+                  onClick={handlePay}
+                  disabled={loading}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <DollarSign className="w-4 h-4 mr-2" />
+                  )}
+                  Ödendi İşaretle
                 </button>
               )}
 
