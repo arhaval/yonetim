@@ -303,8 +303,6 @@ export async function handleLogin(
     }
 
     // Return user data in the format expected by existing endpoints
-    const { NextResponse } = await import('next/server')
-    
     // Format response based on role
     switch (role) {
       case 'streamer':
