@@ -3,9 +3,10 @@
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2 } from 'lucide-react'
+import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2, Square, CheckSquare2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import { toast } from 'sonner'
 import ScriptDetailDrawer from './ScriptDetailDrawer'
 
 interface Script {
@@ -42,6 +43,15 @@ export default function VoiceoverScriptsPage() {
   const [selectedScript, setSelectedScript] = useState<Script | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [showApproveModal, setShowApproveModal] = useState(false)
+  const [approvePrice, setApprovePrice] = useState<number>(0)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  
   // Filtreler
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [voiceActorFilter, setVoiceActorFilter] = useState<string>('all')
@@ -55,6 +65,22 @@ export default function VoiceoverScriptsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const limit = 20
+
+  // User role yükle
+  useEffect(() => {
+    const loadUserRole = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'default' })
+        const data = await res.json()
+        if (res.ok && data.user) {
+          setUserRole(data.user.role)
+        }
+      } catch (error) {
+        console.error('Error loading user role:', error)
+      }
+    }
+    loadUserRole()
+  }, [])
 
   // Seslendirmenleri yükle
   useEffect(() => {
@@ -141,6 +167,97 @@ export default function VoiceoverScriptsPage() {
     }, 300)
   }
 
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedIds.size === scripts.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(scripts.map(s => s.id)))
+    }
+  }
+
+  const handleSelectScript = (scriptId: string) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(scriptId)) {
+      newSelected.delete(scriptId)
+    } else {
+      newSelected.add(scriptId)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const handleBulkAction = async (action: 'approve' | 'reject' | 'pay' | 'archive', reason?: string, price?: number) => {
+    if (selectedIds.size === 0) {
+      toast.error('Lütfen en az bir kayıt seçin')
+      return
+    }
+
+    setIsBulkActionLoading(true)
+
+    try {
+      const res = await fetch('/api/voiceover-scripts/bulk-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: Array.from(selectedIds),
+          action,
+          reason,
+          price,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        // Optimistic update
+        setScripts(prevScripts => {
+          return prevScripts.map(script => {
+            if (selectedIds.has(script.id)) {
+              switch (action) {
+                case 'approve':
+                  return { ...script, status: 'APPROVED' as const, price: price || script.price }
+                case 'reject':
+                  return { ...script, status: 'REJECTED' as const, rejectionReason: reason || null }
+                case 'pay':
+                  return { ...script, status: 'PAID' as const }
+                case 'archive':
+                  return { ...script, status: 'ARCHIVED' as const }
+                default:
+                  return script
+              }
+            }
+            return script
+          })
+        })
+
+        toast.success(data.message || `${selectedIds.size} kayıt başarıyla işlendi`)
+        setSelectedIds(new Set())
+        setShowRejectModal(false)
+        setShowApproveModal(false)
+        setRejectReason('')
+        setApprovePrice(0)
+        
+        // Listeyi yenile
+        setTimeout(() => {
+          loadScripts()
+        }, 500)
+      } else {
+        toast.error(data.error || 'İşlem başarısız oldu')
+        if (data.results?.failed && data.results.failed.length > 0) {
+          const failedMessages = data.results.failed.map((f: any) => `${f.id}: ${f.reason}`).join('\n')
+          toast.error(`Başarısız kayıtlar:\n${failedMessages}`)
+        }
+      }
+    } catch (error: any) {
+      console.error('Error performing bulk action:', error)
+      toast.error('İşlem sırasında bir hata oluştu')
+    } finally {
+      setIsBulkActionLoading(false)
+    }
+  }
+
+  const isAdminOrManager = userRole === 'admin' || userRole === 'manager'
+
   const getStatusBadge = (script: Script) => {
     const statusConfig = {
       WAITING_VOICE: {
@@ -217,6 +334,152 @@ export default function VoiceoverScriptsPage() {
             </Link>
           </div>
         </div>
+
+        {/* Bulk Action Bar */}
+        {isAdminOrManager && selectedIds.size > 0 && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-indigo-900">
+                  Seçili {selectedIds.size} kayıt
+                </span>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 underline"
+                >
+                  Seçimi Temizle
+                </button>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => setShowApproveModal(true)}
+                  disabled={isBulkActionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Onayla
+                </button>
+                <button
+                  onClick={() => setShowRejectModal(true)}
+                  disabled={isBulkActionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Reddet
+                </button>
+                <button
+                  onClick={() => handleBulkAction('pay')}
+                  disabled={isBulkActionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Ödendi İşaretle
+                </button>
+                <button
+                  onClick={() => handleBulkAction('archive')}
+                  disabled={isBulkActionLoading}
+                  className="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Archive className="w-4 h-4 mr-2" />
+                  Arşivle
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reject Modal */}
+        {showRejectModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowRejectModal(false)}></div>
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Reddetme Nedeni</h3>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Reddetme nedenini girin..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    rows={4}
+                  />
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    onClick={() => {
+                      if (rejectReason.trim()) {
+                        handleBulkAction('reject', rejectReason)
+                      } else {
+                        toast.error('Lütfen reddetme nedeni girin')
+                      }
+                    }}
+                    disabled={isBulkActionLoading || !rejectReason.trim()}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Reddet
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowRejectModal(false)
+                      setRejectReason('')
+                    }}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    İptal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Approve Modal */}
+        {showApproveModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={() => setShowApproveModal(false)}></div>
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Onaylama Ücreti</h3>
+                  <input
+                    type="number"
+                    value={approvePrice || ''}
+                    onChange={(e) => setApprovePrice(parseFloat(e.target.value) || 0)}
+                    placeholder="Ücret girin (₺)"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">Seçili {selectedIds.size} kayıt için aynı ücret uygulanacak</p>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    onClick={() => {
+                      if (approvePrice > 0) {
+                        handleBulkAction('approve', undefined, approvePrice)
+                      } else {
+                        toast.error('Lütfen geçerli bir ücret girin')
+                      }
+                    }}
+                    disabled={isBulkActionLoading || approvePrice <= 0}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Onayla
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowApproveModal(false)
+                      setApprovePrice(0)
+                    }}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    İptal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filtre Barı */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -335,6 +598,21 @@ export default function VoiceoverScriptsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    {isAdminOrManager && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <button
+                          onClick={handleSelectAll}
+                          className="flex items-center justify-center"
+                          title={selectedIds.size === scripts.length ? 'Tümünü kaldır' : 'Tümünü seç'}
+                        >
+                          {selectedIds.size === scripts.length ? (
+                            <CheckSquare2 className="w-5 h-5 text-indigo-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Durum
                     </th>
@@ -363,8 +641,25 @@ export default function VoiceoverScriptsPage() {
                     <tr
                       key={script.id}
                       onClick={() => handleRowClick(script)}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${selectedIds.has(script.id) ? 'bg-indigo-50' : ''}`}
                     >
+                      {isAdminOrManager && (
+                        <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleSelectScript(script.id)
+                            }}
+                            className="flex items-center justify-center"
+                          >
+                            {selectedIds.has(script.id) ? (
+                              <CheckSquare2 className="w-5 h-5 text-indigo-600" />
+                            ) : (
+                              <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                            )}
+                          </button>
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(script)}
                       </td>

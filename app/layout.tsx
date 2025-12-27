@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { DebugConsoleOverlay } from "@/lib/debug-console";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Arhaval Denetim Merkezi",
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body>
         {children}
         <DebugConsoleOverlay />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );
