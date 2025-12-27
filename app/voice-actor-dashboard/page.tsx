@@ -22,8 +22,7 @@ export default function VoiceActorDashboardPage() {
   const checkAuth = async () => {
     try {
       const res = await fetch('/api/voice-actor-auth/me', {
-        cache: 'force-cache', // Cache kullan
-        next: { revalidate: 60 }, // 60 saniye cache
+        cache: 'default', // Browser cache kullan
       })
       const data = await res.json()
 
@@ -43,8 +42,7 @@ export default function VoiceActorDashboardPage() {
   const loadScripts = async () => {
     try {
       const res = await fetch('/api/voice-actor/scripts', {
-        cache: 'force-cache',
-        next: { revalidate: 30 }, // 30 saniye cache
+        cache: 'default', // Browser cache kullan
       })
       const data = await res.json()
       if (res.ok) {
@@ -60,8 +58,7 @@ export default function VoiceActorDashboardPage() {
   const loadContents = async () => {
     try {
       const res = await fetch('/api/voice-actor/contents', {
-        cache: 'force-cache',
-        next: { revalidate: 30 }, // 30 saniye cache
+        cache: 'default', // Browser cache kullan
       })
       const data = await res.json()
       if (res.ok) {

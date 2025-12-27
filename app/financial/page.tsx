@@ -80,8 +80,8 @@ export default function FinancialPage() {
       })
 
       const [recordsRes, streamsRes] = await Promise.all([
-        fetch(`/api/financial?${params}`),
-        fetch(`/api/streams/list?${params}`),
+        fetch(`/api/financial?${params}`, { cache: 'default' }),
+        fetch(`/api/streams/list?${params}`, { cache: 'default' }),
       ])
 
       if (!recordsRes.ok || !streamsRes.ok) {

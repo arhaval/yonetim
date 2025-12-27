@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-export const dynamic = 'force-dynamic'
+// Cache GET requests for 30 seconds
+export const revalidate = 30
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,18 +52,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('Content list query:', JSON.stringify(whereClause, null, 2))
-
-    // Önce tüm içerikleri say (debug için)
-    const allContents = await prisma.content.findMany({
-      select: { id: true, platform: true, type: true, publishDate: true },
-    }).catch(() => [])
-    console.log(`Total contents in DB: ${allContents.length}`)
-    console.log('Sample contents:', allContents.slice(0, 5).map(c => ({ platform: c.platform, type: c.type })))
-
+    // Optimize edilmiş sorgu - sadece gerekli alanları çek
     const contents = await prisma.content.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        platform: true,
+        url: true,
+        publishDate: true,
+        views: true,
+        likes: true,
+        comments: true,
+        shares: true,
+        saves: true,
+        notes: true,
         creator: {
           select: {
             id: true,
@@ -71,12 +76,11 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { publishDate: 'desc' },
+      take: 500, // Limit to 500 for performance
     }).catch((err) => {
       console.error('Error fetching contents:', err)
       return []
     })
-
-    console.log(`Found ${contents.length} contents matching filters`)
 
     const stats = {
       total: contents.length,

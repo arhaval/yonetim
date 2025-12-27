@@ -36,7 +36,7 @@ export default function StreamerDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/streamer-auth/me')
+      const res = await fetch('/api/streamer-auth/me', { cache: 'default' })
       const data = await res.json()
 
       if (!data.streamer) {
@@ -55,7 +55,7 @@ export default function StreamerDashboardPage() {
 
   const loadStreams = async (streamerId: string) => {
     try {
-      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`)
+      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`, { cache: 'default' })
       const data = await res.json()
       if (res.ok) {
         setStreams(data)
@@ -72,7 +72,7 @@ export default function StreamerDashboardPage() {
 
   const loadPaymentInfo = async (streamerId: string) => {
     try {
-      const res = await fetch('/api/streamer/payments')
+      const res = await fetch('/api/streamer/payments', { cache: 'default' })
       const data = await res.json()
       if (res.ok) {
         setPaymentInfo(data)

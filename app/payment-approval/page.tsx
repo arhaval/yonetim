@@ -169,9 +169,8 @@ export default function PaymentApprovalPage() {
     setDataLoading(true)
     try {
       const url = `/api/payment-approval/${selectedPersonType}/${selectedPersonId}`
-      console.log('Fetching person data:', { selectedPersonType, selectedPersonId, url })
       
-      const res = await fetch(url)
+      const res = await fetch(url, { cache: 'default' })
       const data = await res.json()
       
       if (res.ok) {

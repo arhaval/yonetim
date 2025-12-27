@@ -60,7 +60,9 @@ export default function ReportsPage() {
         month: selectedMonth,
       })
 
-      const response = await fetch(`/api/reports?${params}`)
+      const response = await fetch(`/api/reports?${params}`, { 
+        cache: 'default'
+      })
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

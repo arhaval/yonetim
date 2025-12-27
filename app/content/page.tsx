@@ -236,28 +236,22 @@ export default function ContentPage() {
         // Tab -> Type dönüşümü: reels -> reel, post -> post, video -> video, shorts -> shorts
         const typeName = activeTab === 'post' ? 'post' : activeTab === 'reels' ? 'reel' : activeTab
         
-        console.log('Fetching content with filters:', {
-          platform: platformName,
-          type: typeName,
-          filter,
-          month: selectedMonth,
-        })
-        
         const params = new URLSearchParams({
           filter: filter,
           month: selectedMonth,
         })
         // Platform ve tip filtresini KALDIR - tüm içerikler gözüksün
         // Filtreleme sadece görsel olarak yapılacak (client-side)
-        const response = await fetch(`/api/content/list?${params}`)
+        // Cache ile fetch - browser cache kullan
+        const response = await fetch(`/api/content/list?${params}`, {
+          cache: 'default', // Browser cache kullan
+        })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         
         const data = await response.json()
-        
-        console.log('Fetched contents:', data.contents?.length || 0, 'items')
         
         // Güvenli array kontrolü
         const safeContents = Array.isArray(data.contents) ? data.contents : []
@@ -279,23 +273,6 @@ export default function ContentPage() {
     }
     
     fetchData()
-    
-    // Sayfa odağa geldiğinde de yenile (içerik eklendikten sonra)
-    const handleFocus = () => {
-      fetchData()
-    }
-    window.addEventListener('focus', handleFocus)
-    
-    // URL parametreleri değiştiğinde de yenile
-    const handlePopState = () => {
-      fetchData()
-    }
-    window.addEventListener('popstate', handlePopState)
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('popstate', handlePopState)
-    }
   }, [filter, selectedMonth, activeTab, selectedPlatform])
 
   const getMonthOptions = () => {

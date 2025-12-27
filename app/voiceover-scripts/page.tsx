@@ -7,16 +7,25 @@ import { tr } from 'date-fns/locale/tr'
 import AudioLink from './AudioLink'
 import ClearAudioButton from './ClearAudioButton'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// Cache for 30 seconds
+export const revalidate = 30
 
 export default async function VoiceoverScriptsPage() {
   let scripts: any[] = []
   
   try {
     scripts = await prisma.voiceoverScript.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        text: true,
+        status: true,
+        price: true,
+        audioFile: true,
+        contentType: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
         creator: {
           select: {
             id: true,
@@ -31,6 +40,7 @@ export default async function VoiceoverScriptsPage() {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 500, // Limit to 500 for performance
     })
     
     // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
