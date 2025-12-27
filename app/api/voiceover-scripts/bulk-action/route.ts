@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
               shouldUpdate = false
               break
             }
-            if (script.price <= 0) {
+            if (!script.price || script.price <= 0) {
               errorMessage = 'Metin için ücret girilmemiş'
               shouldUpdate = false
               break
