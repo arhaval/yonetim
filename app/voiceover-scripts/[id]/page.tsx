@@ -106,7 +106,7 @@ export default async function VoiceoverScriptDetailPage({
                   </Link>
                 </>
               )}
-              {script.price > 0 && (
+              {script.price && script.price > 0 && (
                 <>
                   <span>•</span>
                   <span className="flex items-center font-semibold text-green-600">

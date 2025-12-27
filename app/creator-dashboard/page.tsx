@@ -443,7 +443,7 @@ export default function CreatorDashboardPage() {
 
                           <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                             <span>{format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}</span>
-                            {script.price > 0 && (
+                            {script.price && script.price > 0 && (
                               <span className="font-semibold text-green-600">
                                 {script.price.toLocaleString('tr-TR', {
                                   style: 'currency',

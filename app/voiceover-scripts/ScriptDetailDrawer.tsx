@@ -388,7 +388,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 <DollarSign className="w-4 h-4" />
                 <span>
                   <span className="font-medium">Fiyat:</span>{' '}
-                  {script.price > 0
+                  {script.price && script.price > 0
                     ? script.price.toLocaleString('tr-TR', {
                         style: 'currency',
                         currency: 'TRY',
