@@ -237,7 +237,10 @@ export async function POST(request: NextRequest) {
       // Metinleri sırayla ödendi olarak işaretle
       for (const script of pendingScripts) {
         if (remainingAmount <= 0) break
-        
+
+        // price nullable olabilir, kontrol et
+        if (!script.price || script.price <= 0) continue
+
         if (remainingAmount >= script.price) {
           // Tam ödeme
           await prisma.voiceoverScript.update({
