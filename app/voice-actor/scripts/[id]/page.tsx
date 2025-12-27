@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, FileText, Upload, X, Download, CheckCircle, Clock, User, Calendar, DollarSign, Mic, Save } from 'lucide-react'
 import { format } from 'date-fns'
@@ -98,7 +98,8 @@ export default function VoiceActorScriptDetailPage() {
       console.log('Fetching script...')
       const res = await fetch(`/api/voiceover-scripts/${scriptId}`, {
         credentials: 'include',
-        cache: 'no-store',
+        cache: 'force-cache', // Cache kullan - daha hızlı
+        next: { revalidate: 30 }, // 30 saniye cache
       })
 
       console.log('Script response status:', res.status)

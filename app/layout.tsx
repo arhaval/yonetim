@@ -19,6 +19,10 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
+// Performance optimizations
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+      </head>
       <body>
         {children}
         <DebugConsoleOverlay />

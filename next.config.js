@@ -25,6 +25,13 @@ const nextConfig = {
   swcMinify: true,
   // Compression
   compress: true,
+  // Performance optimizations
+  poweredByHeader: false,
+  // Link prefetching - sayfa geçişlerini hızlandır
+  experimental: {
+    ...nextConfig.experimental,
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+  },
   // Production'da console.log'ları kaldır (performans için)
   // NOT: Debug modu için ?debug=1 parametresi ile console'lar görünebilir
   compiler: {
