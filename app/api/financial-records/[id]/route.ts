@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-check'
 import { createAuditLog } from '@/lib/audit-log'
-import { cookies } from 'next/headers'
 
 export async function DELETE(
   request: NextRequest,
@@ -48,29 +47,16 @@ export async function DELETE(
       where: { id },
     })
 
-    // Audit log kaydet
-    const cookieStore = await cookies()
-    const userId = cookieStore.get('user-id')?.value
-    if (userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, name: true, role: true },
-      })
-      if (user) {
-        await createAuditLog({
-          userId: user.id,
-          userName: user.name,
-          userRole: user.role,
-          action: 'financial_record_deleted',
-          entityType: 'FinancialRecord',
-          entityId: id,
-          oldValue: recordData,
-          details: {
-            deletedAt: new Date().toISOString(),
-          },
-        })
-      }
-    }
+    // Audit log kaydet (createAuditLog zaten cookies'i kendi içinde kullanıyor)
+    await createAuditLog({
+      action: 'financial_record_deleted',
+      entityType: 'FinancialRecord',
+      entityId: id,
+      oldValue: recordData,
+      details: {
+        deletedAt: new Date().toISOString(),
+      },
+    })
 
     return NextResponse.json({
       success: true,
