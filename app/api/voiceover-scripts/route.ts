@@ -105,10 +105,17 @@ export async function GET(request: NextRequest) {
         text: true,
         status: true,
         price: true,
-        audioFile: true,
+        audioFile: true, // Backward compatibility
+        voiceLink: true,
         contentType: true,
         notes: true,
         rejectionReason: true,
+        producerApproved: true,
+        producerApprovedAt: true,
+        producerApprovedBy: true,
+        adminApproved: true,
+        adminApprovedAt: true,
+        adminApprovedBy: true,
         createdAt: true,
         updatedAt: true,
         creator: {

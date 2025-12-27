@@ -34,13 +34,6 @@ export async function POST(
     const body = await request.json()
     const { price } = body
 
-    if (!price || price <= 0) {
-      return NextResponse.json(
-        { error: 'Geçerli bir ücret girin' },
-        { status: 400 }
-      )
-    }
-
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
       where: { id: params.id },
@@ -53,17 +46,19 @@ export async function POST(
       )
     }
 
-    if (!script.audioFile) {
+    // Kural 1: producerApproved = true olmalı
+    if (!script.producerApproved) {
       return NextResponse.json(
-        { error: 'Ses dosyası yüklenmemiş' },
+        { error: 'Admin onayı için önce producer (içerik üreticisi) onayı gereklidir.' },
         { status: 400 }
       )
     }
 
-    // Sadece VOICE_UPLOADED olanları onaylayabilir
-    if (script.status !== 'VOICE_UPLOADED') {
+    // Kural 2: price dolu olmalı
+    const finalPrice = price || script.price
+    if (!finalPrice || finalPrice <= 0) {
       return NextResponse.json(
-        { error: 'Bu metin ses yüklenmiş ve onay bekliyor durumunda olmalı' },
+        { error: 'Admin onayı için geçerli bir ücret girilmelidir.' },
         { status: 400 }
       )
     }
@@ -72,14 +67,20 @@ export async function POST(
     const oldValue = {
       status: script.status,
       price: script.price,
+      adminApproved: script.adminApproved,
+      adminApprovedAt: script.adminApprovedAt,
+      adminApprovedBy: script.adminApprovedBy,
     }
 
-    // Metni onayla ve ücreti güncelle
+    // Admin onayını ver ve ücreti güncelle
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id: params.id },
       data: {
         status: 'APPROVED',
-        price: price,
+        price: finalPrice,
+        adminApproved: true,
+        adminApprovedAt: new Date(),
+        adminApprovedBy: userId,
       },
       include: {
         voiceActor: true,
@@ -123,6 +124,9 @@ export async function POST(
       newValue: {
         status: updatedScript.status,
         price: updatedScript.price,
+        adminApproved: updatedScript.adminApproved,
+        adminApprovedAt: updatedScript.adminApprovedAt,
+        adminApprovedBy: updatedScript.adminApprovedBy,
       },
       details: {
         title: updatedScript.title,

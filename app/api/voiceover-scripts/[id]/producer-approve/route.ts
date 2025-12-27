@@ -3,12 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
 
-// İçerik üreticisi sesi onaylar
+// İçerik üreticisi (producer) ses linkini onaylar
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const { id } = await Promise.resolve(params)
     const cookieStore = await cookies()
     const creatorId = cookieStore.get('creator-id')?.value
 
@@ -21,7 +22,7 @@ export async function POST(
 
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!script) {
@@ -43,7 +44,7 @@ export async function POST(
     const voiceLink = script.voiceLink || script.audioFile // Backward compatibility
     if (!voiceLink) {
       return NextResponse.json(
-        { error: 'Ses linki henüz eklenmemiş. Producer onayı için ses linki gereklidir.' },
+        { error: 'Ses linki eklenmemiş. Producer onayı için ses linki gereklidir.' },
         { status: 400 }
       )
     }
@@ -56,20 +57,20 @@ export async function POST(
 
     // Eski değerleri kaydet (audit log için)
     const oldValue = {
-      status: script.status,
       producerApproved: script.producerApproved,
       producerApprovedAt: script.producerApprovedAt,
       producerApprovedBy: script.producerApprovedBy,
     }
 
-    // Producer onayını ver (status: VOICE_UPLOADED - ses linki var, admin onayı bekliyor)
+    // Producer onayını ver
     const updatedScript = await prisma.voiceoverScript.update({
-      where: { id: params.id },
+      where: { id },
       data: {
-        status: 'VOICE_UPLOADED',
         producerApproved: true,
         producerApprovedAt: new Date(),
-        producerApprovedBy: null, // Creator User tablosunda değil
+        producerApprovedBy: null, // Creator User tablosunda değil, ContentCreator tablosunda
+        // Status'u VOICE_UPLOADED yap (ses linki var, admin onayı bekliyor)
+        status: 'VOICE_UPLOADED',
       },
       include: {
         creator: {
@@ -89,33 +90,32 @@ export async function POST(
 
     // Audit log kaydet
     await createAuditLog({
-      userId: creator?.id,
-      userName: creator?.name,
-      userRole: 'creator',
-      action: 'script_creator_approved',
+      userId: creatorId,
+      userName: creator?.name || 'Unknown',
+      userRole: 'content_creator',
+      action: 'script_producer_approved',
       entityType: 'VoiceoverScript',
-      entityId: params.id,
+      entityId: id,
       oldValue,
       newValue: {
-        status: updatedScript.status,
+        producerApproved: updatedScript.producerApproved,
+        producerApprovedAt: updatedScript.producerApprovedAt,
+        producerApprovedBy: updatedScript.producerApprovedBy,
       },
       details: {
         title: updatedScript.title,
-        creatorId: updatedScript.creatorId,
-        creatorName: updatedScript.creator?.name,
-        voiceActorId: updatedScript.voiceActorId,
-        voiceActorName: updatedScript.voiceActor?.name,
+        voiceLink: voiceLink,
       },
     })
 
     return NextResponse.json({
-      message: 'Ses onaylandı, admin onayı bekleniyor',
+      message: 'Producer onayı başarıyla verildi',
       script: updatedScript,
     })
   } catch (error: any) {
-    console.error('Error approving script by creator:', error)
+    console.error('Error approving script as producer:', error)
     return NextResponse.json(
-      { error: error.message || 'Ses onaylanamadı' },
+      { error: error.message || 'Producer onayı verilemedi' },
       { status: 500 }
     )
   }

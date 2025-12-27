@@ -83,7 +83,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { audioFile, price, status, title, text, rejectionReason } = body
+    const { audioFile, voiceLink, price, status, title, text, rejectionReason } = body
 
     // Mevcut metni kontrol et
     const existingScript = await prisma.voiceoverScript.findUnique({
@@ -125,9 +125,16 @@ export async function PUT(
           { status: 403 }
         )
       }
-      if (audioFile !== undefined) {
-        updateData.audioFile = audioFile
+      // voiceLink veya audioFile (backward compatibility)
+      if (voiceLink !== undefined) {
+        updateData.voiceLink = voiceLink
         // Ses linki eklendiğinde status'u VOICE_UPLOADED yap
+        if (voiceLink && existingScript.status === 'WAITING_VOICE') {
+          updateData.status = 'VOICE_UPLOADED'
+        }
+      } else if (audioFile !== undefined) {
+        // Backward compatibility: audioFile -> voiceLink
+        updateData.voiceLink = audioFile
         if (audioFile && existingScript.status === 'WAITING_VOICE') {
           updateData.status = 'VOICE_UPLOADED'
         }

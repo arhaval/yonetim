@@ -177,11 +177,25 @@ model VoiceoverScript {
   voiceActorId String?
   voiceActor   VoiceActor? @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
   status       VoiceoverScriptStatus @default(WAITING_VOICE)
-  audioFile    String?
-  price        Float    @default(0)
+  audioFile    String?  // Deprecated - use voiceLink
+  voiceLink    String?  // Ses linki (Google Drive vb.)
+  price        Float?   // Nullable - admin onayından önce boş olabilir
   contentType  String?
   notes        String?
   rejectionReason String? // REJECTED durumunda neden reddedildiği
+  
+  // Producer (İçerik Üreticisi) Onayı
+  producerApproved   Boolean   @default(false)
+  producerApprovedAt DateTime?
+  producerApprovedBy String?
+  producerApprover   User?     @relation("ProducerApprover", fields: [producerApprovedBy], references: [id], onDelete: SetNull)
+  
+  // Admin Onayı
+  adminApproved   Boolean   @default(false)
+  adminApprovedAt DateTime?
+  adminApprovedBy String?
+  adminApprover   User?     @relation("AdminApprover", fields: [adminApprovedBy], references: [id], onDelete: SetNull)
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
