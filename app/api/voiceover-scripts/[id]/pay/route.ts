@@ -49,7 +49,7 @@ export async function POST(
       )
     }
 
-    if (script.status !== 'approved') {
+    if (script.status !== 'APPROVED') {
       return NextResponse.json(
         { error: 'Metin önce onaylanmalı' },
         { status: 400 }
@@ -67,7 +67,7 @@ export async function POST(
     await prisma.voiceoverScript.update({
       where: { id: params.id },
       data: {
-        status: 'paid',
+        status: 'PAID',
       },
     })
 

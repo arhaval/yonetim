@@ -47,10 +47,10 @@ export async function POST(
       )
     }
 
-    // Status pending olmalı (henüz creator onaylamamış)
-    if (script.status !== 'pending') {
+    // Status VOICE_UPLOADED olmalı (ses yüklenmiş, creator onayı bekliyor)
+    if (script.status !== 'VOICE_UPLOADED') {
       return NextResponse.json(
-        { error: 'Bu metin zaten işlenmiş' },
+        { error: 'Bu metin ses yüklenmiş durumunda olmalı' },
         { status: 400 }
       )
     }

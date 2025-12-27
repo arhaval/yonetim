@@ -60,10 +60,10 @@ export async function POST(
       )
     }
 
-    // Sadece creator-approved olanları onaylayabilir
-    if (script.status !== 'creator-approved') {
+    // Sadece VOICE_UPLOADED olanları onaylayabilir
+    if (script.status !== 'VOICE_UPLOADED') {
       return NextResponse.json(
-        { error: 'Bu metin içerik üreticisi tarafından henüz onaylanmamış' },
+        { error: 'Bu metin ses yüklenmiş ve onay bekliyor durumunda olmalı' },
         { status: 400 }
       )
     }
@@ -78,7 +78,7 @@ export async function POST(
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id: params.id },
       data: {
-        status: 'approved',
+        status: 'APPROVED',
         price: price,
       },
       include: {

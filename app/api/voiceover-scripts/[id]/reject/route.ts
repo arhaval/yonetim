@@ -3,13 +3,14 @@ import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
 
-// Metni arşivle (sadece admin)
+// Metni reddet (düzeltme iste)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const { id } = await Promise.resolve(params)
+    const resolvedParams = await Promise.resolve(params)
+    const { id } = resolvedParams
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
 
@@ -32,6 +33,9 @@ export async function POST(
       )
     }
 
+    const body = await request.json()
+    const { rejectionReason } = body
+
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
       where: { id },
@@ -47,13 +51,15 @@ export async function POST(
     // Eski değerleri kaydet (audit log için)
     const oldValue = {
       status: script.status,
+      rejectionReason: script.rejectionReason,
     }
 
-    // Metni arşivle
+    // Metni reddet
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id },
       data: {
-        status: 'ARCHIVED',
+        status: 'REJECTED',
+        rejectionReason: rejectionReason || null,
       },
       include: {
         creator: {
@@ -76,12 +82,13 @@ export async function POST(
       userId: user.id,
       userName: user.name,
       userRole: user.role,
-      action: 'script_archived',
+      action: 'script_rejected',
       entityType: 'VoiceoverScript',
       entityId: id,
       oldValue,
       newValue: {
         status: updatedScript.status,
+        rejectionReason: updatedScript.rejectionReason,
       },
       details: {
         title: updatedScript.title,
@@ -89,13 +96,13 @@ export async function POST(
     })
 
     return NextResponse.json({
-      message: 'Metin başarıyla arşivlendi',
+      message: 'Metin reddedildi',
       script: updatedScript,
     })
   } catch (error: any) {
-    console.error('Error archiving script:', error)
+    console.error('Error rejecting script:', error)
     return NextResponse.json(
-      { error: error.message || 'Metin arşivlenemedi' },
+      { error: error.message || 'Metin reddedilemedi' },
       { status: 500 }
     )
   }

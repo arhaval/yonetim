@@ -159,6 +159,15 @@ model VoiceActor {
   financialRecords FinancialRecord[]
 }
 
+enum VoiceoverScriptStatus {
+  WAITING_VOICE    // Ses bekleniyor
+  VOICE_UPLOADED   // Ses geldi - onay bekliyor
+  APPROVED         // Onaylandı
+  REJECTED         // Düzeltme istendi
+  PAID             // Ödemesi yapıldı
+  ARCHIVED         // Tamamlandı, aktif akıştan çıktı
+}
+
 model VoiceoverScript {
   id           String   @id @default(cuid())
   title        String
@@ -167,11 +176,12 @@ model VoiceoverScript {
   creator      ContentCreator? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   voiceActorId String?
   voiceActor   VoiceActor? @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
-  status       String   @default("pending") // pending, creator-approved, approved, paid
+  status       VoiceoverScriptStatus @default(WAITING_VOICE)
   audioFile    String?
   price        Float    @default(0)
   contentType  String?
   notes        String?
+  rejectionReason String? // REJECTED durumunda neden reddedildiği
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

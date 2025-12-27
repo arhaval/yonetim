@@ -124,7 +124,13 @@ export async function PUT(
           { status: 403 }
         )
       }
-      if (audioFile !== undefined) updateData.audioFile = audioFile
+      if (audioFile !== undefined) {
+        updateData.audioFile = audioFile
+        // Ses dosyası yüklendiğinde status'u VOICE_UPLOADED yap
+        if (audioFile && existingScript.status === 'WAITING_VOICE') {
+          updateData.status = 'VOICE_UPLOADED'
+        }
+      }
     }
 
     const script = await prisma.voiceoverScript.update({

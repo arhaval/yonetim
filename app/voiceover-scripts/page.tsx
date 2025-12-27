@@ -12,11 +12,12 @@ interface Script {
   id: string
   title: string
   text: string
-  status: string
+  status: 'WAITING_VOICE' | 'VOICE_UPLOADED' | 'APPROVED' | 'REJECTED' | 'PAID' | 'ARCHIVED'
   price: number
   audioFile: string | null
   contentType: string | null
   notes: string | null
+  rejectionReason: string | null
   createdAt: string
   updatedAt: string
   creator: {
@@ -47,6 +48,7 @@ export default function VoiceoverScriptsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [showArchived, setShowArchived] = useState(false)
   
   // Pagination
   const [page, setPage] = useState(1)
@@ -81,6 +83,10 @@ export default function VoiceoverScriptsPage() {
       
       if (statusFilter !== 'all') {
         params.append('status', statusFilter)
+      }
+      // ARCHIVED varsayılan olarak gösterilmez
+      if (!showArchived) {
+        params.append('excludeArchived', 'true')
       }
       if (voiceActorFilter !== 'all') {
         params.append('voiceActorId', voiceActorFilter)
@@ -136,69 +142,54 @@ export default function VoiceoverScriptsPage() {
   }
 
   const getStatusBadge = (script: Script) => {
-    // Ses yüklendi ama onaylanmadı
-    if (script.audioFile && script.status !== 'approved' && script.status !== 'paid') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          <Mic className="w-3 h-3 mr-1" />
-          Ses Yüklendi
-        </span>
-      )
+    const statusConfig = {
+      WAITING_VOICE: {
+        label: 'Ses Bekleniyor',
+        icon: FileText,
+        className: 'bg-yellow-100 text-yellow-800',
+      },
+      VOICE_UPLOADED: {
+        label: 'Ses Yüklendi',
+        icon: Mic,
+        className: 'bg-purple-100 text-purple-800',
+      },
+      APPROVED: {
+        label: 'Onaylandı',
+        icon: CheckCircle,
+        className: 'bg-blue-100 text-blue-800',
+      },
+      REJECTED: {
+        label: 'Reddedildi',
+        icon: XCircle,
+        className: 'bg-red-100 text-red-800',
+      },
+      PAID: {
+        label: 'Ödendi',
+        icon: CheckCircle,
+        className: 'bg-green-100 text-green-800',
+      },
+      ARCHIVED: {
+        label: 'Arşiv',
+        icon: Archive,
+        className: 'bg-gray-100 text-gray-800',
+      },
     }
-    
-    // Ses bekleniyor
-    if (script.status === 'pending' && !script.audioFile) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          <FileText className="w-3 h-3 mr-1" />
-          Ses Bekleniyor
-        </span>
-      )
+
+    const config = statusConfig[script.status] || {
+      label: script.status,
+      icon: FileText,
+      className: 'bg-gray-100 text-gray-800',
     }
-    
-    // Onaylandı
-    if (script.status === 'approved') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Onaylandı
-        </span>
-      )
-    }
-    
-    // Ödendi
-    if (script.status === 'paid') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Ödendi
-        </span>
-      )
-    }
-    
-    // Creator onayladı
-    if (script.status === 'creator-approved') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Creator Onayladı
-        </span>
-      )
-    }
-    
-    // Arşiv
-    if (script.status === 'archived') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          <Archive className="w-3 h-3 mr-1" />
-          Arşiv
-        </span>
-      )
-    }
-    
+
+    const Icon = config.icon
+
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-        {script.status}
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}
+        title={script.status === 'REJECTED' && script.rejectionReason ? script.rejectionReason : undefined}
+      >
+        <Icon className="w-3 h-3 mr-1" />
+        {config.label}
       </span>
     )
   }
@@ -241,11 +232,12 @@ export default function VoiceoverScriptsPage() {
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
               >
                 <option value="all">Tümü</option>
-                <option value="audio-uploaded">Ses Yüklendi</option>
-                <option value="pending">Ses Bekleniyor</option>
-                <option value="approved">Onaylandı</option>
-                <option value="paid">Ödendi</option>
-                <option value="archived">Arşiv</option>
+                <option value="VOICE_UPLOADED">Ses Yüklendi</option>
+                <option value="WAITING_VOICE">Ses Bekleniyor</option>
+                <option value="REJECTED">Reddedildi</option>
+                <option value="APPROVED">Onaylandı</option>
+                <option value="PAID">Ödendi</option>
+                {showArchived && <option value="ARCHIVED">Arşiv</option>}
               </select>
             </div>
 
@@ -310,6 +302,19 @@ export default function VoiceoverScriptsPage() {
                 />
               </div>
             </div>
+          </div>
+          {/* Arşiv Toggle */}
+          <div className="flex items-center mt-2">
+            <input
+              type="checkbox"
+              id="showArchived"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label htmlFor="showArchived" className="ml-2 text-sm text-gray-700">
+              Arşivlenmiş kayıtları göster
+            </label>
           </div>
         </div>
 

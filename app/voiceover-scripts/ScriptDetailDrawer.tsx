@@ -9,11 +9,12 @@ interface Script {
   id: string
   title: string
   text: string
-  status: string
+  status: 'WAITING_VOICE' | 'VOICE_UPLOADED' | 'APPROVED' | 'REJECTED' | 'PAID' | 'ARCHIVED'
   price: number
   audioFile: string | null
   contentType: string | null
   notes: string | null
+  rejectionReason: string | null
   createdAt: string
   updatedAt: string
   creator: {
@@ -290,8 +291,16 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               </div>
             )}
 
+            {/* Reddetme Nedeni */}
+            {script.status === 'REJECTED' && script.rejectionReason && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-red-900 mb-1">Reddetme Nedeni</h3>
+                <p className="text-sm text-red-800">{script.rejectionReason}</p>
+              </div>
+            )}
+
             {/* Fiyat Girişi (Onay için) */}
-            {script.status === 'creator-approved' && (
+            {script.status === 'VOICE_UPLOADED' && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Fiyat</h3>
                 <div className="flex items-center space-x-2">
@@ -337,7 +346,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           {/* Footer - Aksiyon Butonları */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex flex-wrap gap-3">
-              {script.status === 'creator-approved' && (
+              {script.status === 'VOICE_UPLOADED' && (
                 <button
                   onClick={handleApprove}
                   disabled={loading || price <= 0}
@@ -352,7 +361,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </button>
               )}
               
-              {script.status !== 'pending' && script.status !== 'archived' && (
+              {(script.status === 'VOICE_UPLOADED' || script.status === 'APPROVED') && (
                 <button
                   onClick={handleReject}
                   disabled={loading}
@@ -367,7 +376,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </button>
               )}
 
-              {script.status !== 'archived' && (
+              {script.status !== 'ARCHIVED' && (
                 <button
                   onClick={handleArchive}
                   disabled={loading}

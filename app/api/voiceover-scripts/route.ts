@@ -39,24 +39,27 @@ export async function GET(request: NextRequest) {
       whereClause.creatorId = creatorId
     }
 
+    // ARCHIVED varsayılan olarak gösterilmez
+    if (excludeArchived) {
+      whereClause.status = { not: 'ARCHIVED' }
+    }
+
     // Durum filtresi
-    if (statusFilter) {
-      if (statusFilter === 'audio-uploaded') {
-        // Ses yüklendi ama onaylanmadı
-        whereClause.audioFile = { not: null }
-        whereClause.status = { notIn: ['approved', 'paid'] }
-      } else if (statusFilter === 'pending') {
-        // Ses bekleniyor
-        whereClause.status = 'pending'
-        whereClause.audioFile = null
-      } else if (statusFilter === 'approved') {
-        whereClause.status = 'approved'
-      } else if (statusFilter === 'paid') {
-        whereClause.status = 'paid'
-      } else if (statusFilter === 'archived') {
-        whereClause.status = 'archived'
+    if (statusFilter && statusFilter !== 'all') {
+      if (statusFilter === 'VOICE_UPLOADED') {
+        whereClause.status = 'VOICE_UPLOADED'
+      } else if (statusFilter === 'WAITING_VOICE') {
+        whereClause.status = 'WAITING_VOICE'
+      } else if (statusFilter === 'APPROVED') {
+        whereClause.status = 'APPROVED'
+      } else if (statusFilter === 'REJECTED') {
+        whereClause.status = 'REJECTED'
+      } else if (statusFilter === 'PAID') {
+        whereClause.status = 'PAID'
+      } else if (statusFilter === 'ARCHIVED') {
+        whereClause.status = 'ARCHIVED'
       } else {
-        whereClause.status = statusFilter
+        whereClause.status = statusFilter as any
       }
     }
 
@@ -99,6 +102,7 @@ export async function GET(request: NextRequest) {
         audioFile: true,
         contentType: true,
         notes: true,
+        rejectionReason: true,
         createdAt: true,
         updatedAt: true,
         creator: {
@@ -119,29 +123,23 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Client-side'da özel sıralama yapacağız (Prisma'da karmaşık olduğu için)
+    // Özel sıralama: VOICE_UPLOADED → WAITING_VOICE → REJECTED → APPROVED → PAID
+    const statusOrder: Record<string, number> = {
+      'VOICE_UPLOADED': 1,
+      'WAITING_VOICE': 2,
+      'REJECTED': 3,
+      'APPROVED': 4,
+      'PAID': 5,
+      'ARCHIVED': 6,
+    }
+
     const sortedScripts = scripts.sort((a, b) => {
-      // 1. Ses yüklendi ama onaylanmadı (en üstte)
-      const aHasAudioNotApproved = a.audioFile && a.status !== 'approved' && a.status !== 'paid'
-      const bHasAudioNotApproved = b.audioFile && b.status !== 'approved' && b.status !== 'paid'
+      const aOrder = statusOrder[a.status] || 99
+      const bOrder = statusOrder[b.status] || 99
       
-      if (aHasAudioNotApproved && !bHasAudioNotApproved) return -1
-      if (!aHasAudioNotApproved && bHasAudioNotApproved) return 1
-
-      // 2. Ses bekleniyor
-      const aIsPending = a.status === 'pending' && !a.audioFile
-      const bIsPending = b.status === 'pending' && !b.audioFile
-      
-      if (aIsPending && !bIsPending) return -1
-      if (!aIsPending && bIsPending) return 1
-
-      // 3. Onaylandı
-      if (a.status === 'approved' && b.status !== 'approved') return -1
-      if (a.status !== 'approved' && b.status === 'approved') return 1
-
-      // 4. Ödendi
-      if (a.status === 'paid' && b.status !== 'paid') return -1
-      if (a.status !== 'paid' && b.status === 'paid') return 1
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder
+      }
 
       // Aynı durumda, tarihe göre (en yeni üstte)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

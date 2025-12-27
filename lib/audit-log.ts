@@ -20,6 +20,7 @@ export type AuditAction =
   | 'script_paid'
   | 'script_assigned'
   | 'script_archived'
+  | 'script_rejected'
   | 'stream_created'
   | 'stream_updated'
   | 'stream_deleted'
