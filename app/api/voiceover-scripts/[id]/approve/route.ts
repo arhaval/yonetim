@@ -123,16 +123,20 @@ export async function POST(
     // Finansal kayıt oluştur (gider olarak) - Sadece voice actor için
     // Creator maaş alıyor, script ücretinden pay almıyor
     let financialRecordId = null
-    if (updatedScript.voiceActorId) {
+    if (updatedScript.voiceActorId && finalPrice > 0) {
       try {
+        const now = new Date()
         const financialRecord = await prisma.financialRecord.create({
           data: {
             type: 'expense',
             category: 'voiceover',
-            amount: price,
+            amount: finalPrice,
             description: `Seslendirme: ${updatedScript.title} - ${updatedScript.voiceActor?.name || 'Bilinmeyen'}`,
-            date: new Date(),
-            voiceActorId: updatedScript.voiceActorId || null,
+            date: now,
+            occurredAt: now,
+            entryType: 'expense',
+            direction: 'OUT',
+            voiceActorId: updatedScript.voiceActorId,
             // contentCreatorId kaldırıldı - creator maaş alıyor
           },
         })
@@ -140,6 +144,7 @@ export async function POST(
         console.log('Finansal kayıt oluşturuldu:', financialRecord)
       } catch (financialError: any) {
         console.error('Finansal kayıt oluşturma hatası:', financialError)
+        console.error('Hata detayı:', JSON.stringify(financialError, null, 2))
         // Finansal kayıt oluşturulamasa bile metin onaylanmış olarak kalmalı
       }
     }
