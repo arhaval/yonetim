@@ -114,6 +114,15 @@ export default function VoiceoverScriptsPage() {
       if (hasAudioLinkFilter !== 'all') {
         params.append('hasAudioLink', hasAudioLinkFilter)
       }
+      if (producerApprovedFilter !== 'all') {
+        params.append('producerApproved', producerApprovedFilter)
+      }
+      if (adminApprovedFilter !== 'all') {
+        params.append('adminApproved', adminApprovedFilter)
+      }
+      if (hasPriceFilter !== 'all') {
+        params.append('hasPrice', hasPriceFilter)
+      }
       if (searchQuery) {
         params.append('search', searchQuery)
       }
@@ -561,6 +570,71 @@ export default function VoiceoverScriptsPage() {
               </div>
             </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            {/* Ses Linki Durumu */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ses Linki
+              </label>
+              <select
+                value={hasAudioLinkFilter}
+                onChange={(e) => setHasAudioLinkFilter(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              >
+                <option value="all">Tümü</option>
+                <option value="true">Var</option>
+                <option value="false">Yok</option>
+              </select>
+            </div>
+
+            {/* Üretici Onayı Filtresi */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Üretici Onayı
+              </label>
+              <select
+                value={producerApprovedFilter}
+                onChange={(e) => setProducerApprovedFilter(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              >
+                <option value="all">Tümü</option>
+                <option value="true">Onaylı</option>
+                <option value="false">Onaysız</option>
+              </select>
+            </div>
+
+            {/* Admin Onayı Filtresi */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Admin Onayı
+              </label>
+              <select
+                value={adminApprovedFilter}
+                onChange={(e) => setAdminApprovedFilter(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              >
+                <option value="all">Tümü</option>
+                <option value="true">Onaylı</option>
+                <option value="false">Onaysız</option>
+              </select>
+            </div>
+
+            {/* Fiyat Filtresi */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fiyat
+              </label>
+              <select
+                value={hasPriceFilter}
+                onChange={(e) => setHasPriceFilter(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              >
+                <option value="all">Tümü</option>
+                <option value="true">Var</option>
+                <option value="false">Yok</option>
+              </select>
+            </div>
+          </div>
           {/* Arşiv Toggle */}
           <div className="flex items-center mt-2">
             <input
@@ -622,10 +696,16 @@ export default function VoiceoverScriptsPage() {
                       Ses Linki
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tarih
+                      Üretici Onayı
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Admin Onayı
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Fiyat
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Metin Tarihi
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Aksiyonlar
@@ -682,18 +762,51 @@ export default function VoiceoverScriptsPage() {
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
-                            Link Var
+                            Var
                           </a>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Link Yok
+                            Yok
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
-                          {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
-                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          script.producerApproved 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {script.producerApproved ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Onaylı
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Onaysız
+                            </>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          script.adminApproved 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {script.adminApproved ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Onaylı
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Onaysız
+                            </>
+                          )}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
@@ -702,7 +815,12 @@ export default function VoiceoverScriptsPage() {
                                 style: 'currency',
                                 currency: 'TRY',
                               })
-                            : '-'}
+                            : '—'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
