@@ -117,7 +117,7 @@ export async function PUT(
       if (rejectionReason !== undefined) updateData.rejectionReason = rejectionReason
     }
 
-    // Seslendirmen sadece ses dosyası yükleyebilir
+    // Seslendirmen sadece ses linki ekleyebilir/güncelleyebilir
     if (voiceActorId) {
       if (existingScript.voiceActorId !== voiceActorId) {
         return NextResponse.json(
@@ -127,7 +127,7 @@ export async function PUT(
       }
       if (audioFile !== undefined) {
         updateData.audioFile = audioFile
-        // Ses dosyası yüklendiğinde status'u VOICE_UPLOADED yap
+        // Ses linki eklendiğinde status'u VOICE_UPLOADED yap
         if (audioFile && existingScript.status === 'WAITING_VOICE') {
           updateData.status = 'VOICE_UPLOADED'
         }

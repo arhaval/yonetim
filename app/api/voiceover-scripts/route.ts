@@ -126,29 +126,7 @@ export async function GET(request: NextRequest) {
       },
       skip,
       take: limit,
-      orderBy: { createdAt: 'desc' },
-    })
-
-    // Özel sıralama: VOICE_UPLOADED → WAITING_VOICE → REJECTED → APPROVED → PAID
-    const statusOrder: Record<string, number> = {
-      'VOICE_UPLOADED': 1,
-      'WAITING_VOICE': 2,
-      'REJECTED': 3,
-      'APPROVED': 4,
-      'PAID': 5,
-      'ARCHIVED': 6,
-    }
-
-    const sortedScripts = scripts.sort((a, b) => {
-      const aOrder = statusOrder[a.status] || 99
-      const bOrder = statusOrder[b.status] || 99
-      
-      if (aOrder !== bOrder) {
-        return aOrder - bOrder
-      }
-
-      // Aynı durumda, tarihe göre (en yeni üstte)
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      orderBy: { createdAt: 'desc' }, // İçerik üreticisinin metni yüklediği tarih (createdAt) bazlı
     })
 
     return NextResponse.json({
