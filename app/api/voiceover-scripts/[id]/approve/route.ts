@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
+import { generateEditPackToken } from '@/lib/edit-pack-token'
 
 // Admin metni onaylar ve ücreti girer
 export async function POST(
@@ -83,10 +84,41 @@ export async function POST(
         adminApprovedBy: userId,
       },
       include: {
-        voiceActor: true,
-        creator: true,
+        creator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
+
+    // EditPack oluştur (idempotent - varsa tekrar oluşturma)
+    const existingEditPack = await prisma.editPack.findUnique({
+      where: { voiceoverId: params.id },
+    })
+
+    if (!existingEditPack) {
+      const token = generateEditPackToken()
+      const createdAt = new Date()
+      const expiresAt = new Date(createdAt)
+      expiresAt.setDate(expiresAt.getDate() + 7) // +7 gün
+
+      await prisma.editPack.create({
+        data: {
+          voiceoverId: params.id,
+          token,
+          createdAt,
+          expiresAt,
+        },
+      })
+    }
 
     // Finansal kayıt oluştur (gider olarak) - Sadece voice actor için
     // Creator maaş alıyor, script ücretinden pay almıyor
