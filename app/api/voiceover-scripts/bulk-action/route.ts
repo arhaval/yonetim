@@ -136,8 +136,6 @@ export async function POST(request: NextRequest) {
               shouldUpdate = false
               break
             }
-            // script.price null kontrolü yukarıda yapıldı, burada kesinlikle number
-            const scriptPrice = script.price
             updateData = {
               status: 'PAID',
             }
