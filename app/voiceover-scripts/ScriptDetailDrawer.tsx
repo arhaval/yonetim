@@ -71,22 +71,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       setIsCreator(true)
     }
 
-    // Admin kontrolü
-    if (userId) {
-      fetch('/api/user/me')
-        .then(res => res.json())
-        .then(data => {
-          if (data.role === 'admin') {
-            setIsAdmin(true)
-          }
-          setRoleLoading(false)
-        })
-        .catch(() => {
-          setRoleLoading(false)
-        })
-    } else {
-      setRoleLoading(false)
+    // Admin kontrolü - cookie'den user-role kontrolü
+    const userRole = getCookie('user-role')
+    if (userRole === 'admin') {
+      setIsAdmin(true)
     }
+    setRoleLoading(false)
   }, [script.creator?.id])
 
   // Script güncellendiğinde state'i güncelle
