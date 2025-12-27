@@ -84,9 +84,9 @@ export default async function TeamMemberDetailPage({
       .filter(s => s.status === 'PAID')
       .reduce((sum, s) => sum + (s.price || 0), 0)
     
-    // Ödenmemiş metinler için toplam ücret (onaylanmış veya ses dosyası yüklenmiş pending olanlar)
+    // Ödenmemiş metinler için toplam ücret (onaylanmış veya ses dosyası yüklenmiş olanlar)
     const unpaidScripts = scripts.filter(s => 
-      s.status === 'approved' || (s.status === 'pending' && s.audioFile)
+      s.status === 'APPROVED' || s.status === 'VOICE_UPLOADED'
     )
     totalUnpaid = unpaidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
     
