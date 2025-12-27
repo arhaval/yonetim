@@ -21,7 +21,10 @@ export default function VoiceActorDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/voice-actor-auth/me')
+      const res = await fetch('/api/voice-actor-auth/me', {
+        cache: 'force-cache', // Cache kullan
+        next: { revalidate: 60 }, // 60 saniye cache
+      })
       const data = await res.json()
 
       if (!data.voiceActor) {
@@ -30,8 +33,8 @@ export default function VoiceActorDashboardPage() {
       }
 
       setVoiceActor(data.voiceActor)
-      loadScripts()
-      loadContents()
+      // Paralel yükleme - daha hızlı
+      Promise.all([loadScripts(), loadContents()])
     } catch (error) {
       router.push('/voice-actor-login')
     }
@@ -39,7 +42,10 @@ export default function VoiceActorDashboardPage() {
 
   const loadScripts = async () => {
     try {
-      const res = await fetch('/api/voice-actor/scripts')
+      const res = await fetch('/api/voice-actor/scripts', {
+        cache: 'force-cache',
+        next: { revalidate: 30 }, // 30 saniye cache
+      })
       const data = await res.json()
       if (res.ok) {
         setScripts(data)
@@ -53,7 +59,10 @@ export default function VoiceActorDashboardPage() {
 
   const loadContents = async () => {
     try {
-      const res = await fetch('/api/voice-actor/contents')
+      const res = await fetch('/api/voice-actor/contents', {
+        cache: 'force-cache',
+        next: { revalidate: 30 }, // 30 saniye cache
+      })
       const data = await res.json()
       if (res.ok) {
         setContents(data)
