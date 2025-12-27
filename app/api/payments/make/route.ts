@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { createAuditLog } from '@/lib/audit-log'
 
 // Kısmi veya tam ödeme yap
 export async function POST(request: NextRequest) {
@@ -75,8 +76,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Streamer bilgisini al (audit log için)
+      const streamer = await prisma.streamer.findUnique({
+        where: { id: streamerId },
+        select: { name: true },
+      })
+
       // Payment kaydı oluştur
-      await prisma.payment.create({
+      const payment = await prisma.payment.create({
         data: {
           streamerId,
           amount: amount,
@@ -88,7 +95,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Finansal kayıt oluştur (gider olarak)
-      await prisma.financialRecord.create({
+      const financialRecord = await prisma.financialRecord.create({
         data: {
           type: 'expense',
           category: 'salary',
@@ -96,6 +103,26 @@ export async function POST(request: NextRequest) {
           description: note || `${month} ayı yayıncı ödemesi`,
           date: paidAt ? new Date(paidAt) : new Date(),
           streamerId: streamerId,
+        },
+      })
+
+      // Audit log kaydet
+      await createAuditLog({
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,
+        action: 'payment_created',
+        entityType: 'Payment',
+        entityId: payment.id,
+        details: {
+          type: 'streamer',
+          streamerId,
+          streamerName: streamer?.name,
+          amount,
+          month,
+          note,
+          paidAt: paidAt || new Date().toISOString(),
+          financialRecordId: financialRecord.id,
         },
       })
     } else if (type === 'team' && teamPaymentId) {
@@ -138,6 +165,12 @@ export async function POST(request: NextRequest) {
         })
       }
 
+      // Team member bilgisini al (audit log için)
+      const teamMember = await prisma.teamMember.findUnique({
+        where: { id: teamPayment.teamMemberId },
+        select: { name: true },
+      })
+
       // Finansal kayıt oluştur (gider olarak)
       const financialRecord = await prisma.financialRecord.create({
         data: {
@@ -154,6 +187,26 @@ export async function POST(request: NextRequest) {
         id: financialRecord.id,
         amount: financialRecord.amount,
         date: financialRecord.date,
+      })
+
+      // Audit log kaydet
+      await createAuditLog({
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,
+        action: 'payment_created',
+        entityType: 'TeamPayment',
+        entityId: teamPaymentId,
+        details: {
+          type: 'team',
+          teamMemberId: teamPayment.teamMemberId,
+          teamMemberName: teamMember?.name,
+          amount,
+          period: teamPayment.period,
+          note,
+          paidAt: paymentDate.toISOString(),
+          financialRecordId: financialRecord.id,
+        },
       })
     } else if (type === 'voice-actors' && voiceActorId) {
       // Seslendirmen ödemesi
@@ -198,8 +251,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Voice actor bilgisini al (audit log için)
+      const voiceActor = await prisma.voiceActor.findUnique({
+        where: { id: voiceActorId },
+        select: { name: true },
+      })
+
       // Finansal kayıt oluştur (gider olarak)
-      await prisma.financialRecord.create({
+      const financialRecord = await prisma.financialRecord.create({
         data: {
           type: 'expense',
           category: 'voiceover',
@@ -207,6 +266,27 @@ export async function POST(request: NextRequest) {
           description: note || `${month} ayı seslendirme ödemesi`,
           date: paidAt ? new Date(paidAt) : new Date(),
           voiceActorId: voiceActorId,
+        },
+      })
+
+      // Audit log kaydet
+      await createAuditLog({
+        userId: user.id,
+        userName: user.name,
+        userRole: user.role,
+        action: 'payment_created',
+        entityType: 'VoiceActorPayment',
+        entityId: voiceActorId,
+        details: {
+          type: 'voice-actor',
+          voiceActorId,
+          voiceActorName: voiceActor?.name,
+          amount,
+          month,
+          note,
+          paidAt: paidAt || new Date().toISOString(),
+          financialRecordId: financialRecord.id,
+          paidScripts: pendingScripts.filter(s => remainingAmount >= s.price).map(s => s.id),
         },
       })
     } else {

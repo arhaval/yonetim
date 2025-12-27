@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse, format } from 'date-fns'
+import { createAuditLog } from '@/lib/audit-log'
+import { cookies } from 'next/headers'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
@@ -265,6 +267,37 @@ export async function POST(request: NextRequest) {
         voiceActorId: record.voiceActorId,
         date: record.date,
       })
+
+      // Audit log kaydet
+      const cookieStore = await cookies()
+      const userId = cookieStore.get('user-id')?.value
+      if (userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, name: true, role: true },
+        })
+        if (user) {
+          await createAuditLog({
+            userId: user.id,
+            userName: user.name,
+            userRole: user.role,
+            action: 'financial_record_created',
+            entityType: 'FinancialRecord',
+            entityId: record.id,
+            details: {
+              type: record.type,
+              category: record.category,
+              amount: record.amount,
+              date: record.date.toISOString(),
+              description: record.description,
+              streamerId: record.streamerId,
+              teamMemberId: record.teamMemberId,
+              contentCreatorId: record.contentCreatorId,
+              voiceActorId: record.voiceActorId,
+            },
+          })
+        }
+      }
       
       // Eğer streamerId varsa, streamer'ın profil sayfasını revalidate et
       if (record.streamerId) {

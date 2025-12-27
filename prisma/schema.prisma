@@ -342,3 +342,26 @@ model SocialMediaStats {
 
   @@unique([month, week, platform])
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  // İşlemi yapan kullanıcı ID'si (User, Streamer, Creator, vb.)
+  userName    String?  // İşlemi yapan kullanıcı adı (hızlı erişim için)
+  userRole    String?  // Kullanıcı rolü (admin, streamer, creator, vb.)
+  action      String   // Yapılan işlem (payment_created, record_deleted, vb.)
+  entityType  String?  // Hangi tablo (Payment, FinancialRecord, Stream, vb.)
+  entityId    String?  // İlgili kayıt ID'si
+  oldValue    String?  // Eski değer (JSON string - güncelleme için)
+  newValue    String?  // Yeni değer (JSON string - güncelleme için)
+  details     String?  // Detaylı bilgi (JSON string)
+  ipAddress   String?  // IP adresi (güvenlik için)
+  userAgent   String?  // Tarayıcı bilgisi
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([userRole])
+}

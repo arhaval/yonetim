@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { createAuditLog } from '@/lib/audit-log'
 
 // Admin metni onaylar ve ücreti girer
 export async function POST(
@@ -67,6 +68,12 @@ export async function POST(
       )
     }
 
+    // Eski değerleri kaydet (audit log için)
+    const oldValue = {
+      status: script.status,
+      price: script.price,
+    }
+
     // Metni onayla ve ücreti güncelle
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id: params.id },
@@ -76,10 +83,12 @@ export async function POST(
       },
       include: {
         voiceActor: true,
+        creator: true,
       },
     })
 
     // Finansal kayıt oluştur (gider olarak)
+    let financialRecordId = null
     if (updatedScript.voiceActorId) {
       try {
         const financialRecord = await prisma.financialRecord.create({
@@ -93,12 +102,36 @@ export async function POST(
             contentCreatorId: updatedScript.creatorId || null,
           },
         })
+        financialRecordId = financialRecord.id
         console.log('Finansal kayıt oluşturuldu:', financialRecord)
       } catch (financialError: any) {
         console.error('Finansal kayıt oluşturma hatası:', financialError)
         // Finansal kayıt oluşturulamasa bile metin onaylanmış olarak kalmalı
       }
     }
+
+    // Audit log kaydet
+    await createAuditLog({
+      userId: user.id,
+      userName: user.name,
+      userRole: user.role,
+      action: 'script_approved',
+      entityType: 'VoiceoverScript',
+      entityId: params.id,
+      oldValue,
+      newValue: {
+        status: updatedScript.status,
+        price: updatedScript.price,
+      },
+      details: {
+        title: updatedScript.title,
+        voiceActorId: updatedScript.voiceActorId,
+        voiceActorName: updatedScript.voiceActor?.name,
+        creatorId: updatedScript.creatorId,
+        creatorName: updatedScript.creator?.name,
+        financialRecordId,
+      },
+    })
 
     return NextResponse.json({
       message: 'Metin başarıyla onaylandı ve finansal kayıt oluşturuldu',

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { createAuditLog } from '@/lib/audit-log'
 
 // İçerik üreticisi sesi onaylar
 export async function POST(
@@ -54,6 +55,17 @@ export async function POST(
       )
     }
 
+    // Creator bilgisini al (audit log için)
+    const creator = await prisma.contentCreator.findUnique({
+      where: { id: creatorId },
+      select: { id: true, name: true },
+    })
+
+    // Eski değerleri kaydet (audit log için)
+    const oldValue = {
+      status: script.status,
+    }
+
     // Creator onayını ver (status: creator-approved)
     const updatedScript = await prisma.voiceoverScript.update({
       where: { id: params.id },
@@ -73,6 +85,27 @@ export async function POST(
             name: true,
           },
         },
+      },
+    })
+
+    // Audit log kaydet
+    await createAuditLog({
+      userId: creator?.id,
+      userName: creator?.name,
+      userRole: 'creator',
+      action: 'script_creator_approved',
+      entityType: 'VoiceoverScript',
+      entityId: params.id,
+      oldValue,
+      newValue: {
+        status: updatedScript.status,
+      },
+      details: {
+        title: updatedScript.title,
+        creatorId: updatedScript.creatorId,
+        creatorName: updatedScript.creator?.name,
+        voiceActorId: updatedScript.voiceActorId,
+        voiceActorName: updatedScript.voiceActor?.name,
       },
     })
 
