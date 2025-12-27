@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink, AlertCircle } from 'lucide-react'
+import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink, AlertCircle, Copy, Plus, Trash2, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
@@ -49,6 +49,22 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   const [notes, setNotes] = useState(script.notes || '')
   const [audioFileLink, setAudioFileLink] = useState(script.voiceLink || script.audioFile || '')
   
+  // EditPack state
+  const [editPack, setEditPack] = useState<{
+    id: string
+    token: string
+    editorNotes: string | null
+    assetsLinks: Array<{ label: string; url: string }> | null
+    createdAt: string
+    expiresAt: string
+  } | null>(null)
+  const [editPackLoading, setEditPackLoading] = useState(false)
+  const [editorNotes, setEditorNotes] = useState('')
+  const [assetsLinks, setAssetsLinks] = useState<Array<{ label: string; url: string }>>([])
+  const [newAssetLabel, setNewAssetLabel] = useState('')
+  const [newAssetUrl, setNewAssetUrl] = useState('')
+  const [editingAssetIndex, setEditingAssetIndex] = useState<number | null>(null)
+  
   // Rol kontrolü
   const [isCreator, setIsCreator] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -85,6 +101,135 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     setAdminPrice(script.price || 0)
     setAudioFileLink(script.voiceLink || script.audioFile || '')
   }, [script])
+
+  // EditPack yükle
+  useEffect(() => {
+    if (script.adminApproved && isOpen) {
+      loadEditPack()
+    }
+  }, [script.id, script.adminApproved, isOpen])
+
+  const loadEditPack = async () => {
+    setEditPackLoading(true)
+    try {
+      const res = await fetch(`/api/edit-pack/${script.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setEditPack(data.editPack)
+        setEditorNotes(data.editPack.editorNotes || '')
+        setAssetsLinks(data.editPack.assetsLinks || [])
+      } else if (res.status === 404) {
+        // EditPack yok, bu normal
+        setEditPack(null)
+      }
+    } catch (error) {
+      console.error('Error loading EditPack:', error)
+    } finally {
+      setEditPackLoading(false)
+    }
+  }
+
+  const handleCreateEditPack = async () => {
+    if (!script.adminApproved) {
+      toast.error('Admin onayı olmadan EditPack oluşturulamaz')
+      return
+    }
+
+    setEditPackLoading(true)
+    try {
+      const res = await fetch(`/api/edit-pack/${script.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ editorNotes: '', assetsLinks: [] }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setEditPack(data.editPack)
+        toast.success('EditPack oluşturuldu')
+      } else {
+        const errorData = await res.json()
+        toast.error(errorData.error || 'EditPack oluşturulamadı')
+      }
+    } catch (error) {
+      console.error('Error creating EditPack:', error)
+      toast.error('EditPack oluşturulurken bir hata oluştu')
+    } finally {
+      setEditPackLoading(false)
+    }
+  }
+
+  const handleSaveEditPack = async () => {
+    setEditPackLoading(true)
+    try {
+      const res = await fetch(`/api/edit-pack/${script.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          editorNotes,
+          assetsLinks,
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setEditPack(data.editPack)
+        toast.success('EditPack kaydedildi')
+      } else {
+        const errorData = await res.json()
+        toast.error(errorData.error || 'Kaydetme başarısız')
+      }
+    } catch (error) {
+      console.error('Error saving EditPack:', error)
+      toast.error('Kaydetme sırasında bir hata oluştu')
+    } finally {
+      setEditPackLoading(false)
+    }
+  }
+
+  const handleAddAsset = () => {
+    if (!newAssetLabel.trim() || !newAssetUrl.trim()) {
+      toast.error('Label ve URL gerekli')
+      return
+    }
+
+    if (!newAssetUrl.startsWith('http://') && !newAssetUrl.startsWith('https://')) {
+      toast.error('URL http:// veya https:// ile başlamalı')
+      return
+    }
+
+    setAssetsLinks([...assetsLinks, { label: newAssetLabel, url: newAssetUrl }])
+    setNewAssetLabel('')
+    setNewAssetUrl('')
+  }
+
+  const handleDeleteAsset = (index: number) => {
+    setAssetsLinks(assetsLinks.filter((_, i) => i !== index))
+  }
+
+  const handleEditAsset = (index: number) => {
+    const asset = assetsLinks[index]
+    setNewAssetLabel(asset.label)
+    setNewAssetUrl(asset.url)
+    setEditingAssetIndex(index)
+    handleDeleteAsset(index)
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Kopyalandı')
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      toast.error('Kopyalama başarısız')
+    }
+  }
+
+  const getEditPackUrl = (token: string) => {
+    // Production URL - environment variable'dan al veya default kullan
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yonetim.arhaval.com'
+    return `${baseUrl}/edit-pack/${token}`
+  }
 
   const handleApprove = async () => {
     if (price <= 0) {
@@ -607,6 +752,170 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </div>
               )}
             </div>
+
+            {/* Edit Paketi */}
+            {script.adminApproved && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-green-600" />
+                    Edit Paketi
+                  </h3>
+                </div>
+
+                {editPackLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-5 h-5 text-green-600 animate-spin" />
+                  </div>
+                ) : !editPack ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      EditPack henüz oluşturulmamış. Admin onayı sonrası otomatik oluşturulacak.
+                    </p>
+                    {isAdmin && (
+                      <button
+                        onClick={handleCreateEditPack}
+                        disabled={editPackLoading}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {editPackLoading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Plus className="w-4 h-4 mr-2" />
+                        )}
+                        Oluştur
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* EditPack URL */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        EditPack URL
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={getEditPackUrl(editPack.token)}
+                          readOnly
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                        />
+                        <button
+                          onClick={() => copyToClipboard(getEditPackUrl(editPack.token))}
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Kopyala
+                        </button>
+                        <a
+                          href={getEditPackUrl(editPack.token)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Aç
+                        </a>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Süresi: {format(new Date(editPack.expiresAt), 'dd MMM yyyy HH:mm', { locale: tr })} (7 gün)
+                      </p>
+                    </div>
+
+                    {/* Ek Linkler */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Ek Linkler
+                      </label>
+                      <div className="space-y-2 mb-2">
+                        {assetsLinks.map((asset, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">{asset.label}</div>
+                              <div className="text-xs text-gray-600 truncate">{asset.url}</div>
+                            </div>
+                            <button
+                              onClick={() => handleEditAsset(index)}
+                              className="p-1 text-gray-600 hover:text-gray-900"
+                              title="Düzenle"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAsset(index)}
+                              className="p-1 text-red-600 hover:text-red-900"
+                              title="Sil"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={newAssetLabel}
+                          onChange={(e) => setNewAssetLabel(e.target.value)}
+                          placeholder="Label (örn: Müzik)"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={newAssetUrl}
+                          onChange={(e) => setNewAssetUrl(e.target.value)}
+                          placeholder="URL (http:// veya https://)"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        />
+                        <button
+                          onClick={() => {
+                            if (editingAssetIndex !== null) {
+                              handleAddAsset()
+                              setEditingAssetIndex(null)
+                            } else {
+                              handleAddAsset()
+                            }
+                          }}
+                          disabled={!newAssetLabel.trim() || !newAssetUrl.trim()}
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          {editingAssetIndex !== null ? 'Güncelle' : 'Link Ekle'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Editor Notes */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Editör Notları
+                      </label>
+                      <textarea
+                        value={editorNotes}
+                        onChange={(e) => setEditorNotes(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"
+                        placeholder="Editör için notlar..."
+                      />
+                    </div>
+
+                    {/* Kaydet Butonu */}
+                    <button
+                      onClick={handleSaveEditPack}
+                      disabled={editPackLoading}
+                      className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {editPackLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Kaydet
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notlar */}
             <div>
