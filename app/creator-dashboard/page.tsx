@@ -64,7 +64,19 @@ export default function CreatorDashboardPage() {
       const res = await fetch('/api/voiceover-scripts')
       const data = await res.json()
       if (res.ok) {
-        setScripts(data)
+        // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
+        const sorted = [...data].sort((a: any, b: any) => {
+          const aIsCompleted = a.status === 'paid' || a.status === 'approved'
+          const bIsCompleted = b.status === 'paid' || b.status === 'approved'
+          
+          // Onaylanmış/ödenmiş olanlar alta gitsin
+          if (aIsCompleted && !bIsCompleted) return 1
+          if (!aIsCompleted && bIsCompleted) return -1
+          
+          // İkisi de aynı durumda, tarihe göre sırala (en yeni üstte)
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        })
+        setScripts(sorted)
       }
     } catch (error) {
       console.error('Error loading scripts:', error)

@@ -114,8 +114,21 @@ export default function VoiceActorDashboardPage() {
     return null
   }
 
-  const unassignedScripts = scripts.filter(s => !s.voiceActorId)
-  const myScripts = scripts.filter(s => s.voiceActorId === voiceActor.id)
+  // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
+  const sortedScripts = [...scripts].sort((a, b) => {
+    const aIsCompleted = a.status === 'paid' || a.status === 'approved'
+    const bIsCompleted = b.status === 'paid' || b.status === 'approved'
+    
+    // Onaylanmış/ödenmiş olanlar alta gitsin
+    if (aIsCompleted && !bIsCompleted) return 1
+    if (!aIsCompleted && bIsCompleted) return -1
+    
+    // İkisi de aynı durumda, tarihe göre sırala (en yeni üstte)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
+  const unassignedScripts = sortedScripts.filter(s => !s.voiceActorId)
+  const myScripts = sortedScripts.filter(s => s.voiceActorId === voiceActor.id)
   
   // Ödeme hesaplamaları
   const paidScripts = myScripts.filter(s => s.status === 'paid')
@@ -243,22 +256,22 @@ export default function VoiceActorDashboardPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">
               Seslendirme Metinleri
-              {scripts.length > 0 && (
+              {sortedScripts.length > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({scripts.length} metin)
+                  ({sortedScripts.length} metin)
                 </span>
               )}
             </h2>
           </div>
           <div className="p-6">
-            {scripts.length === 0 ? (
+            {sortedScripts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">Henüz seslendirme metni eklenmemiş</p>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {scripts
+                  {sortedScripts
                     .slice((currentPage - 1) * scriptsPerPage, currentPage * scriptsPerPage)
                     .map((script) => {
                       // Status kontrolü - ödenmiş veya onaylanmış ise "Onaylı"
@@ -294,7 +307,7 @@ export default function VoiceActorDashboardPage() {
                 </div>
 
                 {/* Pagination */}
-                {scripts.length > scriptsPerPage && (
+                {sortedScripts.length > scriptsPerPage && (
                   <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
                     <div className="flex items-center gap-2">
                       <button
@@ -307,9 +320,9 @@ export default function VoiceActorDashboardPage() {
                       </button>
                       
                       <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, Math.ceil(scripts.length / scriptsPerPage)) }, (_, i) => {
+                        {Array.from({ length: Math.min(5, Math.ceil(sortedScripts.length / scriptsPerPage)) }, (_, i) => {
                           let pageNum: number
-                          const totalPages = Math.ceil(scripts.length / scriptsPerPage)
+                          const totalPages = Math.ceil(sortedScripts.length / scriptsPerPage)
                           
                           if (totalPages <= 5) {
                             pageNum = i + 1
@@ -338,8 +351,8 @@ export default function VoiceActorDashboardPage() {
                       </div>
                       
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(scripts.length / scriptsPerPage), prev + 1))}
-                        disabled={currentPage >= Math.ceil(scripts.length / scriptsPerPage)}
+                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(sortedScripts.length / scriptsPerPage), prev + 1))}
+                        disabled={currentPage >= Math.ceil(sortedScripts.length / scriptsPerPage)}
                         className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                       >
                         Sonraki
@@ -348,7 +361,7 @@ export default function VoiceActorDashboardPage() {
                     </div>
                     
                     <div className="text-sm text-gray-500">
-                      Sayfa {currentPage} / {Math.ceil(scripts.length / scriptsPerPage)}
+                      Sayfa {currentPage} / {Math.ceil(sortedScripts.length / scriptsPerPage)}
                     </div>
                   </div>
                 )}

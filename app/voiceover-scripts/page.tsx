@@ -32,6 +32,19 @@ export default async function VoiceoverScriptsPage() {
       },
       orderBy: { createdAt: 'desc' },
     })
+    
+    // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
+    scripts = scripts.sort((a, b) => {
+      const aIsCompleted = a.status === 'paid' || a.status === 'approved'
+      const bIsCompleted = b.status === 'paid' || b.status === 'approved'
+      
+      // Onaylanmış/ödenmiş olanlar alta gitsin
+      if (aIsCompleted && !bIsCompleted) return 1
+      if (!aIsCompleted && bIsCompleted) return -1
+      
+      // İkisi de aynı durumda, tarihe göre sırala (en yeni üstte)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
   } catch (error: any) {
     console.error('Error fetching scripts:', error)
     // Prisma Client henüz generate edilmemiş olabilir
