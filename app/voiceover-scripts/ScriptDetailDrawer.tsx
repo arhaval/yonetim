@@ -336,10 +336,10 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   )}
                   Linki Kaydet
                 </button>
-                {script.audioFile && (
+                {(script.voiceLink || script.audioFile) && (
                   <div className="mt-2">
                     <a
-                      href={script.audioFile}
+                      href={script.voiceLink || script.audioFile || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
