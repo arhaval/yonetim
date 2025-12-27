@@ -162,8 +162,8 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      skip,
-      take: limit * 3, // Gruplar için daha fazla veri çek (sonra client-side sıralama)
+      // Varsayılan sıralama için daha fazla veri çek (gruplar için)
+      take: useDefaultSorting && !statusFilter && !producerApprovedFilter && !adminApprovedFilter && !hasPriceFilter && !hasAudioLink && !voiceActorId && !search && !dateFrom && !dateTo ? limit * 10 : limit,
       orderBy: { createdAt: 'desc' }, // İçerik üreticisinin metni yüklediği tarih (createdAt) bazlı
     })
 
@@ -187,9 +187,6 @@ export async function GET(request: NextRequest) {
       
       // Pagination için limit uygula
       sortedScripts = sortedScripts.slice(skip, skip + limit)
-    } else {
-      // Filtre varsa normal sıralama
-      sortedScripts = scripts.slice(0, limit)
     }
 
     return NextResponse.json({
