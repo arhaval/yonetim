@@ -17,6 +17,7 @@ export type AuditAction =
   | 'financial_record_deleted'
   | 'script_approved'
   | 'script_creator_approved'
+  | 'script_producer_approved'
   | 'script_paid'
   | 'script_assigned'
   | 'script_archived'
