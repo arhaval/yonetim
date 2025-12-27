@@ -202,13 +202,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
   const handleSaveAudio = async () => {
     if (!audioFileLink.trim()) {
-      alert('Lütfen bir Google Drive linki girin')
+      toast.error('Lütfen bir link girin')
       return
     }
 
-    // Link format doğrulama
     if (!audioFileLink.startsWith('http://') && !audioFileLink.startsWith('https://')) {
-      alert('Link http:// veya https:// ile başlamalıdır')
+      toast.error('Link http:// veya https:// ile başlamalıdır')
       return
     }
 
@@ -217,20 +216,93 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const res = await fetch(`/api/voiceover-scripts/${script.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioFile: audioFileLink.trim() }),
+        body: JSON.stringify({ voiceLink: audioFileLink.trim() }),
       })
 
       const data = await res.json()
 
       if (res.ok) {
-        alert('Ses linki başarıyla kaydedildi')
+        toast.success('Ses linki başarıyla kaydedildi')
         onUpdate()
       } else {
-        alert(data.error || 'Ses linki kaydedilemedi')
+        toast.error(data.error || 'Link kaydedilemedi')
       }
     } catch (error) {
       console.error('Error saving audio:', error)
-      alert('Ses linki kaydedilirken bir hata oluştu')
+      toast.error('Link kaydedilirken bir hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProducerApprove = async () => {
+    const voiceLink = script.voiceLink || script.audioFile
+    if (!voiceLink) {
+      toast.error('Ses linki eklenmemiş')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}/producer-approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success('Producer onayı başarıyla verildi')
+        onUpdate()
+      } else {
+        if (res.status === 403) {
+          toast.error('Bu işlem için yetkiniz yok')
+        } else {
+          toast.error(data.error || 'Onaylama başarısız')
+        }
+      }
+    } catch (error) {
+      console.error('Error approving as producer:', error)
+      toast.error('Onaylama sırasında bir hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAdminApprove = async () => {
+    if (!script.producerApproved) {
+      toast.error('Önce içerik üreticisi onaylamalı')
+      return
+    }
+
+    if (!adminPrice || adminPrice <= 0) {
+      toast.error('Lütfen geçerli bir fiyat girin')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: adminPrice }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success('Admin onayı başarıyla verildi')
+        onUpdate()
+      } else {
+        if (res.status === 403) {
+          toast.error('Bu işlem için yetkiniz yok')
+        } else {
+          toast.error(data.error || 'Onaylama başarısız')
+        }
+      }
+    } catch (error) {
+      console.error('Error approving as admin:', error)
+      toast.error('Onaylama sırasında bir hata oluştu')
     } finally {
       setLoading(false)
     }
@@ -399,24 +471,142 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               </div>
             )}
 
-            {/* Fiyat Girişi (Onay için) */}
-            {script.status === 'VOICE_UPLOADED' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Fiyat</h3>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                    placeholder="Fiyat girin"
-                    className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    min="0"
-                    step="0.01"
-                  />
-                  <span className="text-sm text-gray-600">₺</span>
-                </div>
+            {/* BLOK 1: İçerik Üreticisi Onayı */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                  İçerik Üreticisi Onayı
+                </h3>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  script.producerApproved 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {script.producerApproved ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Onaylı
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Onaysız
+                    </>
+                  )}
+                </span>
               </div>
-            )}
+              
+              {script.producerApprovedAt && (
+                <p className="text-xs text-gray-600">
+                  Onaylandı: {format(new Date(script.producerApprovedAt), 'dd MMM yyyy HH:mm', { locale: tr })}
+                </p>
+              )}
+
+              {isCreator && (
+                <div className="space-y-2">
+                  <button
+                    onClick={handleProducerApprove}
+                    disabled={loading || !(script.voiceLink || script.audioFile) || script.producerApproved}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Sesi Onayla
+                  </button>
+                  
+                  {!(script.voiceLink || script.audioFile) && (
+                    <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Ses linki eklenmemiş. Onaylamak için önce ses linki eklenmelidir.</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* BLOK 2: Admin Final Onay + Fiyat */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
+                  Admin Final Onay + Fiyat
+                </h3>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  script.adminApproved 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {script.adminApproved ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Admin Onaylı
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Admin Onaysız
+                    </>
+                  )}
+                </span>
+              </div>
+
+              {script.adminApprovedAt && (
+                <p className="text-xs text-gray-600">
+                  Onaylandı: {format(new Date(script.adminApprovedAt), 'dd MMM yyyy HH:mm', { locale: tr })}
+                </p>
+              )}
+
+              {isAdmin && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Fiyat (₺)
+                    </label>
+                    <input
+                      type="number"
+                      value={adminPrice}
+                      onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
+                      placeholder="Fiyat girin"
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                      min="0"
+                      step="0.01"
+                      disabled={loading || script.adminApproved}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleAdminApprove}
+                    disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    Final Onay Ver
+                  </button>
+
+                  {!script.producerApproved && (
+                    <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Önce içerik üreticisi onaylamalı</span>
+                    </div>
+                  )}
+
+                  {(!adminPrice || adminPrice <= 0) && script.producerApproved && (
+                    <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Fiyat gir</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Notlar */}
             <div>
