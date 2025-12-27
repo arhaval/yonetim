@@ -56,7 +56,7 @@ export async function POST(
       )
     }
 
-    if (script.price <= 0) {
+    if (!script.price || script.price <= 0) {
       return NextResponse.json(
         { error: 'Metin için ücret girilmemiş' },
         { status: 400 }
