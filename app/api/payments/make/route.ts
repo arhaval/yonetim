@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
           note,
           paidAt: paidAt || new Date().toISOString(),
           financialRecordId: financialRecord.id,
-          paidScripts: pendingScripts.filter(s => remainingAmount >= s.price).map(s => s.id),
+          paidScripts: pendingScripts.filter(s => s.price && remainingAmount >= s.price).map(s => s.id),
         },
       })
     } else {
