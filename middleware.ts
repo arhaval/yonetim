@@ -90,6 +90,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Voice Actor routes için kontrol (/voice-actor/**)
+  const isVoiceActorRoute = request.nextUrl.pathname.startsWith('/voice-actor/')
+  if (isVoiceActorRoute) {
+    if (!voiceActorId) {
+      const redirectUrl = new URL('/login-selection', request.url)
+      redirectUrl.searchParams.set('reason', 'middleware_denied_no_session')
+      redirectUrl.searchParams.set('from', request.nextUrl.pathname)
+      redirectUrl.searchParams.set('role', 'voice-actor')
+      return NextResponse.redirect(redirectUrl)
+    }
+    return NextResponse.next()
+  }
+
   // Team Member login sayfasına her zaman izin ver
   if (isTeamLoginPage) {
     // Eğer zaten giriş yapmışsa dashboard'a yönlendir
@@ -154,6 +167,7 @@ export function middleware(request: NextRequest) {
                       !isCreatorDashboard && 
                       !isVoiceActorLoginPage && 
                       !isVoiceActorDashboard && 
+                      !isVoiceActorRoute && // Voice actor route'larını admin kontrolünden çıkar
                       !isTeamLoginPage && 
                       !isTeamDashboard && 
                       !request.nextUrl.pathname.startsWith('/api')
@@ -161,12 +175,21 @@ export function middleware(request: NextRequest) {
   if (isAdminPage) {
     // Giriş yapmamışsa login selection'a yönlendir
     if (!userId) {
-      return NextResponse.redirect(new URL('/login-selection', request.url))
+      const redirectUrl = new URL('/login-selection', request.url)
+      redirectUrl.searchParams.set('reason', 'middleware_denied_no_session')
+      redirectUrl.searchParams.set('from', request.nextUrl.pathname)
+      redirectUrl.searchParams.set('role', 'admin')
+      return NextResponse.redirect(redirectUrl)
     }
     
     // Admin role'üne sahip değilse erişim reddedilir
     if (userRole !== 'admin' && userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      const redirectUrl = new URL('/admin-login', request.url)
+      redirectUrl.searchParams.set('reason', 'middleware_denied_role')
+      redirectUrl.searchParams.set('from', request.nextUrl.pathname)
+      redirectUrl.searchParams.set('expected_role', 'admin')
+      redirectUrl.searchParams.set('actual_role', userRole || 'none')
+      return NextResponse.redirect(redirectUrl)
     }
   }
 
