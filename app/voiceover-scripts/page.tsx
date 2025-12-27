@@ -51,6 +51,8 @@ export default function VoiceoverScriptsPage() {
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [approvePrice, setApprovePrice] = useState<number>(0)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [currentVoiceActor, setCurrentVoiceActor] = useState<{ id: string; name: string } | null>(null)
+  const [isVoiceActor, setIsVoiceActor] = useState(false)
   
   // Filtreler
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -66,20 +68,33 @@ export default function VoiceoverScriptsPage() {
   const [total, setTotal] = useState(0)
   const limit = 20
 
-  // User role yükle
+  // User role ve voice actor kontrolü
   useEffect(() => {
-    const loadUserRole = async () => {
+    const loadUserInfo = async () => {
       try {
-        const res = await fetch('/api/auth/me', { cache: 'default' })
-        const data = await res.json()
-        if (res.ok && data.user) {
-          setUserRole(data.user.role)
+        // Önce admin/user kontrolü
+        const userRes = await fetch('/api/auth/me', { cache: 'default' })
+        const userData = await userRes.json()
+        if (userRes.ok && userData.user) {
+          setUserRole(userData.user.role)
+          setIsVoiceActor(false)
+        } else {
+          // Admin değilse voice actor kontrolü
+          const voiceActorRes = await fetch('/api/voice-actor-auth/me', { cache: 'default' })
+          const voiceActorData = await voiceActorRes.json()
+          if (voiceActorRes.ok && voiceActorData.voiceActor) {
+            setCurrentVoiceActor({
+              id: voiceActorData.voiceActor.id,
+              name: voiceActorData.voiceActor.name,
+            })
+            setIsVoiceActor(true)
+          }
         }
       } catch (error) {
-        console.error('Error loading user role:', error)
+        console.error('Error loading user info:', error)
       }
     }
-    loadUserRole()
+    loadUserInfo()
   }, [])
 
   // Seslendirmenleri yükle
@@ -257,6 +272,7 @@ export default function VoiceoverScriptsPage() {
   }
 
   const isAdminOrManager = userRole === 'admin' || userRole === 'manager'
+  const isAdmin = userRole === 'admin'
 
   const getStatusBadge = (script: Script) => {
     const statusConfig = {
@@ -335,8 +351,8 @@ export default function VoiceoverScriptsPage() {
           </div>
         </div>
 
-        {/* Bulk Action Bar */}
-        {isAdminOrManager && selectedIds.size > 0 && (
+        {/* Bulk Action Bar - Sadece admin için */}
+        {isAdmin && selectedIds.size > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-2">
@@ -481,9 +497,10 @@ export default function VoiceoverScriptsPage() {
           </div>
         )}
 
-        {/* Filtre Barı */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Filtre Barı - Seslendirmen için gizle */}
+        {!isVoiceActor && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Durum Filtresi */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -598,7 +615,7 @@ export default function VoiceoverScriptsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {isAdminOrManager && (
+                    {isAdmin && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                         <button
                           onClick={handleSelectAll}
@@ -619,18 +636,24 @@ export default function VoiceoverScriptsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Başlık
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Oluşturan
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Seslendiren
-                    </th>
+                    {!isVoiceActor && (
+                      <>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Oluşturan
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Seslendiren
+                        </th>
+                      </>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Tarih
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fiyat
-                    </th>
+                    {!isVoiceActor && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fiyat
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Aksiyonlar
                     </th>
@@ -643,7 +666,7 @@ export default function VoiceoverScriptsPage() {
                       onClick={() => handleRowClick(script)}
                       className={`hover:bg-gray-50 cursor-pointer transition-colors ${selectedIds.has(script.id) ? 'bg-indigo-50' : ''}`}
                     >
-                      {isAdminOrManager && (
+                      {isAdmin && (
                         <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={(e) => {
@@ -668,31 +691,37 @@ export default function VoiceoverScriptsPage() {
                           {script.title}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {script.creator?.name || '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {script.voiceActor?.name || '-'}
-                        </div>
-                      </td>
+                      {!isVoiceActor && (
+                        <>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {script.creator?.name || '-'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {script.voiceActor?.name || '-'}
+                            </div>
+                          </td>
+                        </>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
                           {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {script.price > 0
-                            ? script.price.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                              })
-                            : '-'}
-                        </div>
-                      </td>
+                      {!isVoiceActor && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {script.price > 0
+                              ? script.price.toLocaleString('tr-TR', {
+                                  style: 'currency',
+                                  currency: 'TRY',
+                                })
+                              : '-'}
+                          </div>
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={(e) => {
@@ -701,7 +730,7 @@ export default function VoiceoverScriptsPage() {
                           }}
                           className="text-indigo-600 hover:text-indigo-900 font-medium"
                         >
-                          Detay
+                          {isVoiceActor ? 'Metni Gör' : 'Detay'}
                         </button>
                       </td>
                     </tr>

@@ -11,9 +11,10 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
     const creatorId = cookieStore.get('creator-id')?.value
+    const voiceActorIdCookie = cookieStore.get('voice-actor-id')?.value
 
-    // Admin veya içerik üreticisi kontrolü
-    if (!userId && !creatorId) {
+    // Admin, içerik üreticisi veya seslendirmen kontrolü
+    if (!userId && !creatorId && !voiceActorIdCookie) {
       return NextResponse.json(
         { error: 'Yetkisiz erişim' },
         { status: 401 }
@@ -35,6 +36,17 @@ export async function GET(request: NextRequest) {
 
     // Where clause oluştur
     let whereClause: any = {}
+
+    // Seslendirmen sadece kendisine atanmış metinleri görür
+    if (voiceActorIdCookie) {
+      whereClause.voiceActorId = voiceActorIdCookie
+      // Seslendirmen için ARCHIVED ve REJECTED gösterilmez (varsayılan)
+      if (excludeArchived) {
+        whereClause.status = { notIn: ['ARCHIVED', 'REJECTED'] }
+      } else {
+        whereClause.status = { not: 'REJECTED' }
+      }
+    }
 
     // İçerik üreticisi sadece kendi metinlerini görür
     if (creatorId) {
