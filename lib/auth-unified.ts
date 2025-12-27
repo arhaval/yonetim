@@ -354,7 +354,6 @@ export async function handleLogin(
         })
     }
   } catch (error: any) {
-    const { NextResponse } = await import('next/server')
     return NextResponse.json(
       { error: `Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}` },
       { status: 500 }
