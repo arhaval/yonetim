@@ -670,9 +670,9 @@ export default function VoiceoverScriptsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {script.audioFile ? (
+                        {(script.voiceLink || script.audioFile) ? (
                           <a
-                            href={script.audioFile}
+                            href={script.voiceLink || script.audioFile || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}

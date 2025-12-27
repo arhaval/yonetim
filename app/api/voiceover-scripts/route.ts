@@ -67,11 +67,17 @@ export async function GET(request: NextRequest) {
       whereClause.voiceActorId = voiceActorId
     }
 
-    // Link var/yok filtresi
+    // Link var/yok filtresi (voiceLink veya audioFile kontrolü)
     if (hasAudioLink === 'true') {
-      whereClause.audioFile = { not: null }
+      whereClause.OR = [
+        { voiceLink: { not: null } },
+        { audioFile: { not: null } }
+      ]
     } else if (hasAudioLink === 'false') {
-      whereClause.audioFile = null
+      whereClause.AND = [
+        { voiceLink: null },
+        { audioFile: null }
+      ]
     }
 
     // Arama filtresi (başlık veya metin içinde)
