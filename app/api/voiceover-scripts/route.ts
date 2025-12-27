@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      scripts: sortedScripts,
+      scripts: scripts,
       pagination: {
         page,
         limit,
