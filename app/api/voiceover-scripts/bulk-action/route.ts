@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
             console.error('Finansal kayıt oluşturma hatası:', financialError)
             // Finansal kayıt oluşturulamasa bile metin onaylanmış olarak kalmalı
           }
-        } else if (action === 'pay' && script.voiceActorId) {
+        } else if (action === 'pay' && script.voiceActorId && script.price) {
           try {
             await prisma.financialRecord.create({
               data: {
