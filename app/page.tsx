@@ -764,11 +764,11 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      script.status === 'creator-approved' 
+                      script.status === 'VOICE_UPLOADED' 
                         ? 'bg-yellow-100 text-yellow-800' 
                         : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {script.status === 'creator-approved' ? 'Admin Onayı Bekliyor' : 'Creator Onayı Bekliyor'}
+                      {script.status === 'VOICE_UPLOADED' ? 'Admin Onayı Bekliyor' : 'Creator Onayı Bekliyor'}
                     </span>
                   </div>
                 ))}

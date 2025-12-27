@@ -113,8 +113,8 @@ export default function VoiceActorDashboardPage() {
 
   // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
   const sortedScripts = [...scripts].sort((a, b) => {
-    const aIsCompleted = a.status === 'paid' || a.status === 'approved'
-    const bIsCompleted = b.status === 'paid' || b.status === 'approved'
+    const aIsCompleted = a.status === 'PAID' || a.status === 'APPROVED'
+    const bIsCompleted = b.status === 'PAID' || b.status === 'APPROVED'
     
     // Onaylanmış/ödenmiş olanlar alta gitsin
     if (aIsCompleted && !bIsCompleted) return 1
@@ -128,8 +128,8 @@ export default function VoiceActorDashboardPage() {
   const myScripts = sortedScripts.filter(s => s.voiceActorId === voiceActor.id)
   
   // Ödeme hesaplamaları
-  const paidScripts = myScripts.filter(s => s.status === 'paid')
-  const unpaidScripts = myScripts.filter(s => s.status === 'approved' || (s.status === 'pending' && s.audioFile))
+  const paidScripts = myScripts.filter(s => s.status === 'PAID')
+  const unpaidScripts = myScripts.filter(s => s.status === 'APPROVED' || (s.status === 'VOICE_UPLOADED' && s.audioFile))
   const totalPaid = paidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
   const totalUnpaid = unpaidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
 
@@ -272,7 +272,7 @@ export default function VoiceActorDashboardPage() {
                     .slice((currentPage - 1) * scriptsPerPage, currentPage * scriptsPerPage)
                     .map((script) => {
                       // Status kontrolü - ödenmiş veya onaylanmış ise "Onaylı"
-                      const isApproved = script.status === 'paid' || script.status === 'approved'
+                      const isApproved = script.status === 'PAID' || script.status === 'APPROVED'
                       
                       return (
                         <div 

@@ -58,17 +58,17 @@ export default async function VoiceoverScriptDetailPage({
           <div className="mt-4">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h1 className="text-3xl font-bold text-gray-900">{script.title}</h1>
-              {script.status === 'paid' ? (
+              {script.status === 'PAID' ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Ödendi
                 </span>
-              ) : script.status === 'approved' ? (
+              ) : script.status === 'APPROVED' ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Onaylandı
                 </span>
-              ) : script.status === 'creator-approved' ? (
+              ) : script.status === 'VOICE_UPLOADED' ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 animate-pulse">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Creator Onayladı - Admin Onayı Bekliyor

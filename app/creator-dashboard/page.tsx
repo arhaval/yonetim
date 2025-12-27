@@ -66,8 +66,8 @@ export default function CreatorDashboardPage() {
       if (res.ok) {
         // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
         const sorted = [...data].sort((a: any, b: any) => {
-          const aIsCompleted = a.status === 'paid' || a.status === 'approved'
-          const bIsCompleted = b.status === 'paid' || b.status === 'approved'
+          const aIsCompleted = a.status === 'PAID' || a.status === 'APPROVED'
+          const bIsCompleted = b.status === 'PAID' || b.status === 'APPROVED'
           
           // Onaylanmış/ödenmiş olanlar alta gitsin
           if (aIsCompleted && !bIsCompleted) return 1
@@ -282,9 +282,9 @@ export default function CreatorDashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold text-gray-900">Seslendirme Metinlerim</h2>
-                {scripts.filter(s => s.audioFile && s.status === 'pending').length > 0 && (
+                {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length > 0 && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 animate-pulse">
-                    {scripts.filter(s => s.audioFile && s.status === 'pending').length} Onay Bekleyen Ses
+                    {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length} Onay Bekleyen Ses
                   </span>
                 )}
               </div>
@@ -304,13 +304,13 @@ export default function CreatorDashboardPage() {
                 <p className="text-gray-500">Henüz metin eklenmemiş</p>
               </div>
             ) : (
-              // Önce onay bekleyen sesleri göster (sadece pending - creator-approved olanlar admin'e gönderilmiş)
+              // Önce onay bekleyen sesleri göster (sadece VOICE_UPLOADED olanlar admin'e gönderilmiş)
               <>
-                {scripts.filter(s => s.audioFile && s.status === 'pending').length > 0 && (
+                {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length > 0 && (
                   <div className="px-6 py-4 bg-yellow-50 border-l-4 border-yellow-400">
                     <h3 className="text-lg font-semibold text-yellow-900 mb-3">⚠️ Onay Bekleyen Sesler</h3>
                     {scripts
-                      .filter(s => s.audioFile && s.status === 'pending')
+                      .filter(s => s.audioFile && s.status === 'VOICE_UPLOADED')
                       .map((script) => (
                         <div key={script.id} className="mb-4 last:mb-0 p-4 bg-white rounded-lg border border-yellow-200">
                           <div className="flex items-start justify-between">
@@ -355,7 +355,7 @@ export default function CreatorDashboardPage() {
                                   <Download className="w-4 h-4 mr-2" />
                                   Ses Dosyasını Dinle
                                 </a>
-                                {script.status === 'pending' && (
+                                {script.status === 'VOICE_UPLOADED' && (
                                   <button
                                     onClick={async () => {
                                       if (!confirm('Bu sesi onaylamak istediğinize emin misiniz? Onayladıktan sonra admin onayı bekleyecektir.')) {
@@ -393,7 +393,7 @@ export default function CreatorDashboardPage() {
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {scripts
-                      .filter(s => !(s.audioFile && s.status === 'pending'))
+                      .filter(s => !(s.audioFile && s.status === 'VOICE_UPLOADED'))
                       .slice((currentPage - 1) * scriptsPerPage, currentPage * scriptsPerPage)
                       .map((script) => (
                       <div 
@@ -409,15 +409,15 @@ export default function CreatorDashboardPage() {
                           </div>
                           
                           <div className="flex flex-wrap gap-2 mb-3">
-                            {script.status === 'paid' ? (
+                            {script.status === 'PAID' ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 Ödendi
                               </span>
-                            ) : script.status === 'approved' ? (
+                            ) : script.status === 'APPROVED' ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 Onaylandı
                               </span>
-                            ) : script.status === 'creator-approved' ? (
+                            ) : script.status === 'VOICE_UPLOADED' ? (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                 Admin Onayı Bekliyor
                               </span>
