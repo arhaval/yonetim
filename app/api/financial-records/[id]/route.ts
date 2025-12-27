@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdmin } from '@/lib/admin-check'
 import { createAuditLog } from '@/lib/audit-log'
+import { cookies } from 'next/headers'
 
 export async function DELETE(
   request: NextRequest,
