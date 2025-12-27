@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get('dateTo')
     const excludeArchivedParam = searchParams.get('excludeArchived')
     const excludeArchived = excludeArchivedParam === 'true'
+    const hasAudioLink = searchParams.get('hasAudioLink') // 'true' or 'false' or null
 
     const skip = (page - 1) * limit
 
