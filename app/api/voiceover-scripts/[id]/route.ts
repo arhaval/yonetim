@@ -83,7 +83,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { audioFile, price, status, title, text } = body
+    const { audioFile, price, status, title, text, rejectionReason } = body
 
     // Mevcut metni kontrol et
     const existingScript = await prisma.voiceoverScript.findUnique({
@@ -114,6 +114,7 @@ export async function PUT(
       if (text !== undefined) updateData.text = text
       if (price !== undefined) updateData.price = price
       if (status !== undefined) updateData.status = status
+      if (rejectionReason !== undefined) updateData.rejectionReason = rejectionReason
     }
 
     // Seslendirmen sadece ses dosyası yükleyebilir
