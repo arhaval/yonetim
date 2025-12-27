@@ -395,13 +395,13 @@ export default async function ContentCreatorDetailPage({
                       <div className="flex items-center space-x-2 mb-1">
                         <h3 className="text-sm font-semibold text-gray-900">{script.title}</h3>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          script.status === 'approved'
+                          script.status === 'APPROVED'
                             ? 'bg-green-100 text-green-800'
-                            : script.status === 'paid'
+                            : script.status === 'PAID'
                             ? 'bg-blue-100 text-blue-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {script.status === 'approved' ? 'Onaylandı' : script.status === 'paid' ? 'Ödendi' : 'Beklemede'}
+                          {script.status === 'APPROVED' ? 'Onaylandı' : script.status === 'PAID' ? 'Ödendi' : 'Beklemede'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
