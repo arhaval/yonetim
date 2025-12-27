@@ -112,7 +112,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   const loadEditPack = async () => {
     setEditPackLoading(true)
     try {
-      const res = await fetch(`/api/edit-pack/${script.id}`)
+      const res = await fetch(`/api/edit-pack/voiceover/${script.id}`)
       if (res.ok) {
         const data = await res.json()
         setEditPack(data.editPack)
@@ -137,7 +137,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
     setEditPackLoading(true)
     try {
-      const res = await fetch(`/api/edit-pack/${script.id}`, {
+      const res = await fetch(`/api/edit-pack/voiceover/${script.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ editorNotes: '', assetsLinks: [] }),
@@ -162,7 +162,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   const handleSaveEditPack = async () => {
     setEditPackLoading(true)
     try {
-      const res = await fetch(`/api/edit-pack/${script.id}`, {
+      const res = await fetch(`/api/edit-pack/voiceover/${script.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
