@@ -78,10 +78,10 @@ export default async function TeamMemberDetailPage({
   if (isVoiceActor && voiceActor) {
     const scripts = voiceActor.scripts || []
     totalScripts = scripts.length
-    approvedScripts = scripts.filter(s => s.status === 'approved').length
-    pendingScripts = scripts.filter(s => s.status === 'pending').length
+    approvedScripts = scripts.filter(s => s.status === 'APPROVED').length
+    pendingScripts = scripts.filter(s => s.status === 'WAITING_VOICE' || s.status === 'VOICE_UPLOADED').length
     totalEarnings = scripts
-      .filter(s => s.status === 'paid')
+      .filter(s => s.status === 'PAID')
       .reduce((sum, s) => sum + (s.price || 0), 0)
     
     // Ödenmemiş metinler için toplam ücret (onaylanmış veya ses dosyası yüklenmiş pending olanlar)
