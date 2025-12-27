@@ -32,9 +32,10 @@ interface ScriptDetailDrawerProps {
   isOpen: boolean
   onClose: () => void
   onUpdate: () => void
+  isVoiceActor?: boolean // Seslendirmen mi kontrolü
 }
 
-export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }: ScriptDetailDrawerProps) {
+export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, isVoiceActor = false }: ScriptDetailDrawerProps) {
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
   const [notes, setNotes] = useState(script.notes || '')
