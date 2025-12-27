@@ -113,10 +113,8 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
   const { editPack, voiceover } = data
 
   return (
-    <>
-      <Toaster position="top-center" />
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{voiceover.title}</h1>
@@ -222,9 +220,8 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
             </div>
           </div>
         )}
-        </div>
       </div>
-    </>
+    </div>
   )
 }
 
