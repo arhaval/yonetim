@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import { toast } from 'sonner'
 
 interface Script {
   id: string
@@ -44,8 +45,56 @@ interface ScriptDetailDrawerProps {
 export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }: ScriptDetailDrawerProps) {
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
+  const [adminPrice, setAdminPrice] = useState(script.price || 0)
   const [notes, setNotes] = useState(script.notes || '')
   const [audioFileLink, setAudioFileLink] = useState(script.voiceLink || script.audioFile || '')
+  
+  // Rol kontrolü
+  const [isCreator, setIsCreator] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [roleLoading, setRoleLoading] = useState(true)
+
+  useEffect(() => {
+    // Cookie'lerden rol bilgisini al
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift()
+      return null
+    }
+
+    const creatorId = getCookie('creator-id')
+    const userId = getCookie('user-id')
+
+    // İçerik üreticisi kontrolü
+    if (creatorId && script.creator?.id === creatorId) {
+      setIsCreator(true)
+    }
+
+    // Admin kontrolü
+    if (userId) {
+      fetch('/api/user/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.role === 'admin') {
+            setIsAdmin(true)
+          }
+          setRoleLoading(false)
+        })
+        .catch(() => {
+          setRoleLoading(false)
+        })
+    } else {
+      setRoleLoading(false)
+    }
+  }, [script.creator?.id])
+
+  // Script güncellendiğinde state'i güncelle
+  useEffect(() => {
+    setPrice(script.price || 0)
+    setAdminPrice(script.price || 0)
+    setAudioFileLink(script.voiceLink || script.audioFile || '')
+  }, [script])
 
   const handleApprove = async () => {
     if (price <= 0) {
