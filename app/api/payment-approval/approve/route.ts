@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       const validScriptIds: string[] = []
 
       for (const script of scripts) {
-        if (script.status !== 'paid') {
+        if (script.status !== 'PAID') {
           totalScriptAmount += script.price || 0
           validScriptIds.push(script.id)
         }
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
             id: { in: validScriptIds },
           },
           data: {
-            status: 'paid',
+            status: 'PAID',
           },
         })
 

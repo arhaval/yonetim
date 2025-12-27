@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
         scripts: {
           where: {
             OR: [
-              { status: 'approved' },
-              { status: 'paid' },
+              { status: 'APPROVED' },
+              { status: 'PAID' },
             ],
             createdAt: {
               gte: monthStart,
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
 
     // Her seslendirmen için ödeme bilgilerini hesapla
     const payments = voiceActors.map((actor) => {
-      const approvedScripts = actor.scripts.filter(s => s.status === 'approved')
-      const paidScripts = actor.scripts.filter(s => s.status === 'paid')
+      const approvedScripts = actor.scripts.filter(s => s.status === 'APPROVED')
+      const paidScripts = actor.scripts.filter(s => s.status === 'PAID')
       
       const pendingAmount = approvedScripts.reduce((sum, s) => sum + (s.price || 0), 0)
       const paidAmount = paidScripts.reduce((sum, s) => sum + (s.price || 0), 0)

@@ -103,7 +103,7 @@ export async function GET(
       const scripts = await prisma.voiceoverScript.findMany({
         where: {
           voiceActorId: personId,
-          status: 'approved', // Onaylanmış ama ödenmemiş
+          status: 'APPROVED', // Onaylanmış ama ödenmemiş
           price: { gt: 0 },
         },
         orderBy: {
@@ -146,7 +146,7 @@ export async function GET(
       const scripts = await prisma.voiceoverScript.findMany({
         where: {
           creatorId: personId,
-          status: 'approved',
+          status: 'APPROVED',
           price: { gt: 0 },
         },
         orderBy: {

@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     // Ödenen seslendirmen metinlerini getir
     const paidVoiceoverScripts = await prisma.voiceoverScript.findMany({
       where: {
-        status: 'paid',
+        status: 'PAID',
         ...(filter === 'monthly' && monthStart && monthEnd ? {
           updatedAt: {
             gte: monthStart,

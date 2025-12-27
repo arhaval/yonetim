@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
       const pendingScripts = await prisma.voiceoverScript.findMany({
         where: {
           voiceActorId,
-          status: 'approved',
+          status: 'APPROVED',
           createdAt: {
             gte: startDate,
             lte: endDate,
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
           // Tam ödeme
           await prisma.voiceoverScript.update({
             where: { id: script.id },
-            data: { status: 'paid' },
+            data: { status: 'PAID' },
           })
           remainingAmount -= script.price
         } else {
