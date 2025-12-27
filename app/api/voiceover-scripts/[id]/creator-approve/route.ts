@@ -48,13 +48,6 @@ export async function POST(
     }
 
     // Status WAITING_VOICE veya VOICE_UPLOADED olabilir (ses yüklenmiş olmalı)
-    if (!script.audioFile) {
-      return NextResponse.json(
-        { error: 'Ses dosyası henüz yüklenmemiş' },
-        { status: 400 }
-      )
-    }
-    
     // Eğer WAITING_VOICE ise VOICE_UPLOADED'a çevir (creator onayı)
     // Eğer zaten VOICE_UPLOADED ise hata verme (tekrar onaylanabilir)
     if (script.status !== 'WAITING_VOICE' && script.status !== 'VOICE_UPLOADED') {
