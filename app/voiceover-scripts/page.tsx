@@ -61,6 +61,9 @@ export default function VoiceoverScriptsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [voiceActorFilter, setVoiceActorFilter] = useState<string>('all')
   const [hasAudioLinkFilter, setHasAudioLinkFilter] = useState<string>('all') // 'all', 'true', 'false'
+  const [producerApprovedFilter, setProducerApprovedFilter] = useState<string>('all') // 'all', 'true', 'false'
+  const [adminApprovedFilter, setAdminApprovedFilter] = useState<string>('all') // 'all', 'true', 'false'
+  const [hasPriceFilter, setHasPriceFilter] = useState<string>('all') // 'all', 'true', 'false'
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -136,7 +139,7 @@ export default function VoiceoverScriptsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, statusFilter, voiceActorFilter, hasAudioLinkFilter, searchQuery, dateFrom, dateTo, showArchived])
+  }, [page, statusFilter, voiceActorFilter, hasAudioLinkFilter, producerApprovedFilter, adminApprovedFilter, hasPriceFilter, searchQuery, dateFrom, dateTo, showArchived])
 
   useEffect(() => {
     loadScripts()

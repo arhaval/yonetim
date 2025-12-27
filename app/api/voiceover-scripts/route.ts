@@ -32,6 +32,10 @@ export async function GET(request: NextRequest) {
     const excludeArchivedParam = searchParams.get('excludeArchived')
     const excludeArchived = excludeArchivedParam === 'true'
     const hasAudioLink = searchParams.get('hasAudioLink') // 'true' or 'false' or null
+    const producerApprovedFilter = searchParams.get('producerApproved') // 'true' or 'false' or null
+    const adminApprovedFilter = searchParams.get('adminApproved') // 'true' or 'false' or null
+    const hasPriceFilter = searchParams.get('hasPrice') // 'true' or 'false' or null
+    const useDefaultSorting = searchParams.get('useDefaultSorting') !== 'false' // Default: true
 
     const skip = (page - 1) * limit
 
@@ -78,6 +82,27 @@ export async function GET(request: NextRequest) {
         { voiceLink: null },
         { audioFile: null }
       ]
+    }
+
+    // Üretici Onayı filtresi
+    if (producerApprovedFilter === 'true') {
+      whereClause.producerApproved = true
+    } else if (producerApprovedFilter === 'false') {
+      whereClause.producerApproved = false
+    }
+
+    // Admin Onayı filtresi
+    if (adminApprovedFilter === 'true') {
+      whereClause.adminApproved = true
+    } else if (adminApprovedFilter === 'false') {
+      whereClause.adminApproved = false
+    }
+
+    // Fiyat var/yok filtresi
+    if (hasPriceFilter === 'true') {
+      whereClause.price = { not: null }
+    } else if (hasPriceFilter === 'false') {
+      whereClause.price = null
     }
 
     // Arama filtresi (başlık veya metin içinde)
@@ -138,12 +163,37 @@ export async function GET(request: NextRequest) {
         },
       },
       skip,
-      take: limit,
+      take: limit * 3, // Gruplar için daha fazla veri çek (sonra client-side sıralama)
       orderBy: { createdAt: 'desc' }, // İçerik üreticisinin metni yüklediği tarih (createdAt) bazlı
     })
 
+    // Varsayılan sıralama mantığı (eğer filtre yoksa)
+    let sortedScripts = scripts
+    if (useDefaultSorting && !statusFilter && !producerApprovedFilter && !adminApprovedFilter && !hasPriceFilter && !hasAudioLink && !voiceActorId && !search && !dateFrom && !dateTo) {
+      // Grup 1: producerApproved = false (Ses onayı bekleyenler)
+      const group1 = scripts.filter(s => !s.producerApproved)
+      // Grup 2: producerApproved = true AND adminApproved = false (Admin fiyat/onay bekleyenler)
+      const group2 = scripts.filter(s => s.producerApproved && !s.adminApproved)
+      // Grup 3: adminApproved = true (Video yapım hazır)
+      const group3 = scripts.filter(s => s.adminApproved)
+      
+      // Her grup içinde createdAt DESC (zaten orderBy ile geliyor, ama emin olmak için tekrar sırala)
+      group1.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      group2.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      group3.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      
+      // Grupları birleştir
+      sortedScripts = [...group1, ...group2, ...group3]
+      
+      // Pagination için limit uygula
+      sortedScripts = sortedScripts.slice(skip, skip + limit)
+    } else {
+      // Filtre varsa normal sıralama
+      sortedScripts = scripts.slice(0, limit)
+    }
+
     return NextResponse.json({
-      scripts: scripts,
+      scripts: sortedScripts,
       pagination: {
         page,
         limit,
