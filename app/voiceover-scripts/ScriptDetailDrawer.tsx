@@ -41,6 +41,8 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, 
   const [notes, setNotes] = useState(script.notes || '')
   const [isPlaying, setIsPlaying] = useState(false)
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
+  const [audioFileLink, setAudioFileLink] = useState(script.audioFile || '')
+  const [showAudioUpload, setShowAudioUpload] = useState(false)
 
   const handleApprove = async () => {
     if (price <= 0) {
@@ -156,6 +158,37 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, 
     }
   }
 
+  const handleSaveAudio = async () => {
+    if (!audioFileLink.trim()) {
+      alert('Lütfen bir Google Drive linki girin')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioFile: audioFileLink.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        alert('Ses dosyası başarıyla kaydedildi')
+        setShowAudioUpload(false)
+        onUpdate()
+      } else {
+        alert(data.error || 'Ses dosyası kaydedilemedi')
+      }
+    } catch (error) {
+      console.error('Error saving audio:', error)
+      alert('Ses dosyası kaydedilirken bir hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handlePlayAudio = () => {
     if (!script.audioFile) return
 
@@ -260,12 +293,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, 
             </div>
 
             {/* Ses Dosyası */}
-            {script.audioFile && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
-                  <Mic className="w-5 h-5 mr-2" />
-                  Ses Dosyası
-                </h3>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+                <Mic className="w-5 h-5 mr-2" />
+                Ses Dosyası
+              </h3>
+              {script.audioFile ? (
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center space-x-3">
                     <button
@@ -288,9 +321,71 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, 
                       <span>Ses dosyasını aç</span>
                     </a>
                   </div>
+                  {isVoiceActor && (
+                    <button
+                      onClick={() => {
+                        setShowAudioUpload(true)
+                        setAudioFileLink(script.audioFile || '')
+                      }}
+                      className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 underline"
+                    >
+                      Ses Dosyasını Değiştir
+                    </button>
+                  )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800 mb-2">Henüz ses dosyası yüklenmemiş</p>
+                  {isVoiceActor && (
+                    <button
+                      onClick={() => setShowAudioUpload(true)}
+                      className="text-sm text-indigo-600 hover:text-indigo-800 underline"
+                    >
+                      Ses Dosyası Yükle
+                    </button>
+                  )}
+                </div>
+              )}
+              
+              {/* Ses Yükleme Formu - Sadece seslendirmen için */}
+              {isVoiceActor && showAudioUpload && (
+                <div className="mt-4 bg-gray-50 rounded-lg p-4 space-y-3">
+                  <label className="block text-sm font-medium text-gray-900">
+                    Google Drive Linki
+                  </label>
+                  <input
+                    type="text"
+                    value={audioFileLink}
+                    onChange={(e) => setAudioFileLink(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleSaveAudio}
+                      disabled={loading || !audioFileLink.trim()}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Mic className="w-4 h-4 mr-2" />
+                      )}
+                      Kaydet
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAudioUpload(false)
+                        setAudioFileLink(script.audioFile || '')
+                      }}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Reddetme Nedeni */}
             {script.status === 'REJECTED' && script.rejectionReason && (
