@@ -32,17 +32,13 @@ interface ScriptDetailDrawerProps {
   isOpen: boolean
   onClose: () => void
   onUpdate: () => void
-  isVoiceActor?: boolean // Seslendirmen mi kontrolü
 }
 
-export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate, isVoiceActor = false }: ScriptDetailDrawerProps) {
+export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }: ScriptDetailDrawerProps) {
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
   const [notes, setNotes] = useState(script.notes || '')
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
   const [audioFileLink, setAudioFileLink] = useState(script.audioFile || '')
-  const [showAudioUpload, setShowAudioUpload] = useState(false)
 
   const handleApprove = async () => {
     if (price <= 0) {

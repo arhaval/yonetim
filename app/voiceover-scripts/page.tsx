@@ -50,13 +50,10 @@ export default function VoiceoverScriptsPage() {
   const [rejectReason, setRejectReason] = useState('')
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [approvePrice, setApprovePrice] = useState<number>(0)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [currentVoiceActor, setCurrentVoiceActor] = useState<{ id: string; name: string } | null>(null)
-  const [isVoiceActor, setIsVoiceActor] = useState(false)
-  
   // Filtreler
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [voiceActorFilter, setVoiceActorFilter] = useState<string>('all')
+  const [hasAudioLinkFilter, setHasAudioLinkFilter] = useState<string>('all') // 'all', 'true', 'false'
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -68,34 +65,6 @@ export default function VoiceoverScriptsPage() {
   const [total, setTotal] = useState(0)
   const limit = 20
 
-  // User role ve voice actor kontrolü
-  useEffect(() => {
-    const loadUserInfo = async () => {
-      try {
-        // Önce admin/user kontrolü
-        const userRes = await fetch('/api/auth/me', { cache: 'default' })
-        const userData = await userRes.json()
-        if (userRes.ok && userData.user) {
-          setUserRole(userData.user.role)
-          setIsVoiceActor(false)
-        } else {
-          // Admin değilse voice actor kontrolü
-          const voiceActorRes = await fetch('/api/voice-actor-auth/me', { cache: 'default' })
-          const voiceActorData = await voiceActorRes.json()
-          if (voiceActorRes.ok && voiceActorData.voiceActor) {
-            setCurrentVoiceActor({
-              id: voiceActorData.voiceActor.id,
-              name: voiceActorData.voiceActor.name,
-            })
-            setIsVoiceActor(true)
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user info:', error)
-      }
-    }
-    loadUserInfo()
-  }, [])
 
   // Seslendirmenleri yükle
   useEffect(() => {
@@ -132,6 +101,9 @@ export default function VoiceoverScriptsPage() {
       if (voiceActorFilter !== 'all') {
         params.append('voiceActorId', voiceActorFilter)
       }
+      if (hasAudioLinkFilter !== 'all') {
+        params.append('hasAudioLink', hasAudioLinkFilter)
+      }
       if (searchQuery) {
         params.append('search', searchQuery)
       }
@@ -157,7 +129,7 @@ export default function VoiceoverScriptsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, statusFilter, voiceActorFilter, searchQuery, dateFrom, dateTo])
+  }, [page, statusFilter, voiceActorFilter, hasAudioLinkFilter, searchQuery, dateFrom, dateTo, showArchived])
 
   useEffect(() => {
     loadScripts()
@@ -166,7 +138,7 @@ export default function VoiceoverScriptsPage() {
   // Filtre değiştiğinde sayfayı sıfırla
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, voiceActorFilter, searchQuery, dateFrom, dateTo])
+  }, [statusFilter, voiceActorFilter, hasAudioLinkFilter, searchQuery, dateFrom, dateTo])
 
   const handleRowClick = (script: Script) => {
     setSelectedScript(script)
@@ -271,9 +243,6 @@ export default function VoiceoverScriptsPage() {
     }
   }
 
-  const isAdminOrManager = userRole === 'admin' || userRole === 'manager'
-  const isAdmin = userRole === 'admin'
-
   const getStatusBadge = (script: Script) => {
     const statusConfig = {
       WAITING_VOICE: {
@@ -351,8 +320,8 @@ export default function VoiceoverScriptsPage() {
           </div>
         </div>
 
-        {/* Bulk Action Bar - Sadece admin için */}
-        {isAdmin && selectedIds.size > 0 && (
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-2">
@@ -666,23 +635,21 @@ export default function VoiceoverScriptsPage() {
                       onClick={() => handleRowClick(script)}
                       className={`hover:bg-gray-50 cursor-pointer transition-colors ${selectedIds.has(script.id) ? 'bg-indigo-50' : ''}`}
                     >
-                      {isAdmin && (
-                        <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleSelectScript(script.id)
-                            }}
-                            className="flex items-center justify-center"
-                          >
-                            {selectedIds.has(script.id) ? (
-                              <CheckSquare2 className="w-5 h-5 text-indigo-600" />
-                            ) : (
-                              <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                            )}
-                          </button>
-                        </td>
-                      )}
+                      <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSelectScript(script.id)
+                          }}
+                          className="flex items-center justify-center"
+                        >
+                          {selectedIds.has(script.id) ? (
+                            <CheckSquare2 className="w-5 h-5 text-indigo-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(script)}
                       </td>
@@ -691,37 +658,49 @@ export default function VoiceoverScriptsPage() {
                           {script.title}
                         </div>
                       </td>
-                      {!isVoiceActor && (
-                        <>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {script.creator?.name || '-'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {script.voiceActor?.name || '-'}
-                            </div>
-                          </td>
-                        </>
-                      )}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {script.creator?.name || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {script.voiceActor?.name || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {script.audioFile ? (
+                          <a
+                            href={script.audioFile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Link Var
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Link Yok
+                          </span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
                           {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
                         </div>
                       </td>
-                      {!isVoiceActor && (
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {script.price > 0
-                              ? script.price.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                })
-                              : '-'}
-                          </div>
-                        </td>
-                      )}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {script.price > 0
+                            ? script.price.toLocaleString('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                              })
+                            : '-'}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={(e) => {
@@ -730,7 +709,7 @@ export default function VoiceoverScriptsPage() {
                           }}
                           className="text-indigo-600 hover:text-indigo-900 font-medium"
                         >
-                          {isVoiceActor ? 'Metni Gör' : 'Detay'}
+                          Detay
                         </button>
                       </td>
                     </tr>

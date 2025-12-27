@@ -37,23 +37,7 @@ export async function GET(request: NextRequest) {
     // Where clause oluştur
     let whereClause: any = {}
 
-    // Seslendirmen sadece kendisine atanmış metinleri görür
-    if (voiceActorIdCookie) {
-      whereClause.voiceActorId = voiceActorIdCookie
-      // Seslendirmen için ARCHIVED ve REJECTED gösterilmez (varsayılan)
-      if (excludeArchived) {
-        whereClause.status = { notIn: ['ARCHIVED', 'REJECTED'] }
-      } else {
-        whereClause.status = { not: 'REJECTED' }
-      }
-    }
-
-    // İçerik üreticisi sadece kendi metinlerini görür
-    if (creatorId) {
-      whereClause.creatorId = creatorId
-    }
-
-    // ARCHIVED varsayılan olarak gösterilmez
+    // ARCHIVED varsayılan olarak gösterilmez (tüm roller için)
     if (excludeArchived) {
       whereClause.status = { not: 'ARCHIVED' }
     }
@@ -80,6 +64,13 @@ export async function GET(request: NextRequest) {
     // Seslendiren filtresi
     if (voiceActorId) {
       whereClause.voiceActorId = voiceActorId
+    }
+
+    // Link var/yok filtresi
+    if (hasAudioLink === 'true') {
+      whereClause.audioFile = { not: null }
+    } else if (hasAudioLink === 'false') {
+      whereClause.audioFile = null
     }
 
     // Arama filtresi (başlık veya metin içinde)
