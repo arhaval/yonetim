@@ -496,9 +496,11 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           if (scriptRes.ok) {
             const updatedScript = await scriptRes.json()
             // Parent'a güncellenmiş script'i bildir - onUpdate callback'i script'i güncelleyecek
+            // Parent component (VoiceoverInbox) selectedScript'i güncelleyecek ve script prop'u değişecek
             onUpdate()
-            // Force re-render için script prop'unun değişmesini bekle
-            // Parent component (VoiceoverInbox) selectedScript'i güncelleyecek
+          } else {
+            // Hata olsa bile parent'a bildir
+            onUpdate()
           }
         } catch (err) {
           console.error('Error refetching script:', err)
@@ -569,11 +571,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       return
     }
 
-    // Güvenli price parse - virgül desteği ve empty string kontrolü
-    const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
-    const priceValue = priceString === '' ? 0 : parseFloat(priceString)
+    // Güvenli price parse - virgül desteği ve karakter temizleme
+    const parsedPrice = Number(
+      String(adminPrice).replace(',', '.').replace(/[^\d.]/g, '')
+    )
     
-    if (!priceValue || priceValue <= 0 || isNaN(priceValue)) {
+    if (!parsedPrice || parsedPrice <= 0 || isNaN(parsedPrice)) {
       toast.error('Lütfen geçerli bir fiyat girin')
       return
     }
@@ -583,7 +586,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const res = await fetch(`/api/voiceover-scripts/${script.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: priceValue }),
+        body: JSON.stringify({ price: parsedPrice }),
       })
 
       const data = await res.json()
@@ -933,22 +936,22 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </div>
 
                 {(() => {
-                  // Güvenli price parse
-                  const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
-                  const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
-                  const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
+                  // Güvenli price parse - virgül desteği ve karakter temizleme
+                  const parsedPrice = Number(
+                    String(adminPrice).replace(',', '.').replace(/[^\d.]/g, '')
+                  )
                   
-                  // Final onay için tek doğru kural - SADECE bu değişkenlere bağlı
+                  // Final onay için tek doğru kural - SADECE parsedPrice ile
                   const canAdminApprove = isAdmin 
                     && script.producerApproved === true
-                    && isValidPrice
+                    && parsedPrice > 0
                     && script.adminApproved !== true
                   
                   return (
                     <>
                       {/* Debug: Geçici olarak değerleri göster */}
                       <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded mb-2 font-mono">
-                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(adminPrice)} | adminApproved={String(script.adminApproved)} | canApprove={String(canAdminApprove)}
+                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(parsedPrice)} | adminApproved={String(script.adminApproved)}
                       </div>
                       
                       <button
@@ -971,7 +974,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                           <div className="space-y-1">
                             {!isAdmin && <div>Admin olarak algılanmıyorsun</div>}
                             {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı</div>}
-                            {!isValidPrice && script.producerApproved && <div>Fiyat geçerli değil (adminPrice: {adminPrice})</div>}
+                            {parsedPrice <= 0 && script.producerApproved && <div>Fiyat geçerli değil (parsedPrice: {parsedPrice})</div>}
                             {script.adminApproved && <div>Zaten onaylı</div>}
                           </div>
                         </div>
@@ -1214,28 +1217,28 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   )}
                 </div>
                 {(() => {
-                  // Güvenli price parse
-                  const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
-                  const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
-                  const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
+                  // Güvenli price parse - virgül desteği ve karakter temizleme
+                  const parsedPrice = Number(
+                    String(adminPrice).replace(',', '.').replace(/[^\d.]/g, '')
+                  )
                   
-                  // Final onay için tek doğru kural - SADECE bu değişkenlere bağlı
+                  // Final onay için tek doğru kural - SADECE parsedPrice ile
                   const canAdminApprove = isAdmin 
                     && script.producerApproved === true
-                    && isValidPrice
+                    && parsedPrice > 0
                     && script.adminApproved !== true
                   
                   return (
                     <>
                       {/* Debug: Geçici olarak değerleri göster */}
                       <div className="text-xs text-gray-500 bg-gray-100 p-1 rounded mb-1 font-mono">
-                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(adminPrice)} | adminApproved={String(script.adminApproved)}
+                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(parsedPrice)} | adminApproved={String(script.adminApproved)}
                       </div>
                       <button
                         onClick={handleAdminApprove}
                         disabled={loading || !canAdminApprove}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={!isAdmin ? 'Admin olarak algılanmıyorsun' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : !isValidPrice ? 'Fiyat geçerli değil' : script.adminApproved ? 'Zaten onaylı' : ''}
+                        title={!isAdmin ? 'Admin olarak algılanmıyorsun' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : parsedPrice <= 0 ? 'Fiyat geçerli değil' : script.adminApproved ? 'Zaten onaylı' : ''}
                       >
                         {loading ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
