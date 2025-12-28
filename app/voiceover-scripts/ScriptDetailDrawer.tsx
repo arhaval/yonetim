@@ -45,7 +45,6 @@ interface ScriptDetailDrawerProps {
 }
 
 export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }: ScriptDetailDrawerProps) {
-  console.log('[ScriptDetailDrawer] Component rendered', { isOpen, scriptId: script?.id, scriptStatus: script?.status })
   
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
@@ -108,45 +107,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           }
         }
 
-        // Script objesini analiz et - creator alanını otomatik tespit et
-        // Olası creator alanları: created_by, createdBy, creatorId, producerId, userId
-        const possibleCreatorFields = ['created_by', 'createdBy', 'creatorId', 'producerId', 'userId']
-        
-        // Script objesinin tüm alanlarını analiz et (geçici debug)
-        const scriptKeys = Object.keys(script)
+        // Ownership bazlı creator tespiti - script.creatorId (ContentCreator ID) ile current creator ID karşılaştırması
         const scriptCreatorId = script.creatorId ? String(script.creatorId) : (script.creator?.id ? String(script.creator.id) : null)
-        
-        // Creator alanını otomatik tespit et
-        let detectedCreatorField: string | null = null
-        let detectedCreatorValue: string | null = null
-
-        // Önce doğrudan alanları kontrol et
-        if ((script as any).created_by) {
-          detectedCreatorField = 'created_by'
-          detectedCreatorValue = String((script as any).created_by)
-        } else if ((script as any).createdBy) {
-          detectedCreatorField = 'createdBy'
-          detectedCreatorValue = String((script as any).createdBy)
-        } else if (script.creatorId) {
-          detectedCreatorField = 'creatorId'
-          detectedCreatorValue = String(script.creatorId)
-        } else if ((script as any).producerId) {
-          detectedCreatorField = 'producerId'
-          detectedCreatorValue = String((script as any).producerId)
-        } else if ((script as any).userId) {
-          detectedCreatorField = 'userId'
-          detectedCreatorValue = String((script as any).userId)
-        } else if (script.creator?.id) {
-          detectedCreatorField = 'creator.id'
-          detectedCreatorValue = String(script.creator.id)
-        }
-
-        // Ownership kontrolü: script.creatorId (ContentCreator ID) ile current creator ID karşılaştırması
         let isCreatorByOwnership = false
         
-        // Önce ContentCreator ID karşılaştırması yap
         if (scriptCreatorId) {
-          // Current user'ın creator ID'sini al
+          // Current user'ın creator ID'sini cookie'den al
           const creatorIdCookie = getCookie('creator-id')
           if (creatorIdCookie && String(creatorIdCookie) === String(scriptCreatorId)) {
             isCreatorByOwnership = true
@@ -161,13 +127,6 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
             } catch (error) {
               // Ignore
             }
-          }
-        }
-        
-        // Eğer User ID karşılaştırması gerekiyorsa (detectedCreatorValue User ID ise)
-        if (!isCreatorByOwnership && detectedCreatorValue && currentUserId) {
-          if (String(detectedCreatorValue) === String(currentUserId)) {
-            isCreatorByOwnership = true
           }
         }
 
@@ -1187,8 +1146,8 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               </div>
               
               {/* Reddet Butonu - Admin ve Creator için */}
-              {((isAdmin && (script.status === 'VOICE_UPLOADED' || script.status === 'APPROVED')) || 
-                (isCreator && script.status === 'WAITING_VOICE')) && (
+              {/* Reddet Butonu - Admin ve Creator için (status kontrolü kaldırıldı) */}
+              {(isAdmin || isCreator) && (
                 <button
                   onClick={handleReject}
                   disabled={loading}
