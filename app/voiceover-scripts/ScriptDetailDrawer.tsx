@@ -48,7 +48,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
-  const [adminPrice, setAdminPrice] = useState(script.price || 0)
+  const [adminPrice, setAdminPrice] = useState<string | number>(script.price?.toString() || '')
   const [notes, setNotes] = useState(script.notes || '')
   const [audioFileLink, setAudioFileLink] = useState(script.voiceLink || script.audioFile || '')
   
@@ -564,7 +564,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const res = await fetch(`/api/voiceover-scripts/${script.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: adminPrice }),
+        body: JSON.stringify({ price: typeof adminPrice === 'string' ? parseFloat(adminPrice) : adminPrice }),
       })
 
       const data = await res.json()
@@ -878,26 +878,31 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               )}
 
               {/* Admin Onay Butonu - HER ZAMAN GÖRÜNÜR */}
-              <div className="space-y-3">
-                <div>
+              <div className="space-y-3 relative z-10">
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-900 mb-1">
                     Fiyat (₺)
                   </label>
                   <input
                     type="number"
                     value={adminPrice}
-                    onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setAdminPrice(e.target.value)}
                     placeholder="Fiyat girin"
-                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 relative z-10"
                     min="0"
                     step="0.01"
-                    disabled={loading || !isAdmin || script.adminApproved}
+                    disabled={loading || script.adminApproved}
+                    readOnly={false}
                   />
+                  {/* Overlay koruması - admin değilse görünür ama pointer-events: none */}
+                  {!isAdmin && (
+                    <div className="absolute inset-0 bg-gray-50 opacity-50 rounded-md pointer-events-none z-20" />
+                  )}
                 </div>
 
                 <button
                   onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved}
                   className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? (
@@ -909,13 +914,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </button>
 
                 {/* Disabled durumunda açıklama */}
-                {(!isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved) && (
+                {(!isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved) && (
                   <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <div className="space-y-1">
                       {!isAdmin && <div>Sadece admin. (isAdmin: {String(isAdmin)}, roleLoading: {String(roleLoading)})</div>}
                       {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı. (producerApproved: {String(script.producerApproved)})</div>}
-                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && <div>Fiyat gir. (adminPrice: {adminPrice})</div>}
+                      {(!adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0)) && script.producerApproved && <div>Fiyat gir. (adminPrice: {adminPrice})</div>}
                       {script.adminApproved && <div>Zaten final onaylı.</div>}
                     </div>
                   </div>
@@ -1135,23 +1140,30 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               </button>
 
               {/* Admin Final Onay Butonu - HER ZAMAN GÖRÜNÜR */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={adminPrice}
-                  onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
-                  placeholder="Fiyat (₺)"
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500"
-                  min="0"
-                  step="0.01"
-                  disabled={loading || !isAdmin || script.adminApproved}
-                  title={!isAdmin ? 'Bu alan sadece admin için görünür' : script.adminApproved ? 'Metin zaten onaylandı' : ''}
-                />
+              <div className="flex items-center gap-2 relative z-10">
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={adminPrice}
+                    onChange={(e) => setAdminPrice(e.target.value)}
+                    placeholder="Fiyat (₺)"
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500 relative z-10"
+                    min="0"
+                    step="0.01"
+                    disabled={loading || script.adminApproved}
+                    readOnly={false}
+                    title={script.adminApproved ? 'Metin zaten onaylandı' : ''}
+                  />
+                  {/* Overlay koruması - admin değilse görünür ama pointer-events: none */}
+                  {!isAdmin && (
+                    <div className="absolute inset-0 bg-gray-50 opacity-50 rounded-md pointer-events-none z-20" />
+                  )}
+                </div>
                 <button
                   onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!isAdmin ? 'Sadece admin' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : (!adminPrice || adminPrice <= 0) ? 'Fiyat gir' : script.adminApproved ? 'Zaten final onaylı' : ''}
+                  title={!isAdmin ? 'Sadece admin' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : (!adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0)) ? 'Fiyat gir' : script.adminApproved ? 'Zaten final onaylı' : ''}
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
