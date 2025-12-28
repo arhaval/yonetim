@@ -234,7 +234,10 @@ export default function VoiceoverInbox({
         params.append('dateTo', dateTo)
       }
 
-      const res = await fetch(`/api/voiceover-scripts?${params.toString()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/voiceover-scripts?${params.toString()}`, { 
+        cache: 'default',
+        next: { revalidate: 30 }
+      })
       const data = await res.json()
 
       if (res.ok) {
