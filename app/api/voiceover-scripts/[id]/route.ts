@@ -14,35 +14,8 @@ export async function GET(
     const userId = cookieStore.get('user-id')?.value
     const creatorId = cookieStore.get('creator-id')?.value
     const voiceActorId = cookieStore.get('voice-actor-id')?.value
-    const userRoleCookie = cookieStore.get('user-role')?.value
 
-    // Admin kontrolü - önce cookie'den kontrol et (daha hızlı)
-    const isAdmin = userRoleCookie === 'admin' || userRoleCookie === 'ADMIN'
-    
-    // Eğer cookie'de admin yoksa ama userId varsa, veritabanından kontrol et
-    let isAdminFromDB = false
-    if (!isAdmin && userId) {
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { role: true },
-        })
-        isAdminFromDB = user?.role === 'admin' || user?.role === 'ADMIN'
-      } catch (error) {
-        // Veritabanı hatası durumunda cookie'ye güven
-        isAdminFromDB = false
-      }
-    }
-    
-    const finalIsAdmin = isAdmin || isAdminFromDB
-
-    if (!finalIsAdmin && !userId && !creatorId && !voiceActorId) {
-      return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
-        { status: 401 }
-      )
-    }
-
+    // Script'i getir
     const script = await prisma.voiceoverScript.findUnique({
       where: { id },
       include: {
@@ -68,13 +41,9 @@ export async function GET(
       )
     }
 
-    // Admin tüm metinleri görebilir
-    if (finalIsAdmin) {
-      return NextResponse.json(script)
-    }
-
-    // İçerik üreticisi sadece kendi metinlerini görebilir
-    if (creatorId && script.creatorId !== creatorId) {
+    // Yetki kontrolü
+    const canView = await canViewVoiceover(userId, creatorId, voiceActorId, script)
+    if (!canView) {
       return NextResponse.json(
         { error: 'Yetkisiz erişim' },
         { status: 403 }

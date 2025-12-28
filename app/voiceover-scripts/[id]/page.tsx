@@ -1,12 +1,14 @@
 import RoleAwareLayout from '@/components/RoleAwareLayout'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { ArrowLeft, FileText, CheckCircle, Clock, ExternalLink, Mic, User, DollarSign, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import ApproveScriptButton from './ApproveScriptButton'
 import DeleteScriptButton from './DeleteScriptButton'
+import { canViewVoiceover } from '@/lib/voiceover-permissions'
 
 export default async function VoiceoverScriptDetailPage({
   params,
@@ -14,6 +16,13 @@ export default async function VoiceoverScriptDetailPage({
   params: Promise<{ id: string }> | { id: string }
 }) {
   const { id } = await Promise.resolve(params)
+  
+  // Cookie'lerden kullanıcı bilgilerini al
+  const cookieStore = await cookies()
+  const userId = cookieStore.get('user-id')?.value
+  const creatorId = cookieStore.get('creator-id')?.value
+  const voiceActorId = cookieStore.get('voice-actor-id')?.value
+
   let script: any = null
 
   try {
@@ -42,6 +51,12 @@ export default async function VoiceoverScriptDetailPage({
 
   if (!script) {
     notFound()
+  }
+
+  // Yetki kontrolü - server-side guard
+  const canView = await canViewVoiceover(userId, creatorId, voiceActorId, script)
+  if (!canView) {
+    notFound() // Güvenlik için 404 döndür
   }
 
   return (

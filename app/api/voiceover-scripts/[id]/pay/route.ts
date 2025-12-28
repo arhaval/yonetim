@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { canMarkAsPaid } from '@/lib/voiceover-permissions'
 
 // Admin metni ödendi olarak işaretler ve giderlere ekler
 export async function POST(
@@ -20,16 +21,18 @@ export async function POST(
     }
 
     // Admin kontrolü
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
-
-    if (!user || user.role !== 'admin') {
+    const canPay = await canMarkAsPaid(userId)
+    if (!canPay) {
       return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
+        { error: 'Bu işlem için admin yetkisi gerekmektedir' },
         { status: 403 }
       )
     }
+
+    // User bilgisini audit log için al
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
 
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
