@@ -1218,26 +1218,32 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
                   const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
                   
-                  // Final onay için tek doğru kural
+                  // Final onay için tek doğru kural - SADECE bu değişkenlere bağlı
                   const canAdminApprove = isAdmin 
                     && script.producerApproved === true
                     && isValidPrice
                     && script.adminApproved !== true
                   
                   return (
-                    <button
-                      onClick={handleAdminApprove}
-                      disabled={loading || !canAdminApprove}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title={!isAdmin ? 'Admin olarak algılanmıyorsun' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : !isValidPrice ? 'Fiyat geçerli değil' : script.adminApproved ? 'Zaten onaylı' : ''}
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                      )}
-                      Final Onay Ver
-                    </button>
+                    <>
+                      {/* Debug: Geçici olarak değerleri göster */}
+                      <div className="text-xs text-gray-500 bg-gray-100 p-1 rounded mb-1 font-mono">
+                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(adminPrice)} | adminApproved={String(script.adminApproved)}
+                      </div>
+                      <button
+                        onClick={handleAdminApprove}
+                        disabled={loading || !canAdminApprove}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={!isAdmin ? 'Admin olarak algılanmıyorsun' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : !isValidPrice ? 'Fiyat geçerli değil' : script.adminApproved ? 'Zaten onaylı' : ''}
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Final Onay Ver
+                      </button>
+                    </>
                   )
                 })()}
               </div>
