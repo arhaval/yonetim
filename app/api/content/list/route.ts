@@ -69,6 +69,8 @@ export async function GET(request: NextRequest) {
         shares: true,
         saves: true,
         notes: true,
+        createdAt: true,
+        updatedAt: true,
         creator: {
           select: {
             id: true,
