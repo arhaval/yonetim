@@ -216,23 +216,23 @@ export async function GET(request: NextRequest) {
     })
 
       // lastActivityAt'e göre sıralama
-    let sortedScripts = scripts.map(script => ({
+    const scriptsWithLastActivity = scripts.map(script => ({
       ...script,
       lastActivityAt: getVoiceoverScriptLastActivityAt(script),
     }))
     
     // Varsayılan sıralama: lastActivityAt DESC (en son işlem gören en üstte)
-    sortedScripts.sort((a, b) => {
+    scriptsWithLastActivity.sort((a, b) => {
       const dateA = a.lastActivityAt.getTime()
       const dateB = b.lastActivityAt.getTime()
       return dateB - dateA // DESC
     })
     
     // Pagination için limit uygula
-    sortedScripts = sortedScripts.slice(skip, skip + limit)
+    const paginatedScripts = scriptsWithLastActivity.slice(skip, skip + limit)
     
     // lastActivityAt'i response'dan kaldır (client'a göndermeye gerek yok)
-    sortedScripts = sortedScripts.map(({ lastActivityAt, ...script }) => script)
+    const sortedScripts = paginatedScripts.map(({ lastActivityAt, ...script }) => script)
 
     return NextResponse.json({
       scripts: sortedScripts,
