@@ -190,6 +190,7 @@ export default function VoiceoverInbox({
 
   // Scripts yükle
   const loadScripts = useCallback(async () => {
+    console.log('[VoiceoverInbox] loadScripts called')
     setLoading(true)
     try {
       const params = new URLSearchParams({
