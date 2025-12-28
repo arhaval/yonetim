@@ -75,6 +75,10 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   const [roleLoading, setRoleLoading] = useState(true)
 
   useEffect(() => {
+    if (!isOpen) return
+    
+    console.log('[ScriptDetailDrawer] useEffect triggered', { isOpen, scriptId: script?.id })
+    
     // Cookie'lerden rol bilgisini al
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`
@@ -88,7 +92,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     const voiceActorId = getCookie('voice-actor-id')
     const userRole = getCookie('user-role')
 
-    // Debug logging
+    // Debug logging - HER ZAMAN ÇALIŞMALI
     console.log('[ScriptDetailDrawer] Role check:', {
       creatorId,
       userId,
@@ -98,13 +102,15 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       scriptStatus: script.status,
       producerApproved: script.producerApproved,
       adminApproved: script.adminApproved,
+      isOpen
     })
 
     // İçerik üreticisi kontrolü - creator-id cookie'si varsa ve script'in creator'ı ile eşleşiyorsa
+    let newIsCreator = false
     if (creatorId) {
       // Script'in creator'ı ile eşleşiyorsa veya script henüz yüklenmemişse (tüm creator'lar kendi scriptlerini görebilir)
       if (!script.creator?.id || script.creator.id === creatorId) {
-        setIsCreator(true)
+        newIsCreator = true
         console.log('[ScriptDetailDrawer] Set isCreator = true', {
           creatorId,
           scriptCreatorId: script.creator?.id,
@@ -119,10 +125,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         })
       }
     }
+    setIsCreator(newIsCreator)
 
     // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
+    let newIsAdmin = false
     if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'ADMIN')) {
-      setIsAdmin(true)
+      newIsAdmin = true
       console.log('[ScriptDetailDrawer] Set isAdmin = true', {
         userRole,
         status: script.status,
@@ -133,6 +141,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     } else {
       console.log('[ScriptDetailDrawer] Not admin:', { userRole })
     }
+    setIsAdmin(newIsAdmin)
 
     // Voice actor kontrolü
     if (voiceActorId) {
@@ -140,7 +149,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     }
 
     setRoleLoading(false)
-  }, [script.creator?.id])
+  }, [isOpen, script.id, script.status, script.creator?.id, script.producerApproved, script.adminApproved])
 
   // Script güncellendiğinde state'i güncelle
   useEffect(() => {
@@ -782,31 +791,42 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </p>
               )}
 
-              {/* DEBUG: Buton görünürlük kontrolü */}
+              {/* İçerik Üreticisi Onay Butonu */}
               {(() => {
                 const shouldShow = isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved
                 console.log('[ScriptDetailDrawer] Creator button check:', {
                   isCreator,
                   status: script.status,
                   producerApproved: script.producerApproved,
-                  shouldShow
+                  shouldShow,
+                  roleLoading
                 })
-                return shouldShow ? (
-                  <div className="space-y-2">
-                    <button
-                      onClick={handleProducerApprove}
-                      disabled={loading}
-                      className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                
+                // TEST: Her zaman göster (debug için)
+                if (isCreator || roleLoading) {
+                  return (
+                    <div className="space-y-2">
+                      <button
+                        onClick={handleProducerApprove}
+                        disabled={loading || script.producerApproved || script.status !== 'WAITING_VOICE'}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Metni Onayla {!shouldShow && '(Test)'}
+                      </button>
+                      {!shouldShow && (
+                        <div className="text-xs text-red-600">
+                          Debug: isCreator={String(isCreator)}, status={script.status}, producerApproved={String(script.producerApproved)}
+                        </div>
                       )}
-                      Metni Onayla
-                    </button>
-                  </div>
-                ) : null
+                    </div>
+                  )
+                }
+                return null
               })()}
               
               {script.producerApproved && (
@@ -849,59 +869,94 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </p>
               )}
 
-              {isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">
-                      Fiyat (₺)
-                    </label>
-                    <input
-                      type="number"
-                      value={adminPrice}
-                      onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
-                      placeholder="Fiyat girin"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                      min="0"
-                      step="0.01"
-                      disabled={loading}
-                    />
-                  </div>
+              {/* Admin Onay Butonu - TEST: Her zaman göster */}
+              {(() => {
+                const shouldShow = isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved
+                console.log('[ScriptDetailDrawer] Admin button check:', {
+                  isAdmin,
+                  status: script.status,
+                  producerApproved: script.producerApproved,
+                  adminApproved: script.adminApproved,
+                  shouldShow,
+                  roleLoading
+                })
+                
+                // TEST: Admin ise her zaman göster
+                if (isAdmin || roleLoading) {
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-1">
+                          Fiyat (₺)
+                        </label>
+                        <input
+                          type="number"
+                          value={adminPrice}
+                          onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
+                          placeholder="Fiyat girin"
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                          min="0"
+                          step="0.01"
+                          disabled={loading || script.adminApproved}
+                        />
+                      </div>
 
-                  <button
-                    onClick={handleAdminApprove}
-                    disabled={loading || !adminPrice || adminPrice <= 0}
-                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                    )}
-                    Final Onay Ver
-                  </button>
+                      <button
+                        onClick={handleAdminApprove}
+                        disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Final Onay Ver {!shouldShow && '(Test)'}
+                      </button>
 
-                  {(!adminPrice || adminPrice <= 0) && (
+                      {!shouldShow && (
+                        <div className="text-xs text-red-600">
+                          Debug: isAdmin={String(isAdmin)}, status={script.status}, producerApproved={String(script.producerApproved)}, adminApproved={String(script.adminApproved)}
+                        </div>
+                      )}
+
+                      {!script.producerApproved && (
+                        <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <span>Önce içerik üreticisi metni onaylamalı</span>
+                        </div>
+                      )}
+
+                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && (
+                        <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <span>Fiyat gir</span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+                
+                if (isAdmin && script.status === 'VOICE_UPLOADED' && !script.producerApproved) {
+                  return (
                     <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
                       <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Fiyat gir</span>
+                      <span>Önce içerik üreticisi metni onaylamalı</span>
                     </div>
-                  )}
-                </div>
-              )}
-              
-              {isAdmin && script.status === 'VOICE_UPLOADED' && !script.producerApproved && (
-                <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Önce içerik üreticisi metni onaylamalı</span>
-                </div>
-              )}
-              
-              {isAdmin && script.adminApproved && (
-                <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Admin onayladı. Edit pack oluşturuldu.</span>
-                </div>
-              )}
+                  )
+                }
+                
+                if (isAdmin && script.adminApproved) {
+                  return (
+                    <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+                      <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Admin onayladı. Edit pack oluşturuldu.</span>
+                    </div>
+                  )
+                }
+                
+                return null
+              })()}
             </div>
 
             {/* Edit Paketi */}
@@ -1100,29 +1155,42 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           {/* Footer - Aksiyon Butonları */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex flex-wrap gap-3">
-              {/* İçerik Üreticisi Onayla Butonu - WAITING_VOICE status'ünde */}
+              {/* İçerik Üreticisi Onayla Butonu - TEST: Her zaman göster */}
               {(() => {
                 const shouldShow = isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved
                 console.log('[ScriptDetailDrawer] Footer Creator button check:', {
                   isCreator,
                   status: script.status,
                   producerApproved: script.producerApproved,
-                  shouldShow
+                  shouldShow,
+                  roleLoading
                 })
-                return shouldShow ? (
-                  <button
-                    onClick={handleProducerApprove}
-                    disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                    )}
-                    Metni Onayla
-                  </button>
-                ) : null
+                
+                // TEST: Creator ise her zaman göster
+                if (isCreator || roleLoading) {
+                  return (
+                    <>
+                      <button
+                        onClick={handleProducerApprove}
+                        disabled={loading || script.producerApproved || script.status !== 'WAITING_VOICE'}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Metni Onayla {!shouldShow && '(Test)'}
+                      </button>
+                      {!shouldShow && (
+                        <div className="text-xs text-red-600 w-full">
+                          Debug: isCreator={String(isCreator)}, status={script.status}, producerApproved={String(script.producerApproved)}
+                        </div>
+                      )}
+                    </>
+                  )
+                }
+                return null
               })()}
 
               {/* Admin Final Onay Butonu - VOICE_UPLOADED status'ünde ve producerApproved true ise */}
