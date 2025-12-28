@@ -21,6 +21,16 @@ export async function GET(
       )
     }
 
+    // Admin kontrolü
+    let isAdmin = false
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })
+      isAdmin = user?.role === 'admin' || user?.role === 'ADMIN'
+    }
+
     const script = await prisma.voiceoverScript.findUnique({
       where: { id },
       include: {
@@ -44,6 +54,11 @@ export async function GET(
         { error: 'Metin bulunamadı' },
         { status: 404 }
       )
+    }
+
+    // Admin tüm metinleri görebilir
+    if (isAdmin) {
+      return NextResponse.json(script)
     }
 
     // İçerik üreticisi sadece kendi metinlerini görebilir

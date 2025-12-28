@@ -21,6 +21,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Admin kontrolü
+    let isAdmin = false
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })
+      isAdmin = user?.role === 'admin' || user?.role === 'ADMIN'
+    }
+
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -43,7 +53,7 @@ export async function GET(request: NextRequest) {
     let whereClause: any = {}
 
     // Creator sadece kendi scriptlerini görmeli (admin değilse)
-    if (creatorId && !userId) {
+    if (creatorId && !isAdmin) {
       whereClause.creatorId = creatorId
     }
 
