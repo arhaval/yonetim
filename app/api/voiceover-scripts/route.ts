@@ -12,29 +12,45 @@ export async function GET(request: NextRequest) {
     const userId = cookieStore.get('user-id')?.value
     const creatorId = cookieStore.get('creator-id')?.value
     const voiceActorIdCookie = cookieStore.get('voice-actor-id')?.value
+    const userRoleCookie = cookieStore.get('user-role')?.value
 
     // Debug logging
     console.log('[VoiceoverScripts API] Auth check:', {
       userId,
       creatorId,
       voiceActorIdCookie,
+      userRoleCookie,
       hasUserId: !!userId,
       hasCreatorId: !!creatorId,
       hasVoiceActorId: !!voiceActorIdCookie,
+      hasUserRoleCookie: !!userRoleCookie,
+      allCookies: {
+        'user-id': userId,
+        'creator-id': creatorId,
+        'voice-actor-id': voiceActorIdCookie,
+        'user-role': userRoleCookie,
+      },
     })
 
     // Admin, içerik üreticisi veya seslendirmen kontrolü
     if (!userId && !creatorId && !voiceActorIdCookie) {
       console.log('[VoiceoverScripts API] Unauthorized - no cookies')
       return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
+        { 
+          error: 'Yetkisiz erişim',
+          debug: {
+            hasUserId: !!userId,
+            hasCreatorId: !!creatorId,
+            hasVoiceActorId: !!voiceActorIdCookie,
+            userRoleCookie,
+          }
+        },
         { status: 401 }
       )
     }
 
     // Admin kontrolü - hem cookie'den hem de veritabanından kontrol et
     let isAdmin = false
-    const userRoleCookie = cookieStore.get('user-role')?.value
     if (userId) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
