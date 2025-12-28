@@ -21,14 +21,21 @@ export async function GET(
       )
     }
 
-    // Admin kontrolü
+    // Admin kontrolü - hem cookie'den hem de veritabanından kontrol et
     let isAdmin = false
+    const userRoleCookie = cookieStore.get('user-role')?.value
     if (userId) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true },
       })
-      isAdmin = user?.role === 'admin' || user?.role === 'ADMIN'
+      // Hem cookie'den hem de veritabanından kontrol et
+      isAdmin = 
+        (user?.role === 'admin' || user?.role === 'ADMIN') ||
+        (userRoleCookie === 'admin' || userRoleCookie === 'ADMIN')
+    } else if (userRoleCookie === 'admin' || userRoleCookie === 'ADMIN') {
+      // Sadece cookie'den admin kontrolü (fallback)
+      isAdmin = true
     }
 
     const script = await prisma.voiceoverScript.findUnique({
