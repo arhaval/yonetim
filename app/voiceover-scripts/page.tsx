@@ -755,10 +755,15 @@ export default function VoiceoverScriptsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {(script.voiceLink || script.audioFile) ? (
                           <a
-                            href={script.voiceLink || script.audioFile || '#'}
+                            href={script.voiceLink || script.audioFile || undefined}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (!script.voiceLink && !script.audioFile) {
+                                e.preventDefault()
+                              }
+                            }}
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
