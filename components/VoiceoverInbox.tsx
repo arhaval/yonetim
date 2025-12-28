@@ -26,6 +26,7 @@ interface Script {
   adminApprovedBy: string | null
   createdAt: string
   updatedAt: string
+  creatorId: string | null // Ownership kontrolü için gerekli
   creator: {
     id: string
     name: string
