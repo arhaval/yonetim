@@ -85,14 +85,17 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     const userId = getCookie('user-id')
     const voiceActorId = getCookie('voice-actor-id')
 
-    // İçerik üreticisi kontrolü
-    if (creatorId && script.creator?.id === creatorId) {
-      setIsCreator(true)
+    // İçerik üreticisi kontrolü - creator-id cookie'si varsa ve script'in creator'ı ile eşleşiyorsa
+    if (creatorId) {
+      // Script'in creator'ı ile eşleşiyorsa veya script henüz yüklenmemişse (tüm creator'lar kendi scriptlerini görebilir)
+      if (!script.creator?.id || script.creator.id === creatorId) {
+        setIsCreator(true)
+      }
     }
 
-    // Admin kontrolü - cookie'den user-role kontrolü
+    // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
     const userRole = getCookie('user-role')
-    if (userRole === 'admin') {
+    if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'ADMIN')) {
       setIsAdmin(true)
     }
 
@@ -432,8 +435,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         toast.success('Producer onayı başarıyla verildi')
         onUpdate()
       } else {
-        if (res.status === 403) {
-          toast.error('Bu işlem için yetkiniz yok')
+        console.error('Producer approve error:', { status: res.status, data })
+        if (res.status === 401) {
+          toast.error('Giriş yapmanız gerekiyor')
+        } else if (res.status === 403) {
+          toast.error(data.error || 'Bu işlem için yetkiniz yok')
+        } else if (res.status === 400) {
+          toast.error(data.error || 'Onaylama için gerekli koşullar sağlanmamış')
         } else {
           toast.error(data.error || 'Onaylama başarısız')
         }
@@ -509,8 +517,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         toast.success('Admin onayı başarıyla verildi')
         onUpdate()
       } else {
-        if (res.status === 403) {
-          toast.error('Bu işlem için yetkiniz yok')
+        console.error('Admin approve error:', { status: res.status, data })
+        if (res.status === 401) {
+          toast.error('Giriş yapmanız gerekiyor')
+        } else if (res.status === 403) {
+          toast.error(data.error || 'Bu işlem için admin yetkisi gerekmektedir')
+        } else if (res.status === 400) {
+          toast.error(data.error || 'Onaylama için gerekli koşullar sağlanmamış')
         } else {
           toast.error(data.error || 'Onaylama başarısız')
         }

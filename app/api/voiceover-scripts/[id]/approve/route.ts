@@ -26,9 +26,9 @@ export async function POST(
       where: { id: userId },
     })
 
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'ADMIN')) {
       return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
+        { error: 'Bu işlem için admin yetkisi gerekmektedir' },
         { status: 403 }
       )
     }
