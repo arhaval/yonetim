@@ -554,7 +554,8 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       return
     }
 
-    if (!adminPrice || adminPrice <= 0) {
+    const priceValue = typeof adminPrice === 'string' ? parseFloat(adminPrice) : adminPrice
+    if (!priceValue || priceValue <= 0 || isNaN(priceValue)) {
       toast.error('Lütfen geçerli bir fiyat girin')
       return
     }
@@ -564,7 +565,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const res = await fetch(`/api/voiceover-scripts/${script.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: typeof adminPrice === 'string' ? parseFloat(adminPrice) : adminPrice }),
+        body: JSON.stringify({ price: priceValue }),
       })
 
       const data = await res.json()
