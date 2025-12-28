@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2, Square, CheckSquare2, ExternalLink } from 'lucide-react'
+import { Plus, Search, Filter, ChevronLeft, ChevronRight, Eye, CheckCircle, XCircle, Archive, Calendar, User, Mic, DollarSign, FileText, Loader2, Square, CheckSquare2, ExternalLink, UserPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
@@ -89,6 +89,86 @@ export default function VoiceoverInbox({
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const limit = 20
+
+  // Current user ID (voice actor)
+  const [currentVoiceActorId, setCurrentVoiceActorId] = useState<string | null>(null)
+
+  // Current user ID'yi yükle
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift()
+      return null
+    }
+    const voiceActorId = getCookie('voice-actor-id')
+    setCurrentVoiceActorId(voiceActorId || null)
+  }, [])
+
+  // İşi Üstlen handler
+  const handleAssignScript = async (scriptId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!currentVoiceActorId) {
+      toast.error('Giriş yapmanız gerekiyor')
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${scriptId}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success('İş üstlenildi')
+        
+        // Tablo refetch
+        await loadScripts()
+        
+        // Drawer'ı aç ve script'i seç - API'den güncel script'i çek
+        try {
+          const scriptRes = await fetch(`/api/voiceover-scripts/${scriptId}`)
+          if (scriptRes.ok) {
+            const scriptData = await scriptRes.json()
+            setSelectedScript(scriptData)
+            setIsDrawerOpen(true)
+            // voiceLink input'una odaklan
+            setTimeout(() => {
+              const input = document.querySelector('input[placeholder*="drive.google.com"]') as HTMLInputElement
+              if (input) {
+                input.focus()
+              }
+            }, 300)
+          } else {
+            // Fallback: mevcut script'i kullan
+            const updatedScript = scripts.find(s => s.id === scriptId)
+            if (updatedScript) {
+              setSelectedScript(updatedScript)
+              setIsDrawerOpen(true)
+            }
+          }
+        } catch (err) {
+          console.error('Error loading script details:', err)
+          // Fallback: mevcut script'i kullan
+          const updatedScript = scripts.find(s => s.id === scriptId)
+          if (updatedScript) {
+            setSelectedScript(updatedScript)
+            setIsDrawerOpen(true)
+          }
+        }
+      } else if (res.status === 409) {
+        toast.error('Bu iş başka birine atanmış')
+      } else {
+        toast.error(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      console.error('Error assigning script:', error)
+      toast.error('Bir hata oluştu')
+    }
+  }
 
   // Seslendirmenleri yükle
   useEffect(() => {
@@ -614,15 +694,28 @@ export default function VoiceoverInbox({
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => {
-                              setSelectedScript(script)
-                              setIsDrawerOpen(true)
-                            }}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Detay
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedScript(script)
+                                setIsDrawerOpen(true)
+                              }}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Detay
+                            </button>
+                            {/* İşi Üstlen butonu - sadece voice actor için ve atanmamışsa göster */}
+                            {currentVoiceActorId && !script.voiceActorId && (
+                              <button
+                                onClick={(e) => handleAssignScript(script.id, e)}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded hover:bg-green-100 transition-colors"
+                                title="İşi Üstlen"
+                              >
+                                <UserPlus className="w-3 h-3 mr-1" />
+                                Üstlen
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           {editPackUrl && !isEditPackExpired ? (

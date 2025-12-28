@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink, AlertCircle, Copy, Plus, Trash2, Edit } from 'lucide-react'
+import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, User, Save, Loader2, ExternalLink, AlertCircle, Copy, Plus, Trash2, Edit, UserPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
@@ -68,6 +68,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   // Rol kontrolü
   const [isCreator, setIsCreator] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [currentVoiceActorId, setCurrentVoiceActorId] = useState<string | null>(null)
   const [roleLoading, setRoleLoading] = useState(true)
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
     const creatorId = getCookie('creator-id')
     const userId = getCookie('user-id')
+    const voiceActorId = getCookie('voice-actor-id')
 
     // İçerik üreticisi kontrolü
     if (creatorId && script.creator?.id === creatorId) {
@@ -92,6 +94,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     if (userRole === 'admin') {
       setIsAdmin(true)
     }
+
+    // Voice actor kontrolü
+    if (voiceActorId) {
+      setCurrentVoiceActorId(voiceActorId)
+    }
+
     setRoleLoading(false)
   }, [script.creator?.id])
 
@@ -437,6 +445,44 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     }
   }
 
+  const handleAssignScript = async () => {
+    if (!currentVoiceActorId) {
+      toast.error('Giriş yapmanız gerekiyor')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success('İş üstlenildi')
+        onUpdate()
+        // voiceLink input'una odaklan
+        setTimeout(() => {
+          const input = document.querySelector('input[placeholder*="drive.google.com"]') as HTMLInputElement
+          if (input) {
+            input.focus()
+          }
+        }, 100)
+      } else if (res.status === 409) {
+        toast.error('Bu iş başka birine atanmış')
+      } else {
+        toast.error(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      console.error('Error assigning script:', error)
+      toast.error('Bir hata oluştu')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleAdminApprove = async () => {
     if (!script.producerApproved) {
       toast.error('Önce içerik üreticisi onaylamalı')
@@ -539,11 +585,28 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   <span className="font-medium">Oluşturan:</span> {script.creator?.name || '-'}
                 </span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Mic className="w-4 h-4" />
-                <span>
-                  <span className="font-medium">Seslendiren:</span> {script.voiceActor?.name || '-'}
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Mic className="w-4 h-4" />
+                  <span>
+                    <span className="font-medium">Seslendiren:</span> {script.voiceActor?.name || '-'}
+                  </span>
+                </div>
+                {/* İşi Üstlen butonu - sadece voice actor için ve atanmamışsa göster */}
+                {currentVoiceActorId && !script.voiceActorId && (
+                  <button
+                    onClick={handleAssignScript}
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <UserPlus className="w-4 h-4 mr-2" />
+                    )}
+                    İşi Üstlen
+                  </button>
+                )}
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Calendar className="w-4 h-4" />
