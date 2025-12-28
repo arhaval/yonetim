@@ -17,38 +17,41 @@ export interface VoiceoverScript {
 
 /**
  * Kullanıcının admin olup olmadığını kontrol eder
- * Önce cookie'den kontrol eder, sonra veritabanından
+ * Önce cookie'den kontrol eder (daha hızlı), sonra veritabanından
+ * Admin her zaman erişebilmeli - bu fonksiyon kritik
  */
 export async function isAdmin(userId?: string | null): Promise<boolean> {
-  if (!userId) {
-    // Cookie'den admin kontrolü
-    const cookieStore = await cookies()
-    const userRoleCookie = cookieStore.get('user-role')?.value
-    return userRoleCookie?.toLowerCase() === 'admin'
-  }
-
-  // Cookie'den kontrol
+  // ÖNCE cookie'den kontrol et (en hızlı ve güvenilir)
   const cookieStore = await cookies()
   const userRoleCookie = cookieStore.get('user-role')?.value
+  
+  // Cookie'de admin varsa direkt true döndür
   if (userRoleCookie?.toLowerCase() === 'admin') {
     return true
   }
 
-  // Veritabanından kontrol
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    })
-    return user?.role?.toLowerCase() === 'admin' || false
-  } catch (error) {
-    // Veritabanı hatası durumunda cookie'ye güven
-    return userRoleCookie?.toLowerCase() === 'admin' || false
+  // userId varsa veritabanından da kontrol et (fallback)
+  if (userId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })
+      if (user?.role?.toLowerCase() === 'admin') {
+        return true
+      }
+    } catch (error) {
+      // Veritabanı hatası durumunda cookie'ye güven (zaten yukarıda kontrol edildi)
+      // Hata durumunda false döndür
+    }
   }
+
+  return false
 }
 
 /**
  * Kullanıcının voiceover script'ini görüntüleyip görüntüleyemeyeceğini kontrol eder
+ * Admin her zaman erişebilir
  */
 export async function canViewVoiceover(
   userId: string | null | undefined,
@@ -56,12 +59,14 @@ export async function canViewVoiceover(
   voiceActorId: string | null | undefined,
   script: VoiceoverScript
 ): Promise<boolean> {
-  // Admin her şeyi görebilir - userId varsa veya yoksa da cookie'den kontrol et
+  // Admin her şeyi görebilir - ÖNCE admin kontrolü yap (en önemli)
+  // userId null olsa bile cookie'den kontrol et
   const adminCheck = await isAdmin(userId)
   if (adminCheck) {
     return true
   }
 
+  // Admin değilse, owner kontrolü yap
   // Creator kendi script'lerini görebilir
   if (creatorId && script.creatorId === creatorId) {
     return true
