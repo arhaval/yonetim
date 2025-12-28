@@ -88,12 +88,6 @@ export default function VoiceActorDashboardPage() {
   if (!voiceActor) {
     return null
   }
-  
-  // Ödeme hesaplamaları
-  const paidScripts = myScripts.filter(s => s.status === 'PAID')
-  const unpaidScripts = myScripts.filter(s => s.status === 'APPROVED' || (s.status === 'VOICE_UPLOADED' && s.audioFile))
-  const totalPaid = paidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
-  const totalUnpaid = unpaidScripts.reduce((sum, s) => sum + (s.price || 0), 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
