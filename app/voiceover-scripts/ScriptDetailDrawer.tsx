@@ -33,6 +33,7 @@ interface Script {
     id: string
     name: string
   } | null
+  voiceActorId: string | null
 }
 
 interface ScriptDetailDrawerProps {
@@ -593,7 +594,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   </span>
                 </div>
                 {/* İşi Üstlen butonu - sadece voice actor için ve atanmamışsa göster */}
-                {currentVoiceActorId && !script.voiceActorId && (
+                {currentVoiceActorId && (!script.voiceActorId || script.voiceActorId === null) && (
                   <button
                     onClick={handleAssignScript}
                     disabled={loading}
