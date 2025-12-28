@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       whereClause.contentCreatorId = contentCreatorId
     }
 
-    // Finansal kayıtları getir
+    // Finansal kayıtları getir - updatedAt DESC ile (en son güncellenen en üstte)
     const records = await prisma.financialRecord.findMany({
       where: whereClause,
       include: {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         contentCreator: true,
         voiceActor: true,
       },
-      orderBy: { date: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     }).catch(() => [])
 
     // lastActivityAt'e göre sıralama
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       include: {
         streamer: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     }).catch(() => [])
 
     // Payment'ları lastActivityAt'e göre sıralama
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       include: {
         teamMember: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     }).catch(() => [])
 
     // TeamPayment'ları lastActivityAt'e göre sıralama
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { updatedAt: 'asc' },
+      orderBy: { updatedAt: 'desc' },
     }).catch(() => [])
 
     // VoiceoverScript'leri lastActivityAt'e göre sıralama
@@ -231,11 +231,12 @@ export async function GET(request: NextRequest) {
     // Tüm kayıtları birleştir
     let allRecords: any[] = [...sortedRecords, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
     
-    // Son bir kez lastActivityAt'e göre sırala (tüm kayıtlar için)
+    // Son bir kez updatedAt'e göre sırala (tüm kayıtlar için) - en son güncellenen en üstte
     allRecords.sort((a, b) => {
-      const dateA = new Date(a.date || a.occurredAt || a.createdAt || 0).getTime()
-      const dateB = new Date(b.date || b.occurredAt || b.createdAt || 0).getTime()
-      return dateB - dateA // DESC
+      // updatedAt öncelikli, yoksa occurredAt, yoksa paidAt, yoksa createdAt
+      const dateA = new Date(a.updatedAt || a.occurredAt || a.paidAt || a.date || a.createdAt || 0).getTime()
+      const dateB = new Date(b.updatedAt || b.occurredAt || b.paidAt || b.date || b.createdAt || 0).getTime()
+      return dateB - dateA // DESC - en yeni en üstte
     })
 
     // Role-based filtering for combined records
