@@ -56,8 +56,9 @@ export async function canViewVoiceover(
   voiceActorId: string | null | undefined,
   script: VoiceoverScript
 ): Promise<boolean> {
-  // Admin her şeyi görebilir
-  if (userId && (await isAdmin(userId))) {
+  // Admin her şeyi görebilir - userId varsa veya yoksa da cookie'den kontrol et
+  const adminCheck = await isAdmin(userId)
+  if (adminCheck) {
     return true
   }
 
