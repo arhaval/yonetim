@@ -179,20 +179,20 @@ export async function GET(request: NextRequest) {
     }))
 
     // Tüm kayıtları birleştir
-    let allRecords = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
+    let allRecords: any[] = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
 
     // Role-based filtering for combined records
     if (voiceActorId) {
-      allRecords = allRecords.filter(r => r.voiceActorId === voiceActorId)
+      allRecords = allRecords.filter((r: any) => r.voiceActorId === voiceActorId)
     }
     if (teamMemberId) {
-      allRecords = allRecords.filter(r => r.teamMemberId === teamMemberId)
+      allRecords = allRecords.filter((r: any) => r.teamMemberId === teamMemberId)
     }
     if (streamerId) {
-      allRecords = allRecords.filter(r => r.streamerId === streamerId)
+      allRecords = allRecords.filter((r: any) => r.streamerId === streamerId)
     }
     if (contentCreatorId) {
-      allRecords = allRecords.filter(r => r.contentCreatorId === contentCreatorId)
+      allRecords = allRecords.filter((r: any) => r.contentCreatorId === contentCreatorId)
     }
 
     // Eğer role-based filter varsa { records: [...] } formatında döndür, yoksa direkt array
