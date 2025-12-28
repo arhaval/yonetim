@@ -88,11 +88,19 @@ export default function VoiceActorDashboardPage() {
 
       if (res.ok) {
         console.log('Script assigned successfully:', data)
+        // Optimistic update - script'i hemen listeden güncelle
+        if (voiceActor?.id && data.script) {
+          setScripts(prevScripts => 
+            prevScripts.map(script => 
+              script.id === scriptId 
+                ? { ...script, voiceActorId: voiceActor.id, voiceActor: data.script.voiceActor }
+                : script
+            )
+          )
+        }
         alert('Metin başarıyla size atandı!')
-        // Fresh data için tekrar yükle - loadScripts kendi loading state'ini yönetiyor
+        // Fresh data için tekrar yükle
         await loadScripts()
-        // Sayfayı yenile (güvenli fallback)
-        window.location.reload()
       } else {
         console.error('Assignment failed:', data)
         alert(data.error || 'Bir hata oluştu')
