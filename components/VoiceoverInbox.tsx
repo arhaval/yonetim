@@ -235,6 +235,17 @@ export default function VoiceoverInbox({
       }
 
       const res = await fetch(`/api/voiceover-scripts?${params.toString()}`, { cache: 'no-store' })
+      
+      // Debug logging
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('[VoiceoverInbox] API Error:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: errorData,
+          url: `/api/voiceover-scripts?${params.toString()}`,
+        })
+      }
       const data = await res.json()
 
       if (res.ok) {
