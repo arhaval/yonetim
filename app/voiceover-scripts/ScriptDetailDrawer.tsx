@@ -172,7 +172,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   // Script güncellendiğinde state'i güncelle
   useEffect(() => {
     setPrice(script.price || 0)
-    setAdminPrice(script.price || 0)
+    setAdminPrice(script.price?.toString() || '')
     setAudioFileLink(script.voiceLink || script.audioFile || '')
   }, [script])
 
