@@ -489,6 +489,17 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
       if (res.ok) {
         toast.success('Metin başarıyla onaylandı! Admin fiyat girip final onayı yapacak.')
+        // Script'i refetch et ve güncelle
+        try {
+          const scriptRes = await fetch(`/api/voiceover-scripts/${script.id}`)
+          if (scriptRes.ok) {
+            const updatedScript = await scriptRes.json()
+            // Parent'a güncellenmiş script'i bildir
+            onUpdate()
+          }
+        } catch (err) {
+          console.error('Error refetching script:', err)
+        }
         onUpdate()
       } else {
         console.error('Creator approve error:', { status: res.status, data })
@@ -554,7 +565,10 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       return
     }
 
-    const priceValue = typeof adminPrice === 'string' ? parseFloat(adminPrice) : adminPrice
+    // Güvenli price parse - virgül desteği ve empty string kontrolü
+    const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
+    const priceValue = priceString === '' ? 0 : parseFloat(priceString)
+    
     if (!priceValue || priceValue <= 0 || isNaN(priceValue)) {
       toast.error('Lütfen geçerli bir fiyat girin')
       return
@@ -572,6 +586,19 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
       if (res.ok) {
         toast.success('Admin onayı başarıyla verildi')
+        // Script'i refetch et ve güncelle
+        try {
+          const scriptRes = await fetch(`/api/voiceover-scripts/${script.id}`)
+          if (scriptRes.ok) {
+            const updatedScript = await scriptRes.json()
+            // Parent'a güncellenmiş script'i bildir
+            onUpdate()
+            // Local state'i güncelle (script prop useEffect ile güncellenecek)
+            setAdminPrice(updatedScript.price?.toString() || '')
+          }
+        } catch (err) {
+          console.error('Error refetching script:', err)
+        }
         onUpdate()
       } else {
         console.error('Admin approve error:', { status: res.status, data })
@@ -901,31 +928,48 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   )}
                 </div>
 
-                <button
-                  onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved}
-                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Final Onay Ver
-                </button>
+                {(() => {
+                  // Güvenli price parse
+                  const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
+                  const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
+                  const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
+                  
+                  // Final onay için tek doğru kural
+                  const canAdminApprove = isAdmin 
+                    && script.producerApproved === true
+                    && isValidPrice
+                    && script.adminApproved !== true
+                  
+                  return (
+                    <>
+                      <button
+                        onClick={handleAdminApprove}
+                        disabled={loading || !canAdminApprove}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                        )}
+                        Final Onay Ver
+                      </button>
 
-                {/* Disabled durumunda açıklama */}
-                {(!isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved) && (
-                  <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <div className="space-y-1">
-                      {!isAdmin && <div>Sadece admin. (isAdmin: {String(isAdmin)}, roleLoading: {String(roleLoading)})</div>}
-                      {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı. (producerApproved: {String(script.producerApproved)})</div>}
-                      {(!adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0)) && script.producerApproved && <div>Fiyat gir. (adminPrice: {adminPrice})</div>}
-                      {script.adminApproved && <div>Zaten final onaylı.</div>}
-                    </div>
-                  </div>
-                )}
+                      {/* Disabled durumunda açıklama */}
+                      {!canAdminApprove && !loading && (
+                        <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                          <div className="space-y-1">
+                            {!isAdmin && <div>Admin olarak algılanmıyorsun</div>}
+                            {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı</div>}
+                            {!isValidPrice && script.producerApproved && <div>Fiyat geçerli değil (adminPrice: {adminPrice})</div>}
+                            {script.adminApproved && <div>Zaten onaylı</div>}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             </div>
 
@@ -1160,19 +1204,34 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     <div className="absolute inset-0 bg-gray-50 opacity-50 rounded-md pointer-events-none z-20" />
                   )}
                 </div>
-                <button
-                  onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0) || script.adminApproved}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!isAdmin ? 'Sadece admin' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : (!adminPrice || (typeof adminPrice === 'string' ? parseFloat(adminPrice) <= 0 : adminPrice <= 0)) ? 'Fiyat gir' : script.adminApproved ? 'Zaten final onaylı' : ''}
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Final Onay Ver
-                </button>
+                {(() => {
+                  // Güvenli price parse
+                  const priceString = typeof adminPrice === 'string' ? adminPrice.replace(',', '.') : String(adminPrice || '')
+                  const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
+                  const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
+                  
+                  // Final onay için tek doğru kural
+                  const canAdminApprove = isAdmin 
+                    && script.producerApproved === true
+                    && isValidPrice
+                    && script.adminApproved !== true
+                  
+                  return (
+                    <button
+                      onClick={handleAdminApprove}
+                      disabled={loading || !canAdminApprove}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={!isAdmin ? 'Admin olarak algılanmıyorsun' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : !isValidPrice ? 'Fiyat geçerli değil' : script.adminApproved ? 'Zaten onaylı' : ''}
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      )}
+                      Final Onay Ver
+                    </button>
+                  )
+                })()}
               </div>
               
               {/* Reddet Butonu - Admin ve Creator için */}

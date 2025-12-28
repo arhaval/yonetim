@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse, format } from 'date-fns'
 import { createAuditLog } from '@/lib/audit-log'
 import { cookies } from 'next/headers'
+import { getFinancialRecordLastActivityAt, getPaymentLastActivityAt, getTeamPaymentLastActivityAt, getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
@@ -55,6 +56,19 @@ export async function GET(request: NextRequest) {
       orderBy: { date: 'asc' },
     }).catch(() => [])
 
+    // lastActivityAt'e göre sıralama
+    const recordsWithLastActivity = records.map(record => ({
+      ...record,
+      lastActivityAt: getFinancialRecordLastActivityAt(record),
+    }))
+    
+    recordsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    // lastActivityAt'i response'dan kaldır
+    const sortedRecords = recordsWithLastActivity.map(({ lastActivityAt, ...record }) => record)
+
     // Payment ve TeamPayment kayıtlarını da ekle
     const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
     const monthEnd = filter === 'monthly' ? endOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
@@ -72,6 +86,18 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'asc' },
     }).catch(() => [])
 
+    // Payment'ları lastActivityAt'e göre sıralama
+    const paymentsWithLastActivity = payments.map(payment => ({
+      ...payment,
+      lastActivityAt: getPaymentLastActivityAt(payment),
+    }))
+    
+    paymentsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    const sortedPayments = paymentsWithLastActivity.map(({ lastActivityAt, ...payment }) => payment)
+
     const teamPayments = await prisma.teamPayment.findMany({
       where: filter === 'monthly' && monthStart && monthEnd ? {
         OR: [
@@ -84,6 +110,18 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'asc' },
     }).catch(() => [])
+
+    // TeamPayment'ları lastActivityAt'e göre sıralama
+    const teamPaymentsWithLastActivity = teamPayments.map(payment => ({
+      ...payment,
+      lastActivityAt: getTeamPaymentLastActivityAt(payment),
+    }))
+    
+    teamPaymentsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    const sortedTeamPayments = teamPaymentsWithLastActivity.map(({ lastActivityAt, ...payment }) => payment)
 
     // Ödenen seslendirmen metinlerini getir
     let voiceoverScriptsWhere: any = {
@@ -120,8 +158,20 @@ export async function GET(request: NextRequest) {
       orderBy: { updatedAt: 'asc' },
     }).catch(() => [])
 
+    // VoiceoverScript'leri lastActivityAt'e göre sıralama
+    const scriptsWithLastActivity = paidVoiceoverScripts.map(script => ({
+      ...script,
+      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
+    }))
+    
+    scriptsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    const sortedPaidVoiceoverScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => script)
+
     // Payment'ları FinancialRecord formatına çevir
-    const paymentRecords = payments.map((p) => ({
+    const paymentRecords = sortedPayments.map((p) => ({
       id: `payment-${p.id}`,
       type: 'expense' as const,
       category: 'Maaş - Yayıncı',
@@ -139,7 +189,7 @@ export async function GET(request: NextRequest) {
     }))
 
     // TeamPayment'ları FinancialRecord formatına çevir
-    const teamPaymentRecords = teamPayments.map((tp) => ({
+    const teamPaymentRecords = sortedTeamPayments.map((tp) => ({
       id: `team-payment-${tp.id}`,
       type: 'expense' as const,
       category: 'Maaş - Ekip',
@@ -157,7 +207,7 @@ export async function GET(request: NextRequest) {
     }))
 
     // Seslendirmen ödemelerini FinancialRecord formatına çevir
-    const voiceoverRecords = paidVoiceoverScripts.map((script) => ({
+    const voiceoverRecords = sortedPaidVoiceoverScripts.map((script) => ({
       id: `voiceover-${script.id}`,
       type: 'expense' as const,
       category: 'Seslendirme',
@@ -179,7 +229,14 @@ export async function GET(request: NextRequest) {
     }))
 
     // Tüm kayıtları birleştir
-    let allRecords: any[] = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
+    let allRecords: any[] = [...sortedRecords, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
+    
+    // Son bir kez lastActivityAt'e göre sırala (tüm kayıtlar için)
+    allRecords.sort((a, b) => {
+      const dateA = new Date(a.date || a.occurredAt || a.createdAt || 0).getTime()
+      const dateB = new Date(b.date || b.occurredAt || b.createdAt || 0).getTime()
+      return dateB - dateA // DESC
+    })
 
     // Role-based filtering for combined records
     if (voiceActorId) {

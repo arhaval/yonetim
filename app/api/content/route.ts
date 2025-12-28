@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getContentLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache GET requests for 1 minute
 export const revalidate = 60
@@ -9,7 +10,21 @@ export async function GET() {
     const contents = await prisma.content.findMany({
       orderBy: { publishDate: 'asc' },
     }).catch(() => [])
-    return NextResponse.json(contents)
+
+    // lastActivityAt'e göre sıralama
+    const contentsWithLastActivity = contents.map(content => ({
+      ...content,
+      lastActivityAt: getContentLastActivityAt(content),
+    }))
+    
+    contentsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    // lastActivityAt'i response'dan kaldır
+    const sortedContents = contentsWithLastActivity.map(({ lastActivityAt, ...content }) => content)
+    
+    return NextResponse.json(sortedContents)
   } catch (error) {
     console.error('Error fetching content:', error)
     return NextResponse.json([], { status: 200 }) // Boş array döndür

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { getContentLastActivityAt } from '@/lib/lastActivityAt'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,20 @@ export async function GET(request: NextRequest) {
       orderBy: { publishDate: 'desc' },
     })
 
-    return NextResponse.json(contents)
+    // lastActivityAt'e göre sıralama
+    const contentsWithLastActivity = contents.map(content => ({
+      ...content,
+      lastActivityAt: getContentLastActivityAt(content),
+    }))
+    
+    contentsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    // lastActivityAt'i response'dan kaldır
+    const sortedContents = contentsWithLastActivity.map(({ lastActivityAt, ...content }) => content)
+
+    return NextResponse.json(sortedContents)
   } catch (error) {
     console.error('Error fetching voice actor contents:', error)
     return NextResponse.json(

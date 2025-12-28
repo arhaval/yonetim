@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache for 30 seconds
 export const revalidate = 30
@@ -214,27 +215,24 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }, // İçerik üreticisinin metni yüklediği tarih (createdAt) bazlı
     })
 
-    // Varsayılan sıralama mantığı (eğer filtre yoksa)
-    let sortedScripts = scripts
-    if (useDefaultSorting && !statusFilter && !producerApprovedFilter && !adminApprovedFilter && !hasPriceFilter && !hasAudioLink && !voiceActorId && !search && !dateFrom && !dateTo) {
-      // Grup 1: producerApproved = false (Ses onayı bekleyenler)
-      const group1 = scripts.filter(s => !s.producerApproved)
-      // Grup 2: producerApproved = true AND adminApproved = false (Admin fiyat/onay bekleyenler)
-      const group2 = scripts.filter(s => s.producerApproved && !s.adminApproved)
-      // Grup 3: adminApproved = true (Video yapım hazır)
-      const group3 = scripts.filter(s => s.adminApproved)
-      
-      // Her grup içinde createdAt DESC (zaten orderBy ile geliyor, ama emin olmak için tekrar sırala)
-      group1.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      group2.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      group3.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      
-      // Grupları birleştir
-      sortedScripts = [...group1, ...group2, ...group3]
-      
-      // Pagination için limit uygula
-      sortedScripts = sortedScripts.slice(skip, skip + limit)
-    }
+      // lastActivityAt'e göre sıralama
+    let sortedScripts = scripts.map(script => ({
+      ...script,
+      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
+    }))
+    
+    // Varsayılan sıralama: lastActivityAt DESC (en son işlem gören en üstte)
+    sortedScripts.sort((a, b) => {
+      const dateA = a.lastActivityAt.getTime()
+      const dateB = b.lastActivityAt.getTime()
+      return dateB - dateA // DESC
+    })
+    
+    // Pagination için limit uygula
+    sortedScripts = sortedScripts.slice(skip, skip + limit)
+    
+    // lastActivityAt'i response'dan kaldır (client'a göndermeye gerek yok)
+    sortedScripts = sortedScripts.map(({ lastActivityAt, ...script }) => script)
 
     return NextResponse.json({
       scripts: sortedScripts,

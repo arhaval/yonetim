@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
+import { getContentLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
@@ -82,17 +83,30 @@ export async function GET(request: NextRequest) {
       return []
     })
 
+    // lastActivityAt'e göre sıralama
+    const contentsWithLastActivity = contents.map(content => ({
+      ...content,
+      lastActivityAt: getContentLastActivityAt(content),
+    }))
+    
+    contentsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    // lastActivityAt'i response'dan kaldır
+    const sortedContents = contentsWithLastActivity.map(({ lastActivityAt, ...content }) => content)
+
     const stats = {
-      total: contents.length,
-      totalViews: (contents || []).reduce((sum, c) => sum + (c.views || 0), 0),
-      totalLikes: (contents || []).reduce((sum, c) => sum + (c.likes || 0), 0),
-      totalEngagement: (contents || []).reduce(
+      total: sortedContents.length,
+      totalViews: (sortedContents || []).reduce((sum, c) => sum + (c.views || 0), 0),
+      totalLikes: (sortedContents || []).reduce((sum, c) => sum + (c.likes || 0), 0),
+      totalEngagement: (sortedContents || []).reduce(
         (sum, c) => sum + (c.likes || 0) + (c.comments || 0) + (c.shares || 0) + (c.saves || 0),
         0
       ),
     }
 
-    return NextResponse.json({ contents: contents || [], stats })
+    return NextResponse.json({ contents: sortedContents || [], stats })
   } catch (error) {
     console.error('Error fetching content:', error)
     return NextResponse.json(

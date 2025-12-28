@@ -857,8 +857,26 @@ export default function VoiceoverInbox({
             setIsDrawerOpen(false)
             setSelectedScript(null)
           }}
-          onUpdate={() => {
-            loadScripts()
+          onUpdate={async () => {
+            await loadScripts()
+            // Güncellenmiş script'i bul ve selectedScript'i güncelle
+            if (selectedScript) {
+              const updatedScript = scripts.find(s => s.id === selectedScript.id)
+              if (updatedScript) {
+                setSelectedScript(updatedScript)
+              } else {
+                // Script bulunamazsa API'den çek
+                try {
+                  const scriptRes = await fetch(`/api/voiceover-scripts/${selectedScript.id}`)
+                  if (scriptRes.ok) {
+                    const scriptData = await scriptRes.json()
+                    setSelectedScript(scriptData)
+                  }
+                } catch (err) {
+                  console.error('Error refetching script:', err)
+                }
+              }
+            }
           }}
         />
       )}

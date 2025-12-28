@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,7 +43,20 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(scripts)
+    // lastActivityAt'e göre sıralama
+    const scriptsWithLastActivity = scripts.map(script => ({
+      ...script,
+      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
+    }))
+    
+    scriptsWithLastActivity.sort((a, b) => {
+      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
+    })
+    
+    // lastActivityAt'i response'dan kaldır
+    const sortedScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => script)
+
+    return NextResponse.json(sortedScripts)
   } catch (error) {
     console.error('Error fetching scripts:', error)
     return NextResponse.json(
