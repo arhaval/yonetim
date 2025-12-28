@@ -23,6 +23,8 @@ export async function GET() {
         totalRevenue: true,
         streamerEarning: true,
         paymentStatus: true,
+        createdAt: true,
+        updatedAt: true,
         streamer: {
           select: {
             id: true,
