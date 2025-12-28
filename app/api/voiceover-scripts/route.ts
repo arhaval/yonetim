@@ -13,8 +13,19 @@ export async function GET(request: NextRequest) {
     const creatorId = cookieStore.get('creator-id')?.value
     const voiceActorIdCookie = cookieStore.get('voice-actor-id')?.value
 
+    // Debug logging
+    console.log('[VoiceoverScripts API] Auth check:', {
+      userId,
+      creatorId,
+      voiceActorIdCookie,
+      hasUserId: !!userId,
+      hasCreatorId: !!creatorId,
+      hasVoiceActorId: !!voiceActorIdCookie,
+    })
+
     // Admin, içerik üreticisi veya seslendirmen kontrolü
     if (!userId && !creatorId && !voiceActorIdCookie) {
+      console.log('[VoiceoverScripts API] Unauthorized - no cookies')
       return NextResponse.json(
         { error: 'Yetkisiz erişim' },
         { status: 401 }
@@ -29,6 +40,11 @@ export async function GET(request: NextRequest) {
         select: { role: true },
       })
       isAdmin = user?.role === 'admin' || user?.role === 'ADMIN'
+      console.log('[VoiceoverScripts API] Admin check:', {
+        userId,
+        userRole: user?.role,
+        isAdmin,
+      })
     }
 
     const searchParams = request.nextUrl.searchParams
