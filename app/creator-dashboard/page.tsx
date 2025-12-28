@@ -61,11 +61,17 @@ export default function CreatorDashboardPage() {
 
   const loadScripts = async () => {
     try {
-      const res = await fetch('/api/voiceover-scripts')
+      const res = await fetch('/api/voiceover-scripts', { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
+        // Creator sadece kendi scriptlerini görmeli
+        const creatorId = creator?.id
+        const filteredScripts = creatorId 
+          ? (data.scripts || data).filter((s: any) => s.creatorId === creatorId)
+          : (data.scripts || data)
+        
         // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
-        const sorted = [...data].sort((a: any, b: any) => {
+        const sorted = [...filteredScripts].sort((a: any, b: any) => {
           const aIsCompleted = a.status === 'PAID' || a.status === 'APPROVED'
           const bIsCompleted = b.status === 'PAID' || b.status === 'APPROVED'
           

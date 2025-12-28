@@ -42,7 +42,7 @@ export default function VoiceActorDashboardPage() {
   const loadScripts = async () => {
     try {
       const res = await fetch('/api/voice-actor/scripts', {
-        cache: 'default', // Browser cache kullan
+        cache: 'no-store', // Cache bypass - her zaman fresh data
       })
       const data = await res.json()
       if (res.ok) {
@@ -80,17 +80,20 @@ export default function VoiceActorDashboardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scriptId }),
+        cache: 'no-store',
       })
 
       const data = await res.json()
 
       if (res.ok) {
         alert('Metin başarıyla size atandı!')
-        loadScripts()
+        // Cache'i bypass etmek için timestamp ekle
+        await loadScripts()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
     } catch (error) {
+      console.error('Error assigning script:', error)
       alert('Bir hata oluştu')
     }
   }

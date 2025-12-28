@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Creator sadece kendi scriptlerini görmeli (admin değilse)
+    if (creatorId && !userId) {
+      whereClause.creatorId = creatorId
+    }
+
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
