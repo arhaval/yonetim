@@ -170,11 +170,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   }, [isOpen, script.id, script.creatorId, script.producerApproved, script.adminApproved])
 
   // Script güncellendiğinde state'i güncelle
+  // script.producerApproved ve script.adminApproved değişikliklerini de izle
   useEffect(() => {
     setPrice(script.price || 0)
     setAdminPrice(script.price?.toString() || '')
     setAudioFileLink(script.voiceLink || script.audioFile || '')
-  }, [script])
+  }, [script, script.producerApproved, script.adminApproved, script.price])
 
   // EditPack yükle
   useEffect(() => {
