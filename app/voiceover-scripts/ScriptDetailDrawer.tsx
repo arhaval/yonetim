@@ -133,9 +133,26 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         // Ownership bazlı creator tespiti (role veya status kullanmadan)
         setIsCreator(isCreatorByOwnership)
 
-        // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
-        const isAdminByRole = userRoleCookie && (userRoleCookie.toLowerCase() === 'admin' || userRoleCookie === 'ADMIN')
-        setIsAdmin(isAdminByRole || false)
+        // Admin kontrolü - cookie'den ve API'den user-role kontrolü (case-insensitive)
+        let isAdminByRole = false
+        
+        // Önce cookie'den kontrol et
+        if (userRoleCookie && (userRoleCookie.toLowerCase() === 'admin' || userRoleCookie === 'ADMIN')) {
+          isAdminByRole = true
+        } else if (currentUserId) {
+          // Cookie'de yoksa API'den user bilgisini al ve role kontrolü yap
+          try {
+            const userRes = await fetch('/api/auth/me')
+            const userData = await userRes.json()
+            if (userData.user?.role && (userData.user.role.toLowerCase() === 'admin' || userData.user.role === 'ADMIN')) {
+              isAdminByRole = true
+            }
+          } catch (error) {
+            // Ignore
+          }
+        }
+        
+        setIsAdmin(isAdminByRole)
 
         // Voice actor kontrolü
         if (voiceActorIdCookie) {
