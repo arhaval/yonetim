@@ -219,7 +219,21 @@ export function middleware(request: NextRequest) {
     
     // Admin role'üne sahip değilse erişim reddedilir
     if (userRole !== 'admin' && userRole !== 'ADMIN') {
-      const redirectUrl = new URL('/admin-login', request.url)
+      // Kullanıcının rolüne göre uygun dashboard'a yönlendir
+      if (voiceActorId) {
+        return NextResponse.redirect(new URL('/voice-actor-dashboard', request.url))
+      }
+      if (creatorId) {
+        return NextResponse.redirect(new URL('/creator-dashboard', request.url))
+      }
+      if (streamerId) {
+        return NextResponse.redirect(new URL('/streamer-dashboard', request.url))
+      }
+      if (teamMemberId) {
+        return NextResponse.redirect(new URL('/team-dashboard', request.url))
+      }
+      // Hiçbiri yoksa login selection'a yönlendir
+      const redirectUrl = new URL('/login-selection', request.url)
       redirectUrl.searchParams.set('reason', 'middleware_denied_role')
       redirectUrl.searchParams.set('from', request.nextUrl.pathname)
       redirectUrl.searchParams.set('expected_role', 'admin')
