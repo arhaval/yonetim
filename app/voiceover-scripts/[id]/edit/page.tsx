@@ -1,10 +1,9 @@
 'use client'
 
-import Layout from '@/components/Layout'
+import RoleAwareLayout from '@/components/RoleAwareLayout'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, FileText, Loader2 } from 'lucide-react'
+import { FileText, Loader2 } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
 
 export default function EditVoiceoverScriptPage() {
@@ -64,27 +63,20 @@ export default function EditVoiceoverScriptPage() {
 
   if (loadingData) {
     return (
-      <Layout>
+      <RoleAwareLayout>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
           </div>
         </div>
-      </Layout>
+      </RoleAwareLayout>
     )
   }
 
   return (
-    <Layout>
+    <RoleAwareLayout backUrl={`/voiceover-scripts/${scriptId}`} backLabel="Metne dön">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
-          <Link
-            href={`/voiceover-scripts/${scriptId}`}
-            className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Metne dön
-          </Link>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             Seslendirme Metnini Düzenle
           </h1>
@@ -147,7 +139,7 @@ export default function EditVoiceoverScriptPage() {
           </div>
         </form>
       </div>
-    </Layout>
+    </RoleAwareLayout>
   )
 }
 

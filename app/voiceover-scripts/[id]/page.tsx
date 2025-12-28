@@ -1,4 +1,4 @@
-import Layout from '@/components/Layout'
+import RoleAwareLayout from '@/components/RoleAwareLayout'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -45,16 +45,9 @@ export default async function VoiceoverScriptDetailPage({
   }
 
   return (
-    <Layout>
+    <RoleAwareLayout backUrl="/voiceover-scripts" backLabel="Seslendirme Metinlerine dön">
       <div className="px-4 py-6 sm:px-0">
         <div className="mb-6">
-          <Link
-            href="/voiceover-scripts"
-            className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-flex items-center"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Seslendirme Metinlerine dön
-          </Link>
           <div className="mt-4">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <h1 className="text-3xl font-bold text-gray-900">{script.title}</h1>
@@ -180,7 +173,7 @@ export default async function VoiceoverScriptDetailPage({
           </div>
         )}
       </div>
-    </Layout>
+    </RoleAwareLayout>
   )
 }
 

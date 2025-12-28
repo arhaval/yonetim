@@ -1,13 +1,13 @@
 'use client'
 
-import Layout from '@/components/Layout'
+import RoleAwareLayout from '@/components/RoleAwareLayout'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import VoiceoverInbox from '@/components/VoiceoverInbox'
 
 export default function VoiceoverScriptsPage() {
   return (
-    <Layout>
+    <RoleAwareLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -36,6 +36,6 @@ export default function VoiceoverScriptsPage() {
           title="Seslendirme Metinleri"
         />
       </div>
-    </Layout>
+    </RoleAwareLayout>
   )
 }

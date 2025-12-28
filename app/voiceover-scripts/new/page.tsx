@@ -1,6 +1,6 @@
 'use client'
 
-import Layout from '@/components/Layout'
+import RoleAwareLayout from '@/components/RoleAwareLayout'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText } from 'lucide-react'
@@ -41,7 +41,7 @@ export default function NewVoiceoverScriptPage() {
   }
 
   return (
-    <Layout>
+    <RoleAwareLayout backUrl="/voiceover-scripts" backLabel="Seslendirme Metinlerine dön">
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -97,7 +97,7 @@ export default function NewVoiceoverScriptPage() {
           </div>
         </form>
       </div>
-    </Layout>
+    </RoleAwareLayout>
   )
 }
 
