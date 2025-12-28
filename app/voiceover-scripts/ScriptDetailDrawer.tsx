@@ -156,8 +156,14 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
       if (res.ok) {
         const data = await res.json()
-        setEditPack(data.editPack)
-        toast.success('EditPack oluşturuldu')
+        if (data.editPack) {
+          setEditPack(data.editPack)
+          setEditorNotes(data.editPack.editorNotes || '')
+          setAssetsLinks(data.editPack.assetsLinks || [])
+          toast.success('EditPack oluşturuldu')
+        } else {
+          toast.error('EditPack oluşturulamadı')
+        }
       } else {
         const errorData = await res.json()
         toast.error(errorData.error || 'EditPack oluşturulamadı')
@@ -612,10 +618,15 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 {(script.voiceLink || script.audioFile) && (
                   <div className="mt-2">
                     <a
-                      href={script.voiceLink || script.audioFile || '#'}
+                      href={script.voiceLink || script.audioFile || undefined}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                      onClick={(e) => {
+                        if (!script.voiceLink && !script.audioFile) {
+                          e.preventDefault()
+                        }
+                      }}
                     >
                       <ExternalLink className="w-4 h-4 mr-1" />
                       Mevcut linki aç
