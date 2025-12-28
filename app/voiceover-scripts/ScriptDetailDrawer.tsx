@@ -494,13 +494,16 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           const scriptRes = await fetch(`/api/voiceover-scripts/${script.id}`)
           if (scriptRes.ok) {
             const updatedScript = await scriptRes.json()
-            // Parent'a güncellenmiş script'i bildir
+            // Parent'a güncellenmiş script'i bildir - onUpdate callback'i script'i güncelleyecek
             onUpdate()
+            // Force re-render için script prop'unun değişmesini bekle
+            // Parent component (VoiceoverInbox) selectedScript'i güncelleyecek
           }
         } catch (err) {
           console.error('Error refetching script:', err)
+          // Hata olsa bile parent'a bildir
+          onUpdate()
         }
-        onUpdate()
       } else {
         console.error('Creator approve error:', { status: res.status, data })
         if (res.status === 401) {
@@ -934,7 +937,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   const parsedPrice = priceString === '' ? 0 : parseFloat(priceString)
                   const isValidPrice = !isNaN(parsedPrice) && parsedPrice > 0
                   
-                  // Final onay için tek doğru kural
+                  // Final onay için tek doğru kural - SADECE bu değişkenlere bağlı
                   const canAdminApprove = isAdmin 
                     && script.producerApproved === true
                     && isValidPrice
@@ -942,6 +945,11 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   
                   return (
                     <>
+                      {/* Debug: Geçici olarak değerleri göster */}
+                      <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded mb-2 font-mono">
+                        admin={String(isAdmin)} | producerApproved={String(script.producerApproved)} | price={String(adminPrice)} | adminApproved={String(script.adminApproved)} | canApprove={String(canAdminApprove)}
+                      </div>
+                      
                       <button
                         onClick={handleAdminApprove}
                         disabled={loading || !canAdminApprove}
