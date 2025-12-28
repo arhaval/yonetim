@@ -93,19 +93,14 @@ export async function PUT(
       )
     }
 
-    // Admin kontrolü
-    let isAdmin = false
-    if (userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-      })
-      isAdmin = user?.role === 'admin'
-    }
-
     const updateData: any = {}
 
+    // Admin kontrolü
+    const { isAdmin } = await import('@/lib/voiceover-permissions')
+    const isAdminUser = userId ? await isAdmin(userId) : false
+
     // Admin metin içeriğini düzenleyebilir
-    if (isAdmin) {
+    if (isAdminUser) {
       if (title !== undefined) updateData.title = title
       if (text !== undefined) updateData.text = text
       if (price !== undefined) updateData.price = price
@@ -113,14 +108,16 @@ export async function PUT(
       if (rejectionReason !== undefined) updateData.rejectionReason = rejectionReason
     }
 
-    // Seslendirmen sadece ses linki ekleyebilir/güncelleyebilir
-    if (voiceActorId) {
-      if (existingScript.voiceActorId !== voiceActorId) {
+    // Ses linki düzenleme kontrolü
+    if (voiceLink !== undefined || audioFile !== undefined) {
+      const canEdit = await canEditVoiceLink(userId, voiceActorId, existingScript)
+      if (!canEdit) {
         return NextResponse.json(
-          { error: 'Bu metin size atanmamış' },
+          { error: 'Bu metnin ses linkini düzenleme yetkiniz yok' },
           { status: 403 }
         )
       }
+      
       // voiceLink veya audioFile (backward compatibility)
       if (voiceLink !== undefined) {
         updateData.voiceLink = voiceLink
