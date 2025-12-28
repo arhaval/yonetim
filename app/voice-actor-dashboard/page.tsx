@@ -3,17 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut, FileText, User, Calendar, CheckCircle, Clock, Download, DollarSign, Mic, Eye, Heart, MessageCircle, Share2, Bookmark, Video, Image, ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 
 export default function VoiceActorDashboardPage() {
   const router = useRouter()
   const [voiceActor, setVoiceActor] = useState<any>(null)
-  const [scripts, setScripts] = useState<any[]>([])
   const [contents, setContents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const scriptsPerPage = 12
 
   useEffect(() => {
     checkAuth()
@@ -75,42 +73,6 @@ export default function VoiceActorDashboardPage() {
     router.push('/voice-actor-login')
   }
 
-  const handleAssignScript = async (scriptId: string) => {
-    try {
-      const res = await fetch('/api/voiceover-scripts/assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scriptId }),
-        cache: 'no-store',
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        console.log('Script assigned successfully:', data)
-        // Optimistic update - script'i hemen listeden güncelle
-        if (voiceActor?.id && data.script) {
-          setScripts(prevScripts => 
-            prevScripts.map(script => 
-              script.id === scriptId 
-                ? { ...script, voiceActorId: voiceActor.id, voiceActor: data.script.voiceActor }
-                : script
-            )
-          )
-        }
-        alert('Metin başarıyla size atandı!')
-        // Fresh data için tekrar yükle
-        await loadScripts()
-      } else {
-        console.error('Assignment failed:', data)
-        alert(data.error || 'Bir hata oluştu')
-      }
-    } catch (error) {
-      console.error('Error assigning script:', error)
-      alert('Bir hata oluştu')
-    }
-  }
-
 
   if (loading) {
     return (
@@ -126,22 +88,6 @@ export default function VoiceActorDashboardPage() {
   if (!voiceActor) {
     return null
   }
-
-  // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
-  const sortedScripts = [...scripts].sort((a, b) => {
-    const aIsCompleted = a.status === 'PAID' || a.status === 'APPROVED'
-    const bIsCompleted = b.status === 'PAID' || b.status === 'APPROVED'
-    
-    // Onaylanmış/ödenmiş olanlar alta gitsin
-    if (aIsCompleted && !bIsCompleted) return 1
-    if (!aIsCompleted && bIsCompleted) return -1
-    
-    // İkisi de aynı durumda, tarihe göre sırala (en yeni üstte)
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
-
-  const unassignedScripts = sortedScripts.filter(s => !s.voiceActorId)
-  const myScripts = sortedScripts.filter(s => s.voiceActorId === voiceActor.id)
   
   // Ödeme hesaplamaları
   const paidScripts = myScripts.filter(s => s.status === 'PAID')
@@ -210,194 +156,24 @@ export default function VoiceActorDashboardPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Atanmamış Metinler</p>
-                <p className="text-3xl font-bold text-indigo-600 mt-2">{unassignedScripts.length}</p>
-              </div>
-              <FileText className="w-12 h-12 text-indigo-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Bana Atanan Metinler</p>
-                <p className="text-3xl font-bold text-purple-600 mt-2">{myScripts.length}</p>
-              </div>
-              <CheckCircle className="w-12 h-12 text-purple-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Ödenen</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">
-                  {totalPaid.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{paidScripts.length} iş</p>
-              </div>
-              <DollarSign className="w-12 h-12 text-green-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-xl p-6 border-l-4 border-red-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Ödenmemiş</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">
-                  {totalUnpaid.toLocaleString('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{unpaidScripts.length} iş</p>
-              </div>
-              <DollarSign className="w-12 h-12 text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Scripts List - Card Design */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Scripts Link */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Seslendirme Metinleri
-              {sortedScripts.length > 0 && (
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({sortedScripts.length} metin)
-                </span>
-              )}
-            </h2>
-          </div>
-          <div className="p-6">
-            {sortedScripts.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Henüz seslendirme metni eklenmemiş</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Bekleyen Seslendirmelerim
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Size atanan seslendirme metinlerini görüntüleyin ve yönetin</p>
               </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {sortedScripts
-                    .slice((currentPage - 1) * scriptsPerPage, currentPage * scriptsPerPage)
-                    .map((script) => {
-                      // Status kontrolü - ödenmiş veya onaylanmış ise "Onaylı"
-                      const isApproved = script.status === 'PAID' || script.status === 'APPROVED'
-                      const isUnassigned = !script.voiceActorId
-                      const isMyScript = script.voiceActorId === voiceActor?.id
-                      
-                      return (
-                        <div 
-                          key={script.id} 
-                          className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
-                        >
-                          <div 
-                            className={`p-5 ${isMyScript ? 'cursor-pointer' : ''}`}
-                            onClick={isMyScript ? () => router.push(`/voice-actor/scripts/${script.id}`) : undefined}
-                          >
-                            {/* Sadece başlık ve status */}
-                            <div className="flex items-start justify-between gap-3 mb-3">
-                              <h3 
-                                className={`text-lg font-semibold text-gray-900 flex-1 ${isMyScript ? 'hover:text-indigo-600 transition-colors' : ''}`}
-                              >
-                                {script.title}
-                              </h3>
-                              
-                              {/* Sadece "Onaylı" badge'i göster (ödenmiş veya onaylanmış ise) */}
-                              {isApproved && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Onaylı
-                                </span>
-                              )}
-                            </div>
-                            
-                            {/* Atanmamış scriptler için "Bana Ata" butonu */}
-                            {isUnassigned && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleAssignScript(script.id)
-                                }}
-                                className="w-full mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                              >
-                                <Mic className="w-4 h-4" />
-                                Bana Ata
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                </div>
-
-                {/* Pagination */}
-                {sortedScripts.length > scriptsPerPage && (
-                  <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        Önceki
-                      </button>
-                      
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, Math.ceil(sortedScripts.length / scriptsPerPage)) }, (_, i) => {
-                          let pageNum: number
-                          const totalPages = Math.ceil(sortedScripts.length / scriptsPerPage)
-                          
-                          if (totalPages <= 5) {
-                            pageNum = i + 1
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i
-                          } else {
-                            pageNum = currentPage - 2 + i
-                          }
-                          
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => setCurrentPage(pageNum)}
-                              className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                currentPage === pageNum
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(sortedScripts.length / scriptsPerPage), prev + 1))}
-                        disabled={currentPage >= Math.ceil(sortedScripts.length / scriptsPerPage)}
-                        className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        Sonraki
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    <div className="text-sm text-gray-500">
-                      Sayfa {currentPage} / {Math.ceil(sortedScripts.length / scriptsPerPage)}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+              <Link
+                href="/my-assignments"
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Tümünü Görüntüle
+              </Link>
+            </div>
           </div>
         </div>
 

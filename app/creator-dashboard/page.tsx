@@ -12,7 +12,6 @@ export default function CreatorDashboardPage() {
   const router = useRouter()
   const [creator, setCreator] = useState<any>(null)
   const [contents, setContents] = useState<any[]>([])
-  const [scripts, setScripts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showScriptForm, setShowScriptForm] = useState(false)
   const [scriptFormData, setScriptFormData] = useState({
@@ -20,8 +19,6 @@ export default function CreatorDashboardPage() {
     text: '',
   })
   const [submitting, setSubmitting] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const scriptsPerPage = 12
 
   useEffect(() => {
     checkAuth()
@@ -39,7 +36,6 @@ export default function CreatorDashboardPage() {
 
       setCreator(data.creator)
       loadContents(data.creator.id)
-      loadScripts() // Scripts'i de yükle
     } catch (error) {
       router.push('/creator-login')
     }
@@ -56,36 +52,6 @@ export default function CreatorDashboardPage() {
       console.error('Error loading contents:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const loadScripts = async () => {
-    try {
-      const res = await fetch('/api/voiceover-scripts', { cache: 'no-store' })
-      const data = await res.json()
-      if (res.ok) {
-        // Creator sadece kendi scriptlerini görmeli
-        const creatorId = creator?.id
-        const filteredScripts = creatorId 
-          ? (data.scripts || data).filter((s: any) => s.creatorId === creatorId)
-          : (data.scripts || data)
-        
-        // Sıralama: Onaylanmış/ödenmiş metinler alta, diğerleri tarihe göre (en yeni üstte)
-        const sorted = [...filteredScripts].sort((a: any, b: any) => {
-          const aIsCompleted = a.status === 'PAID' || a.status === 'APPROVED'
-          const bIsCompleted = b.status === 'PAID' || b.status === 'APPROVED'
-          
-          // Onaylanmış/ödenmiş olanlar alta gitsin
-          if (aIsCompleted && !bIsCompleted) return 1
-          if (!aIsCompleted && bIsCompleted) return -1
-          
-          // İkisi de aynı durumda, tarihe göre sırala (en yeni üstte)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        })
-        setScripts(sorted)
-      }
-    } catch (error) {
-      console.error('Error loading scripts:', error)
     }
   }
 
@@ -109,7 +75,6 @@ export default function CreatorDashboardPage() {
           title: '',
           text: '',
         })
-        loadScripts()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
@@ -282,273 +247,22 @@ export default function CreatorDashboardPage() {
           </div>
         )}
 
-        {/* Scripts List */}
+        {/* Scripts Link */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div>
                 <h2 className="text-2xl font-bold text-gray-900">Seslendirme Metinlerim</h2>
-                {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length > 0 && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 animate-pulse">
-                    {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length} Onay Bekleyen Ses
-                  </span>
-                )}
+                <p className="text-sm text-gray-600 mt-1">Tüm seslendirme metinlerinizi görüntüleyin ve yönetin</p>
               </div>
-              <button
-                onClick={loadScripts}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              <Link
+                href="/my-voiceovers"
+                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                <span className="mr-2">🔄</span>
-                Yenile
-              </button>
+                <Eye className="w-4 h-4 mr-2" />
+                Tümünü Görüntüle
+              </Link>
             </div>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {scripts.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Henüz metin eklenmemiş</p>
-              </div>
-            ) : (
-              // Önce onay bekleyen sesleri göster (sadece VOICE_UPLOADED olanlar admin'e gönderilmiş)
-              <>
-                {scripts.filter(s => s.audioFile && s.status === 'VOICE_UPLOADED').length > 0 && (
-                  <div className="px-6 py-4 bg-yellow-50 border-l-4 border-yellow-400">
-                    <h3 className="text-lg font-semibold text-yellow-900 mb-3">⚠️ Onay Bekleyen Sesler</h3>
-                    {scripts
-                      .filter(s => s.audioFile && s.status === 'VOICE_UPLOADED')
-                      .map((script) => (
-                        <div key={script.id} className="mb-4 last:mb-0 p-4 bg-white rounded-lg border border-yellow-200">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <Link
-                                  href={`/voiceover-scripts/${script.id}`}
-                                  className="text-lg font-semibold text-gray-900 hover:text-indigo-600"
-                                >
-                                  {script.title}
-                                </Link>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 animate-pulse">
-                                  Onay Bekliyor
-                                </span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                  <Download className="w-3 h-3 mr-1" />
-                                  Ses Yüklendi
-                                </span>
-                              </div>
-                              <div 
-                                className="text-sm text-gray-600 mb-2 line-clamp-2 prose prose-sm max-w-none"
-                                dangerouslySetInnerHTML={{ __html: script.text }}
-                              />
-                              <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                <span>{format(new Date(script.createdAt), 'dd MMMM yyyy', { locale: tr })}</span>
-                                {script.voiceActor && (
-                                  <>
-                                    <span>•</span>
-                                    <span>Seslendirmen: {script.voiceActor.name}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            {script.audioFile && (
-                              <div className="ml-4 flex flex-col gap-2">
-                                <a
-                                  href={script.audioFile}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-sm font-medium rounded-lg hover:from-yellow-700 hover:to-orange-700 transition-all duration-200"
-                                >
-                                  <Download className="w-4 h-4 mr-2" />
-                                  Ses Dosyasını Dinle
-                                </a>
-                                {script.status === 'VOICE_UPLOADED' && (
-                                  <button
-                                    onClick={async () => {
-                                      if (!confirm('Bu sesi onaylamak istediğinize emin misiniz? Onayladıktan sonra admin onayı bekleyecektir.')) {
-                                        return
-                                      }
-                                      try {
-                                        const res = await fetch(`/api/voiceover-scripts/${script.id}/creator-approve`, {
-                                          method: 'POST',
-                                        })
-                                        const data = await res.json()
-                                        if (res.ok) {
-                                          alert('Ses onaylandı! Admin onayı bekleniyor.')
-                                          loadScripts()
-                                        } else {
-                                          alert(data.error || 'Bir hata oluştu')
-                                        }
-                                      } catch (error) {
-                                        alert('Bir hata oluştu')
-                                      }
-                                    }}
-                                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Onayla
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {/* Diğer scriptler - Kart Tasarımı */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {scripts
-                      .filter(s => !(s.audioFile && s.status === 'VOICE_UPLOADED'))
-                      .slice((currentPage - 1) * scriptsPerPage, currentPage * scriptsPerPage)
-                      .map((script) => (
-                      <div 
-                        key={script.id} 
-                        className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
-                        onClick={() => window.location.href = `/voiceover-scripts/${script.id}`}
-                      >
-                        <div className="p-5">
-                          <div className="flex items-start justify-between mb-3">
-                            <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors flex-1">
-                              {script.title}
-                            </h3>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {script.status === 'PAID' ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Ödendi
-                              </span>
-                            ) : script.status === 'APPROVED' ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Onaylandı
-                              </span>
-                            ) : script.status === 'VOICE_UPLOADED' ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                Admin Onayı Bekliyor
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Beklemede
-                              </span>
-                            )}
-                            {script.audioFile && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                <Download className="w-3 h-3 mr-1" />
-                                Ses Yüklendi
-                              </span>
-                            )}
-                          </div>
-
-                          {/* HTML içeriğini düzgün göster */}
-                          <div 
-                            className="text-sm text-gray-600 line-clamp-3 prose prose-sm max-w-none mb-3"
-                            dangerouslySetInnerHTML={{ __html: script.text }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-
-                          <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
-                            <span>{format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}</span>
-                            {script.price && script.price > 0 && (
-                              <span className="font-semibold text-green-600">
-                                {script.price.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                  maximumFractionDigits: 0,
-                                })}
-                              </span>
-                            )}
-                          </div>
-
-                          {script.voiceActor && (
-                            <div className="mt-2 text-xs text-gray-500">
-                              Seslendirmen: <span className="font-medium">{script.voiceActor.name}</span>
-                            </div>
-                          )}
-
-                          {script.audioFile && (
-                            <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                              <a
-                                href={script.audioFile}
-                                download
-                                className="inline-flex items-center w-full justify-center px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
-                              >
-                                <Download className="w-3 h-3 mr-2" />
-                                Ses İndir
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {scripts.filter(s => !(s.audioFile && s.status === 'pending')).length > scriptsPerPage && (
-                    <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                          disabled={currentPage === 1}
-                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          Önceki
-                        </button>
-                        
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: Math.min(5, Math.ceil(scripts.filter(s => !(s.audioFile && s.status === 'pending')).length / scriptsPerPage)) }, (_, i) => {
-                            const filteredScripts = scripts.filter(s => !(s.audioFile && s.status === 'pending'))
-                            let pageNum: number
-                            const totalPages = Math.ceil(filteredScripts.length / scriptsPerPage)
-                            
-                            if (totalPages <= 5) {
-                              pageNum = i + 1
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i
-                            } else {
-                              pageNum = currentPage - 2 + i
-                            }
-                            
-                            return (
-                              <button
-                                key={pageNum}
-                                onClick={() => setCurrentPage(pageNum)}
-                                className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                  currentPage === pageNum
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                }`}
-                              >
-                                {pageNum}
-                              </button>
-                            )
-                          })}
-                        </div>
-                        
-                        <button
-                          onClick={() => {
-                            const filteredScripts = scripts.filter(s => !(s.audioFile && s.status === 'pending'))
-                            setCurrentPage(prev => Math.min(Math.ceil(filteredScripts.length / scriptsPerPage), prev + 1))
-                          }}
-                          disabled={currentPage >= Math.ceil(scripts.filter(s => !(s.audioFile && s.status === 'pending')).length / scriptsPerPage)}
-                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        >
-                          Sonraki
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      <div className="text-sm text-gray-500">
-                        Sayfa {currentPage} / {Math.ceil(scripts.filter(s => !(s.audioFile && s.status === 'pending')).length / scriptsPerPage)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </div>
 
