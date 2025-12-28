@@ -93,6 +93,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       voiceActorId,
       userRole,
       scriptCreatorId: script.creator?.id,
+      scriptStatus: script.status,
+      producerApproved: script.producerApproved,
+      adminApproved: script.adminApproved,
     })
 
     // İçerik üreticisi kontrolü - creator-id cookie'si varsa ve script'in creator'ı ile eşleşiyorsa
@@ -100,14 +103,33 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       // Script'in creator'ı ile eşleşiyorsa veya script henüz yüklenmemişse (tüm creator'lar kendi scriptlerini görebilir)
       if (!script.creator?.id || script.creator.id === creatorId) {
         setIsCreator(true)
-        console.log('[ScriptDetailDrawer] Set isCreator = true')
+        console.log('[ScriptDetailDrawer] Set isCreator = true', {
+          creatorId,
+          scriptCreatorId: script.creator?.id,
+          status: script.status,
+          producerApproved: script.producerApproved,
+          canShowButton: script.status === 'WAITING_VOICE' && !script.producerApproved
+        })
+      } else {
+        console.log('[ScriptDetailDrawer] Creator ID mismatch:', {
+          creatorId,
+          scriptCreatorId: script.creator?.id
+        })
       }
     }
 
     // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
     if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'ADMIN')) {
       setIsAdmin(true)
-      console.log('[ScriptDetailDrawer] Set isAdmin = true')
+      console.log('[ScriptDetailDrawer] Set isAdmin = true', {
+        userRole,
+        status: script.status,
+        producerApproved: script.producerApproved,
+        adminApproved: script.adminApproved,
+        canShowButton: script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved
+      })
+    } else {
+      console.log('[ScriptDetailDrawer] Not admin:', { userRole })
     }
 
     // Voice actor kontrolü
@@ -758,11 +780,11 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </p>
               )}
 
-              {isCreator && script.status === 'WAITING_VOICE' && (
+              {isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved && (
                 <div className="space-y-2">
                   <button
                     onClick={handleProducerApprove}
-                    disabled={loading || script.producerApproved}
+                    disabled={loading}
                     className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {loading ? (
@@ -770,15 +792,15 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     ) : (
                       <CheckCircle className="w-4 h-4 mr-2" />
                     )}
-                    {script.producerApproved ? 'Onaylandı' : 'Metni Onayla'}
+                    Metni Onayla
                   </button>
-                  
-                  {script.producerApproved && (
-                    <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded">
-                      <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Metin onaylandı. Admin fiyat girip final onayı yapacak.</span>
-                    </div>
-                  )}
+                </div>
+              )}
+              
+              {script.producerApproved && (
+                <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded mt-2">
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Metin onaylandı. Admin fiyat girip final onayı yapacak.</span>
                 </div>
               )}
             </div>
@@ -815,7 +837,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </p>
               )}
 
-              {isAdmin && (
+              {isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved && (
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1">
@@ -829,13 +851,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                       className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                       min="0"
                       step="0.01"
-                      disabled={loading || script.adminApproved}
+                      disabled={loading}
                     />
                   </div>
 
                   <button
                     onClick={handleAdminApprove}
-                    disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                    disabled={loading || !adminPrice || adminPrice <= 0}
                     className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {loading ? (
@@ -846,19 +868,26 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     Final Onay Ver
                   </button>
 
-                  {!script.producerApproved && (
-                    <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
-                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Önce içerik üreticisi onaylamalı</span>
-                    </div>
-                  )}
-
-                  {(!adminPrice || adminPrice <= 0) && script.producerApproved && (
+                  {(!adminPrice || adminPrice <= 0) && (
                     <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
                       <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                       <span>Fiyat gir</span>
                     </div>
                   )}
+                </div>
+              )}
+              
+              {isAdmin && script.status === 'VOICE_UPLOADED' && !script.producerApproved && (
+                <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Önce içerik üreticisi metni onaylamalı</span>
+                </div>
+              )}
+              
+              {isAdmin && script.adminApproved && (
+                <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Admin onayladı. Edit pack oluşturuldu.</span>
                 </div>
               )}
             </div>
