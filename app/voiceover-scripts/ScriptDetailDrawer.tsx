@@ -25,6 +25,7 @@ interface Script {
   adminApprovedBy: string | null
   createdAt: string
   updatedAt: string
+  creatorId: string | null // Ownership kontrolü için gerekli
   creator: {
     id: string
     name: string
@@ -79,77 +80,88 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     
     console.log('[ScriptDetailDrawer] useEffect triggered', { isOpen, scriptId: script?.id })
     
-    // Cookie'lerden rol bilgisini al
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`
-      const parts = value.split(`; ${name}=`)
-      if (parts.length === 2) return parts.pop()?.split(';').shift()
-      return null
-    }
+    // Güvenilir kaynaktan current user ve creator bilgilerini al
+    const fetchUserInfo = async () => {
+      try {
+        // Cookie'lerden bilgileri al
+        const getCookie = (name: string) => {
+          const value = `; ${document.cookie}`
+          const parts = value.split(`; ${name}=`)
+          if (parts.length === 2) return parts.pop()?.split(';').shift()
+          return null
+        }
 
-    const creatorId = getCookie('creator-id')
-    const userId = getCookie('user-id')
-    const voiceActorId = getCookie('voice-actor-id')
-    const userRole = getCookie('user-role')
+        const creatorIdCookie = getCookie('creator-id')
+        const userIdCookie = getCookie('user-id')
+        const userRoleCookie = getCookie('user-role')
+        const voiceActorIdCookie = getCookie('voice-actor-id')
 
-    // Debug logging - HER ZAMAN ÇALIŞMALI
-    console.log('[ScriptDetailDrawer] Role check:', {
-      creatorId,
-      userId,
-      voiceActorId,
-      userRole,
-      scriptCreatorId: script.creator?.id,
-      scriptStatus: script.status,
-      producerApproved: script.producerApproved,
-      adminApproved: script.adminApproved,
-      isOpen
-    })
+        // API'den güvenilir user bilgisini al
+        let currentUserId: string | null = null
+        let currentCreatorId: string | null = creatorIdCookie || null
+        
+        if (userIdCookie) {
+          try {
+            const userRes = await fetch('/api/auth/me')
+            const userData = await userRes.json()
+            if (userData.user?.id) {
+              currentUserId = String(userData.user.id)
+            }
+          } catch (error) {
+            console.error('[ScriptDetailDrawer] Error fetching user:', error)
+          }
+        }
 
-    // İçerik üreticisi kontrolü - creator-id cookie'si varsa ve script'in creator'ı ile eşleşiyorsa
-    let newIsCreator = false
-    if (creatorId) {
-      // Script'in creator'ı ile eşleşiyorsa veya script henüz yüklenmemişse (tüm creator'lar kendi scriptlerini görebilir)
-      if (!script.creator?.id || script.creator.id === creatorId) {
-        newIsCreator = true
-        console.log('[ScriptDetailDrawer] Set isCreator = true', {
-          creatorId,
-          scriptCreatorId: script.creator?.id,
-          status: script.status,
+        // API'den güvenilir creator bilgisini al
+        if (creatorIdCookie) {
+          try {
+            const creatorRes = await fetch('/api/creator-auth/me')
+            const creatorData = await creatorRes.json()
+            if (creatorData.creator?.id) {
+              currentCreatorId = String(creatorData.creator.id)
+            }
+          } catch (error) {
+            console.error('[ScriptDetailDrawer] Error fetching creator:', error)
+          }
+        }
+
+        // Ownership bazlı creator kontrolü - script.creatorId ile currentCreatorId karşılaştırması
+        const scriptCreatorId = script.creatorId ? String(script.creatorId) : null
+        const isCreatorByOwnership = scriptCreatorId && currentCreatorId && scriptCreatorId === currentCreatorId
+
+        // Debug logging
+        console.log('[ScriptDetailDrawer] Ownership check:', {
+          scriptCreatorId,
+          currentCreatorId,
+          creatorIdCookie,
+          currentUserId,
+          isCreatorByOwnership,
+          scriptStatus: script.status,
           producerApproved: script.producerApproved,
-          canShowButton: script.status === 'WAITING_VOICE' && !script.producerApproved
+          adminApproved: script.adminApproved
         })
-      } else {
-        console.log('[ScriptDetailDrawer] Creator ID mismatch:', {
-          creatorId,
-          scriptCreatorId: script.creator?.id
-        })
+
+        // Ownership bazlı creator tespiti (role bazlı değil)
+        setIsCreator(isCreatorByOwnership || false)
+
+        // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
+        const isAdminByRole = userRoleCookie && (userRoleCookie.toLowerCase() === 'admin' || userRoleCookie === 'ADMIN')
+        setIsAdmin(isAdminByRole || false)
+
+        // Voice actor kontrolü
+        if (voiceActorIdCookie) {
+          setCurrentVoiceActorId(voiceActorIdCookie)
+        }
+
+        setRoleLoading(false)
+      } catch (error) {
+        console.error('[ScriptDetailDrawer] Error in fetchUserInfo:', error)
+        setRoleLoading(false)
       }
     }
-    setIsCreator(newIsCreator)
 
-    // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
-    let newIsAdmin = false
-    if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'ADMIN')) {
-      newIsAdmin = true
-      console.log('[ScriptDetailDrawer] Set isAdmin = true', {
-        userRole,
-        status: script.status,
-        producerApproved: script.producerApproved,
-        adminApproved: script.adminApproved,
-        canShowButton: script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved
-      })
-    } else {
-      console.log('[ScriptDetailDrawer] Not admin:', { userRole })
-    }
-    setIsAdmin(newIsAdmin)
-
-    // Voice actor kontrolü
-    if (voiceActorId) {
-      setCurrentVoiceActorId(voiceActorId)
-    }
-
-    setRoleLoading(false)
-  }, [isOpen, script.id, script.status, script.creator?.id, script.producerApproved, script.adminApproved])
+    fetchUserInfo()
+  }, [isOpen, script.id, script.creatorId, script.status, script.producerApproved, script.adminApproved])
 
   // Script güncellendiğinde state'i güncelle
   useEffect(() => {
