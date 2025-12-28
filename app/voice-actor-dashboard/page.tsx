@@ -155,6 +155,27 @@ export default function VoiceActorDashboardPage() {
           </div>
         </div>
 
+        {/* Payments Link */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Ödemelerim
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Ödenen ve bekleyen ödemelerinizi görüntüleyin</p>
+              </div>
+              <Link
+                href="/voice-actor-payments"
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Ödemelerimi Görüntüle
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Contents List - Tablo Formatı */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
           <div className="px-6 py-4 border-b border-gray-200">

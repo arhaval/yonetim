@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const filter = searchParams.get('filter') || 'monthly'
     const monthParam = searchParams.get('month') || new Date().toISOString().slice(0, 7)
+    const voiceActorId = searchParams.get('voiceActorId')
+    const teamMemberId = searchParams.get('teamMemberId')
+    const streamerId = searchParams.get('streamerId')
+    const contentCreatorId = searchParams.get('contentCreatorId')
 
     let whereClause: any = {}
 
@@ -19,12 +23,24 @@ export async function GET(request: NextRequest) {
       const monthDate = parse(monthParam, 'yyyy-MM', new Date())
       const monthStart = startOfMonth(monthDate)
       const monthEnd = endOfMonth(monthDate)
-      whereClause = {
-        date: {
-          gte: monthStart,
-          lte: monthEnd,
-        },
+      whereClause.date = {
+        gte: monthStart,
+        lte: monthEnd,
       }
+    }
+
+    // Role-based filtering
+    if (voiceActorId) {
+      whereClause.voiceActorId = voiceActorId
+    }
+    if (teamMemberId) {
+      whereClause.teamMemberId = teamMemberId
+    }
+    if (streamerId) {
+      whereClause.streamerId = streamerId
+    }
+    if (contentCreatorId) {
+      whereClause.contentCreatorId = contentCreatorId
     }
 
     // Finansal kayıtları getir
@@ -70,16 +86,23 @@ export async function GET(request: NextRequest) {
     }).catch(() => [])
 
     // Ödenen seslendirmen metinlerini getir
+    let voiceoverScriptsWhere: any = {
+      status: 'PAID',
+    }
+    
+    if (filter === 'monthly' && monthStart && monthEnd) {
+      voiceoverScriptsWhere.updatedAt = {
+        gte: monthStart,
+        lte: monthEnd,
+      }
+    }
+    
+    if (voiceActorId) {
+      voiceoverScriptsWhere.voiceActorId = voiceActorId
+    }
+    
     const paidVoiceoverScripts = await prisma.voiceoverScript.findMany({
-      where: {
-        status: 'PAID',
-        ...(filter === 'monthly' && monthStart && monthEnd ? {
-          updatedAt: {
-            gte: monthStart,
-            lte: monthEnd,
-          },
-        } : {}),
-      },
+      where: voiceoverScriptsWhere,
       include: {
         voiceActor: {
           select: {
@@ -156,7 +179,26 @@ export async function GET(request: NextRequest) {
     }))
 
     // Tüm kayıtları birleştir
-    const allRecords = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
+    let allRecords = [...records, ...paymentRecords, ...teamPaymentRecords, ...voiceoverRecords]
+
+    // Role-based filtering for combined records
+    if (voiceActorId) {
+      allRecords = allRecords.filter(r => r.voiceActorId === voiceActorId)
+    }
+    if (teamMemberId) {
+      allRecords = allRecords.filter(r => r.teamMemberId === teamMemberId)
+    }
+    if (streamerId) {
+      allRecords = allRecords.filter(r => r.streamerId === streamerId)
+    }
+    if (contentCreatorId) {
+      allRecords = allRecords.filter(r => r.contentCreatorId === contentCreatorId)
+    }
+
+    // Eğer role-based filter varsa { records: [...] } formatında döndür, yoksa direkt array
+    if (voiceActorId || teamMemberId || streamerId || contentCreatorId) {
+      return NextResponse.json({ records: allRecords })
+    }
 
     return NextResponse.json(allRecords)
   } catch (error) {
