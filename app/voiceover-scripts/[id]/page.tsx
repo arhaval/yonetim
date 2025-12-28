@@ -7,8 +7,9 @@ import { ArrowLeft, FileText, CheckCircle, Clock, ExternalLink, Mic, User, Dolla
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import ApproveScriptButton from './ApproveScriptButton'
+import CreatorApproveButton from './CreatorApproveButton'
 import DeleteScriptButton from './DeleteScriptButton'
-import { canViewVoiceover } from '@/lib/voiceover-permissions'
+import { canViewVoiceover, canProducerApprove } from '@/lib/voiceover-permissions'
 
 export default async function VoiceoverScriptDetailPage({
   params,
@@ -130,8 +131,8 @@ export default async function VoiceoverScriptDetailPage({
           </div>
         </div>
 
-        {/* Admin Actions */}
-        <div className="flex items-center gap-4 mb-6">
+        {/* Actions */}
+        <div className="flex items-center gap-4 mb-6 flex-wrap">
           <Link
             href={`/voiceover-scripts/${script.id}/edit`}
             className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -139,8 +140,35 @@ export default async function VoiceoverScriptDetailPage({
             <FileText className="w-4 h-4 mr-2" />
             Düzenle
           </Link>
-          <ApproveScriptButton scriptId={script.id} currentStatus={script.status} currentPrice={script.price} />
-          <DeleteScriptButton scriptId={script.id} />
+          
+          {/* Creator Approve Button - Sadece creator için ve WAITING_VOICE status'ünde */}
+          {(() => {
+            const canApprove = creatorId && script.creatorId === creatorId && script.status === 'WAITING_VOICE' && (script.voiceLink || script.audioFile)
+            return canApprove ? (
+              <CreatorApproveButton 
+                scriptId={script.id} 
+                hasVoiceLink={!!(script.voiceLink || script.audioFile)} 
+              />
+            ) : null
+          })()}
+          
+          {/* Admin Approve Button - Sadece admin için görünür */}
+          {(() => {
+            const userRoleCookie = cookieStore.get('user-role')?.value
+            const isAdmin = userId && userRoleCookie?.toLowerCase() === 'admin'
+            // Admin için VOICE_UPLOADED (creator onayladı) veya APPROVED (fiyat girip ödendi olarak işaretle) status'lerinde göster
+            const shouldShow = isAdmin && (script.status === 'VOICE_UPLOADED' || script.status === 'APPROVED')
+            return shouldShow ? (
+              <ApproveScriptButton scriptId={script.id} currentStatus={script.status} currentPrice={script.price || 0} />
+            ) : null
+          })()}
+          
+          {/* Delete Button - Sadece admin için */}
+          {(() => {
+            const userRoleCookie = cookieStore.get('user-role')?.value
+            const isAdmin = userId && userRoleCookie?.toLowerCase() === 'admin'
+            return isAdmin ? <DeleteScriptButton scriptId={script.id} /> : null
+          })()}
         </div>
 
         {/* Script Content */}

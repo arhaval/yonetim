@@ -9,6 +9,9 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
   const [submitting, setSubmitting] = useState(false)
   const [showPaidButton, setShowPaidButton] = useState(false)
 
+  // Status mapping - schema'daki enum değerlerini component'teki string'lere çevir
+  const normalizedStatus = currentStatus?.toUpperCase() || ''
+
   const handleApprove = async () => {
     if (!price || parseFloat(price) <= 0) {
       alert('Lütfen geçerli bir ücret girin')
@@ -68,7 +71,7 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
     }
   }
 
-  if (currentStatus === 'paid') {
+  if (normalizedStatus === 'PAID') {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <div className="flex items-center">
@@ -81,7 +84,7 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
 
   return (
     <>
-      {currentStatus === 'approved' && (
+      {normalizedStatus === 'APPROVED' && (
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -99,7 +102,7 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
         </div>
       )}
 
-      {currentStatus === 'creator-approved' && (
+      {normalizedStatus === 'VOICE_UPLOADED' && (
         <div className="bg-orange-50 border-2 border-orange-300 rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -117,7 +120,7 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
         </div>
       )}
 
-      {currentStatus === 'pending' && (
+      {(normalizedStatus === 'WAITING_VOICE' || normalizedStatus === 'PENDING') && (
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
