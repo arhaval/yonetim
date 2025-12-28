@@ -795,7 +795,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               <div className="space-y-2">
                 <button
                   onClick={handleProducerApprove}
-                  disabled={loading || !isCreator || script.producerApproved || script.status !== 'WAITING_VOICE'}
+                  disabled={loading || (!isCreator && !isAdmin) || script.producerApproved || !(script.voiceLink || script.audioFile)}
                   className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? (
@@ -807,13 +807,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </button>
                 
                 {/* Disabled durumunda açıklama */}
-                {(!isCreator || script.producerApproved || script.status !== 'WAITING_VOICE') && (
+                {((!isCreator && !isAdmin) || script.producerApproved || !(script.voiceLink || script.audioFile)) && (
                   <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <div>
-                      {!isCreator && <div>Bu buton sadece içerik üreticisi için görünür.</div>}
-                      {script.producerApproved && <div>Metin zaten onaylandı.</div>}
-                      {script.status !== 'WAITING_VOICE' && <div>Bu işlem sadece "Ses Bekleniyor" durumunda yapılabilir. Mevcut durum: {script.status}</div>}
+                      {(!isCreator && !isAdmin) && <div>Bu işlem içerik üreticisine ait.</div>}
+                      {script.producerApproved && <div>Zaten onaylandı.</div>}
+                      {!(script.voiceLink || script.audioFile) && <div>Önce ses linki eklenmeli.</div>}
                     </div>
                   </div>
                 )}
@@ -879,7 +879,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
                 <button
                   onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved || script.status !== 'VOICE_UPLOADED'}
+                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
                   className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? (
@@ -891,15 +891,14 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </button>
 
                 {/* Disabled durumunda açıklama */}
-                {(!isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved || script.status !== 'VOICE_UPLOADED') && (
+                {(!isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved) && (
                   <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <div className="space-y-1">
-                      {!isAdmin && <div>Bu buton sadece admin için görünür.</div>}
-                      {!script.producerApproved && <div>Önce içerik üreticisi metni onaylamalı.</div>}
-                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && <div>Lütfen geçerli bir fiyat girin.</div>}
-                      {script.adminApproved && <div>Metin zaten admin tarafından onaylandı.</div>}
-                      {script.status !== 'VOICE_UPLOADED' && <div>Bu işlem sadece "Ses Yüklendi" durumunda yapılabilir. Mevcut durum: {script.status}</div>}
+                      {!isAdmin && <div>Sadece admin.</div>}
+                      {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı.</div>}
+                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && <div>Fiyat gir.</div>}
+                      {script.adminApproved && <div>Zaten final onaylı.</div>}
                     </div>
                   </div>
                 )}
@@ -1105,9 +1104,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               {/* İçerik Üreticisi Onayla Butonu - HER ZAMAN GÖRÜNÜR */}
               <button
                 onClick={handleProducerApprove}
-                disabled={loading || !isCreator || script.producerApproved || script.status !== 'WAITING_VOICE'}
+                disabled={loading || (!isCreator && !isAdmin) || script.producerApproved || !(script.voiceLink || script.audioFile)}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={!isCreator ? 'Bu buton sadece içerik üreticisi için görünür' : script.producerApproved ? 'Metin zaten onaylandı' : script.status !== 'WAITING_VOICE' ? `Bu işlem sadece "Ses Bekleniyor" durumunda yapılabilir. Mevcut durum: ${script.status}` : ''}
+                title={(!isCreator && !isAdmin) ? 'Bu işlem içerik üreticisine ait' : script.producerApproved ? 'Zaten onaylandı' : !(script.voiceLink || script.audioFile) ? 'Önce ses linki eklenmeli' : ''}
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -1132,9 +1131,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 />
                 <button
                   onClick={handleAdminApprove}
-                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved || script.status !== 'VOICE_UPLOADED'}
+                  disabled={loading || !isAdmin || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!isAdmin ? 'Bu buton sadece admin için görünür' : !script.producerApproved ? 'Önce içerik üreticisi metni onaylamalı' : (!adminPrice || adminPrice <= 0) ? 'Lütfen geçerli bir fiyat girin' : script.adminApproved ? 'Metin zaten onaylandı' : script.status !== 'VOICE_UPLOADED' ? `Bu işlem sadece "Ses Yüklendi" durumunda yapılabilir. Mevcut durum: ${script.status}` : ''}
+                  title={!isAdmin ? 'Sadece admin' : !script.producerApproved ? 'Önce içerik üreticisi onaylamalı' : (!adminPrice || adminPrice <= 0) ? 'Fiyat gir' : script.adminApproved ? 'Zaten final onaylı' : ''}
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
