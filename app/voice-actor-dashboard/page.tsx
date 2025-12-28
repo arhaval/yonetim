@@ -30,25 +30,9 @@ export default function VoiceActorDashboardPage() {
       }
 
       setVoiceActor(data.voiceActor)
-      // Paralel yükleme - daha hızlı
-      Promise.all([loadScripts(), loadContents()])
+      loadContents()
     } catch (error) {
       router.push('/voice-actor-login')
-    }
-  }
-
-  const loadScripts = async () => {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/voice-actor/scripts', {
-        cache: 'no-store', // Cache bypass - her zaman fresh data
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setScripts(data)
-      }
-    } catch (error) {
-      console.error('Error loading scripts:', error)
     } finally {
       setLoading(false)
     }
