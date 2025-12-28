@@ -78,9 +78,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   useEffect(() => {
     if (!isOpen) return
     
-    console.log('[ScriptDetailDrawer] useEffect triggered', { isOpen, scriptId: script?.id })
-    
-    // Güvenilir kaynaktan current user ve creator bilgilerini al
+    // Güvenilir kaynaktan current user bilgisini al
     const fetchUserInfo = async () => {
       try {
         // Cookie'lerden bilgileri al
@@ -91,14 +89,12 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           return null
         }
 
-        const creatorIdCookie = getCookie('creator-id')
         const userIdCookie = getCookie('user-id')
         const userRoleCookie = getCookie('user-role')
         const voiceActorIdCookie = getCookie('voice-actor-id')
 
-        // API'den güvenilir user bilgisini al
+        // API'den güvenilir current user ID'sini al
         let currentUserId: string | null = null
-        let currentCreatorId: string | null = creatorIdCookie || null
         
         if (userIdCookie) {
           try {
@@ -112,38 +108,71 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           }
         }
 
-        // API'den güvenilir creator bilgisini al
-        if (creatorIdCookie) {
-          try {
-            const creatorRes = await fetch('/api/creator-auth/me')
-            const creatorData = await creatorRes.json()
-            if (creatorData.creator?.id) {
-              currentCreatorId = String(creatorData.creator.id)
+        // Script objesini analiz et - creator alanını otomatik tespit et
+        // Olası creator alanları: created_by, createdBy, creatorId, producerId, userId
+        const possibleCreatorFields = ['created_by', 'createdBy', 'creatorId', 'producerId', 'userId']
+        
+        // Script objesinin tüm alanlarını analiz et (geçici debug)
+        const scriptKeys = Object.keys(script)
+        const scriptCreatorId = script.creatorId ? String(script.creatorId) : (script.creator?.id ? String(script.creator.id) : null)
+        
+        // Creator alanını otomatik tespit et
+        let detectedCreatorField: string | null = null
+        let detectedCreatorValue: string | null = null
+
+        // Önce doğrudan alanları kontrol et
+        if ((script as any).created_by) {
+          detectedCreatorField = 'created_by'
+          detectedCreatorValue = String((script as any).created_by)
+        } else if ((script as any).createdBy) {
+          detectedCreatorField = 'createdBy'
+          detectedCreatorValue = String((script as any).createdBy)
+        } else if (script.creatorId) {
+          detectedCreatorField = 'creatorId'
+          detectedCreatorValue = String(script.creatorId)
+        } else if ((script as any).producerId) {
+          detectedCreatorField = 'producerId'
+          detectedCreatorValue = String((script as any).producerId)
+        } else if ((script as any).userId) {
+          detectedCreatorField = 'userId'
+          detectedCreatorValue = String((script as any).userId)
+        } else if (script.creator?.id) {
+          detectedCreatorField = 'creator.id'
+          detectedCreatorValue = String(script.creator.id)
+        }
+
+        // Ownership kontrolü: script.creatorId (ContentCreator ID) ile current creator ID karşılaştırması
+        let isCreatorByOwnership = false
+        
+        // Önce ContentCreator ID karşılaştırması yap
+        if (scriptCreatorId) {
+          // Current user'ın creator ID'sini al
+          const creatorIdCookie = getCookie('creator-id')
+          if (creatorIdCookie && String(creatorIdCookie) === String(scriptCreatorId)) {
+            isCreatorByOwnership = true
+          } else {
+            // API'den creator bilgisini al ve karşılaştır
+            try {
+              const creatorRes = await fetch('/api/creator-auth/me')
+              const creatorData = await creatorRes.json()
+              if (creatorData.creator?.id && String(creatorData.creator.id) === String(scriptCreatorId)) {
+                isCreatorByOwnership = true
+              }
+            } catch (error) {
+              // Ignore
             }
-          } catch (error) {
-            console.error('[ScriptDetailDrawer] Error fetching creator:', error)
+          }
+        }
+        
+        // Eğer User ID karşılaştırması gerekiyorsa (detectedCreatorValue User ID ise)
+        if (!isCreatorByOwnership && detectedCreatorValue && currentUserId) {
+          if (String(detectedCreatorValue) === String(currentUserId)) {
+            isCreatorByOwnership = true
           }
         }
 
-        // Ownership bazlı creator kontrolü - script.creatorId ile currentCreatorId karşılaştırması
-        // script.creatorId yoksa script.creator?.id kullan (fallback)
-        const scriptCreatorId = script.creatorId ? String(script.creatorId) : (script.creator?.id ? String(script.creator.id) : null)
-        const isCreatorByOwnership = scriptCreatorId && currentCreatorId && String(scriptCreatorId) === String(currentCreatorId)
-
-        // Debug logging
-        console.log('[ScriptDetailDrawer] Ownership check:', {
-          scriptCreatorId,
-          currentCreatorId,
-          creatorIdCookie,
-          currentUserId,
-          isCreatorByOwnership,
-          scriptStatus: script.status,
-          producerApproved: script.producerApproved,
-          adminApproved: script.adminApproved
-        })
-
-        // Ownership bazlı creator tespiti (role bazlı değil)
-        setIsCreator(isCreatorByOwnership || false)
+        // Ownership bazlı creator tespiti (role veya status kullanmadan)
+        setIsCreator(isCreatorByOwnership)
 
         // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
         const isAdminByRole = userRoleCookie && (userRoleCookie.toLowerCase() === 'admin' || userRoleCookie === 'ADMIN')
@@ -162,7 +191,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     }
 
     fetchUserInfo()
-  }, [isOpen, script.id, script.creatorId, script.status, script.producerApproved, script.adminApproved])
+  }, [isOpen, script.id, script.creatorId, script.producerApproved, script.adminApproved])
 
   // Script güncellendiğinde state'i güncelle
   useEffect(() => {
