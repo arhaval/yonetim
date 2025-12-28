@@ -598,15 +598,19 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           const scriptRes = await fetch(`/api/voiceover-scripts/${script.id}`)
           if (scriptRes.ok) {
             const updatedScript = await scriptRes.json()
-            // Parent'a güncellenmiş script'i bildir
-            onUpdate()
-            // Local state'i güncelle (script prop useEffect ile güncellenecek)
+            // Local state'i güncelle
             setAdminPrice(updatedScript.price?.toString() || '')
+            // Parent'a güncellenmiş script'i bildir - parent selectedScript'i güncelleyecek
+            onUpdate()
+          } else {
+            // Hata olsa bile parent'a bildir
+            onUpdate()
           }
         } catch (err) {
           console.error('Error refetching script:', err)
+          // Hata olsa bile parent'a bildir
+          onUpdate()
         }
-        onUpdate()
       } else {
         console.error('Admin approve error:', { status: res.status, data })
         if (res.status === 401) {
