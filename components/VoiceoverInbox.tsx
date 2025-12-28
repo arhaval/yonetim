@@ -235,8 +235,7 @@ export default function VoiceoverInbox({
       }
 
       const res = await fetch(`/api/voiceover-scripts?${params.toString()}`, { 
-        cache: 'default',
-        next: { revalidate: 30 }
+        cache: 'default'
       })
       const data = await res.json()
 
