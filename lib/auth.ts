@@ -42,9 +42,18 @@ export async function getStreamerByEmail(email: string) {
   // Email'i normalize et (case-insensitive arama için)
   const normalizedEmail = email.toLowerCase().trim()
   
-  return prisma.streamer.findUnique({
-    where: { email: normalizedEmail },
-  })
+  try {
+    return await prisma.streamer.findUnique({
+      where: { email: normalizedEmail },
+    })
+  } catch (error: any) {
+    // Database bağlantı hatası durumunda null döndür
+    if (error.message?.includes('Tenant') || error.message?.includes('user not found') || error.message?.includes('FATAL')) {
+      console.error('Database connection error in getStreamerByEmail:', error.message)
+      return null
+    }
+    throw error
+  }
 }
 
 export async function getContentCreatorByEmail(email: string) {

@@ -43,15 +43,6 @@ export async function POST(
       )
     }
 
-    // Kural: voiceLink dolu olmalı
-    const voiceLink = script.voiceLink || script.audioFile // Backward compatibility
-    if (!voiceLink) {
-      return NextResponse.json(
-        { error: 'Ses linki henüz eklenmemiş. Producer onayı için ses linki gereklidir.' },
-        { status: 400 }
-      )
-    }
-
     // Creator bilgisini al (audit log için)
     const creator = await prisma.contentCreator.findUnique({
       where: { id: creatorId },
@@ -113,7 +104,7 @@ export async function POST(
     })
 
     return NextResponse.json({
-      message: 'Ses onaylandı, admin onayı bekleniyor',
+      message: 'Metin onaylandı, admin fiyat girip onaylayacak',
       script: updatedScript,
     })
   } catch (error: any) {

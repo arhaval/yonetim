@@ -427,15 +427,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
   }
 
   const handleProducerApprove = async () => {
-    const voiceLink = script.voiceLink || script.audioFile
-    if (!voiceLink) {
-      toast.error('Ses linki eklenmemiş')
-      return
-    }
-
     setLoading(true)
     try {
-      const res = await fetch(`/api/voiceover-scripts/${script.id}/producer-approve`, {
+      const res = await fetch(`/api/voiceover-scripts/${script.id}/creator-approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
@@ -443,10 +437,10 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const data = await res.json()
 
       if (res.ok) {
-        toast.success('Producer onayı başarıyla verildi')
+        toast.success('Metin başarıyla onaylandı! Admin fiyat girip final onayı yapacak.')
         onUpdate()
       } else {
-        console.error('Producer approve error:', { status: res.status, data })
+        console.error('Creator approve error:', { status: res.status, data })
         if (res.status === 401) {
           toast.error('Giriş yapmanız gerekiyor')
         } else if (res.status === 403) {
@@ -768,7 +762,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 <div className="space-y-2">
                   <button
                     onClick={handleProducerApprove}
-                    disabled={loading || !(script.voiceLink || script.audioFile) || script.producerApproved}
+                    disabled={loading || script.producerApproved}
                     className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {loading ? (
@@ -776,20 +770,13 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                     ) : (
                       <CheckCircle className="w-4 h-4 mr-2" />
                     )}
-                    {script.producerApproved ? 'Onaylandı' : 'Ses Doğru - Onayla'}
+                    {script.producerApproved ? 'Onaylandı' : 'Metni Onayla'}
                   </button>
-                  
-                  {!(script.voiceLink || script.audioFile) && (
-                    <div className="flex items-start space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
-                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Ses linki eklenmemiş. Onaylamak için önce ses linki eklenmelidir.</span>
-                    </div>
-                  )}
                   
                   {script.producerApproved && (
                     <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded">
                       <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Ses onaylandı. Admin fiyat girip final onayı yapacak.</span>
+                      <span>Metin onaylandı. Admin fiyat girip final onayı yapacak.</span>
                     </div>
                   )}
                 </div>
@@ -1072,11 +1059,11 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           {/* Footer - Aksiyon Butonları */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex flex-wrap gap-3">
-              {/* İçerik Üreticisi Onayla Butonu - WAITING_VOICE status'ünde ve ses linki varsa */}
-              {isCreator && script.status === 'WAITING_VOICE' && (script.voiceLink || script.audioFile) && !script.producerApproved && (
+              {/* İçerik Üreticisi Onayla Butonu - WAITING_VOICE status'ünde */}
+              {isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved && (
                 <button
                   onClick={handleProducerApprove}
-                  disabled={loading || !(script.voiceLink || script.audioFile)}
+                  disabled={loading}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
@@ -1084,7 +1071,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   ) : (
                     <CheckCircle className="w-4 h-4 mr-2" />
                   )}
-                  Ses Doğru - Onayla
+                  Metni Onayla
                 </button>
               )}
 

@@ -3,16 +3,11 @@
 import { useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 
-export default function CreatorApproveButton({ scriptId, hasVoiceLink }: { scriptId: string, hasVoiceLink: boolean }) {
+export default function CreatorApproveButton({ scriptId }: { scriptId: string }) {
   const [submitting, setSubmitting] = useState(false)
 
   const handleApprove = async () => {
-    if (!hasVoiceLink) {
-      alert('Ses linki henüz eklenmemiş. Seslendirmen önce ses linkini eklemelidir.')
-      return
-    }
-
-    if (!confirm('Sesi onaylıyor musunuz? Onayladıktan sonra admin fiyat girip final onayı yapacak.')) {
+    if (!confirm('Metni onaylıyor musunuz? Onayladıktan sonra admin fiyat girip final onayı yapacak.')) {
       return
     }
 
@@ -26,7 +21,7 @@ export default function CreatorApproveButton({ scriptId, hasVoiceLink }: { scrip
       const data = await res.json()
 
       if (res.ok) {
-        alert('Ses başarıyla onaylandı! Admin fiyat girip final onayı yapacak.')
+        alert('Metin başarıyla onaylandı! Admin fiyat girip final onayı yapacak.')
         window.location.reload()
       } else {
         alert(data.error || 'Bir hata oluştu')
@@ -38,10 +33,6 @@ export default function CreatorApproveButton({ scriptId, hasVoiceLink }: { scrip
     }
   }
 
-  if (!hasVoiceLink) {
-    return null // Ses linki yoksa buton gösterilmez
-  }
-
   return (
     <button
       onClick={handleApprove}
@@ -49,7 +40,7 @@ export default function CreatorApproveButton({ scriptId, hasVoiceLink }: { scrip
       className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
     >
       <CheckCircle className="w-5 h-5 inline mr-2" />
-      {submitting ? 'Onaylanıyor...' : 'Ses Doğru - Onayla'}
+      {submitting ? 'Onaylanıyor...' : 'Metni Onayla'}
     </button>
   )
 }

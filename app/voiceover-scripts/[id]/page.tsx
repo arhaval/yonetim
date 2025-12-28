@@ -143,11 +143,10 @@ export default async function VoiceoverScriptDetailPage({
           
           {/* Creator Approve Button - Sadece creator için ve WAITING_VOICE status'ünde */}
           {(() => {
-            const canApprove = creatorId && script.creatorId === creatorId && script.status === 'WAITING_VOICE' && (script.voiceLink || script.audioFile)
+            const canApprove = creatorId && script.creatorId === creatorId && script.status === 'WAITING_VOICE' && !script.producerApproved
             return canApprove ? (
               <CreatorApproveButton 
                 scriptId={script.id} 
-                hasVoiceLink={!!(script.voiceLink || script.audioFile)} 
               />
             ) : null
           })()}
