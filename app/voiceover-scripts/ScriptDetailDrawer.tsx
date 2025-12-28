@@ -84,19 +84,30 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     const creatorId = getCookie('creator-id')
     const userId = getCookie('user-id')
     const voiceActorId = getCookie('voice-actor-id')
+    const userRole = getCookie('user-role')
+
+    // Debug logging
+    console.log('[ScriptDetailDrawer] Role check:', {
+      creatorId,
+      userId,
+      voiceActorId,
+      userRole,
+      scriptCreatorId: script.creator?.id,
+    })
 
     // İçerik üreticisi kontrolü - creator-id cookie'si varsa ve script'in creator'ı ile eşleşiyorsa
     if (creatorId) {
       // Script'in creator'ı ile eşleşiyorsa veya script henüz yüklenmemişse (tüm creator'lar kendi scriptlerini görebilir)
       if (!script.creator?.id || script.creator.id === creatorId) {
         setIsCreator(true)
+        console.log('[ScriptDetailDrawer] Set isCreator = true')
       }
     }
 
     // Admin kontrolü - cookie'den user-role kontrolü (case-insensitive)
-    const userRole = getCookie('user-role')
     if (userRole && (userRole.toLowerCase() === 'admin' || userRole === 'ADMIN')) {
       setIsAdmin(true)
+      console.log('[ScriptDetailDrawer] Set isAdmin = true')
     }
 
     // Voice actor kontrolü
