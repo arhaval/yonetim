@@ -153,6 +153,14 @@ export async function POST(
       }
     }
 
+    // User null kontrolü
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Kullanıcı bulunamadı' },
+        { status: 404 }
+      )
+    }
+
     // Audit log kaydet
     await createAuditLog({
       userId: user.id,
