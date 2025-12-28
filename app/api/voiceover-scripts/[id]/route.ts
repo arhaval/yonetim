@@ -96,7 +96,6 @@ export async function PUT(
     const updateData: any = {}
 
     // Admin kontrolü
-    const { isAdmin } = await import('@/lib/voiceover-permissions')
     const isAdminUser = userId ? await isAdmin(userId) : false
 
     // Admin metin içeriğini düzenleyebilir
