@@ -35,7 +35,7 @@ export default function RoleAwareLayout({ children, backUrl, backLabel }: RoleAw
       const voiceActorId = getCookie('voice-actor-id')
       const creatorId = getCookie('creator-id')
 
-      // Admin kontrolü
+      // Admin kontrolü - cookie'den kontrol yeterli, API başarısız olsa bile admin olarak kabul et
       if (userId && (userRole === 'admin' || userRole === 'ADMIN')) {
         try {
           const res = await fetch('/api/auth/me', { cache: 'no-store' })
@@ -48,6 +48,11 @@ export default function RoleAwareLayout({ children, backUrl, backLabel }: RoleAw
           }
         } catch (error) {
           console.error('Error fetching admin user:', error)
+          // API başarısız olsa bile cookie'den admin olduğu belli, admin olarak devam et
+          setRole('admin')
+          setUser({ id: userId, role: 'admin' })
+          setLoading(false)
+          return
         }
       }
 
@@ -232,13 +237,9 @@ export default function RoleAwareLayout({ children, backUrl, backLabel }: RoleAw
     )
   }
 
-  // Role bulunamadıysa veya geçersizse
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="text-center">
-        <p className="text-gray-600">Yetkisiz erişim</p>
-      </div>
-    </div>
-  )
+  // Role bulunamadıysa veya geçersizse - SAYFA HER ZAMAN RENDER EDİLMELİ
+  // Yetki kontrolü API route'larda yapılacak, burada sadece layout belirlenir
+  // Admin layout'u varsayılan olarak kullan (fallback)
+  return <Layout>{children}</Layout>
 }
 
