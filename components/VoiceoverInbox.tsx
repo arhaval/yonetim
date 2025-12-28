@@ -503,8 +503,13 @@ export default function VoiceoverInbox({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scripts.map((script) => {
+                    const getEditPackUrl = (token: string) => {
+                      if (typeof window === 'undefined') return ''
+                      const baseUrl = window.location.origin
+                      return `${baseUrl}/edit-pack/${token}`
+                    }
                     const editPackUrl = script.editPack?.token 
-                      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/edit-pack/${script.editPack.token}`
+                      ? getEditPackUrl(script.editPack.token)
                       : null
                     const isEditPackExpired = script.editPack?.expiresAt 
                       ? new Date(script.editPack.expiresAt) < new Date()
