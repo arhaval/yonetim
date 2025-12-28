@@ -828,7 +828,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               )}
             </div>
 
-            {/* BLOK 2: Admin Final Onay + Fiyat */}
+            {/* BLOK 2: Admin Final Onay + Fiyat - HER ZAMAN GÖRÜNÜR */}
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -896,9 +896,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   <div className="flex items-start space-x-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
                     <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                     <div className="space-y-1">
-                      {!isAdmin && <div>Sadece admin.</div>}
-                      {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı.</div>}
-                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && <div>Fiyat gir.</div>}
+                      {!isAdmin && <div>Sadece admin. (isAdmin: {String(isAdmin)}, roleLoading: {String(roleLoading)})</div>}
+                      {!script.producerApproved && <div>Önce içerik üreticisi onaylamalı. (producerApproved: {String(script.producerApproved)})</div>}
+                      {(!adminPrice || adminPrice <= 0) && script.producerApproved && <div>Fiyat gir. (adminPrice: {adminPrice})</div>}
                       {script.adminApproved && <div>Zaten final onaylı.</div>}
                     </div>
                   </div>
