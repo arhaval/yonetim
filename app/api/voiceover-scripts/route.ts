@@ -14,37 +14,10 @@ export async function GET(request: NextRequest) {
     const voiceActorIdCookie = cookieStore.get('voice-actor-id')?.value
     const userRoleCookie = cookieStore.get('user-role')?.value
 
-    // Debug logging
-    console.log('[VoiceoverScripts API] Auth check:', {
-      userId,
-      creatorId,
-      voiceActorIdCookie,
-      userRoleCookie,
-      hasUserId: !!userId,
-      hasCreatorId: !!creatorId,
-      hasVoiceActorId: !!voiceActorIdCookie,
-      hasUserRoleCookie: !!userRoleCookie,
-      allCookies: {
-        'user-id': userId,
-        'creator-id': creatorId,
-        'voice-actor-id': voiceActorIdCookie,
-        'user-role': userRoleCookie,
-      },
-    })
-
     // Admin, içerik üreticisi veya seslendirmen kontrolü
     if (!userId && !creatorId && !voiceActorIdCookie) {
-      console.log('[VoiceoverScripts API] Unauthorized - no cookies')
       return NextResponse.json(
-        { 
-          error: 'Yetkisiz erişim',
-          debug: {
-            hasUserId: !!userId,
-            hasCreatorId: !!creatorId,
-            hasVoiceActorId: !!voiceActorIdCookie,
-            userRoleCookie,
-          }
-        },
+        { error: 'Yetkisiz erişim' },
         { status: 401 }
       )
     }
@@ -60,19 +33,9 @@ export async function GET(request: NextRequest) {
       isAdmin = 
         (user?.role === 'admin' || user?.role === 'ADMIN') ||
         (userRoleCookie === 'admin' || userRoleCookie === 'ADMIN')
-      console.log('[VoiceoverScripts API] Admin check:', {
-        userId,
-        userRoleFromDB: user?.role,
-        userRoleFromCookie: userRoleCookie,
-        isAdmin,
-      })
     } else if (userRoleCookie === 'admin' || userRoleCookie === 'ADMIN') {
       // Sadece cookie'den admin kontrolü (fallback)
       isAdmin = true
-      console.log('[VoiceoverScripts API] Admin check from cookie only:', {
-        userRoleFromCookie: userRoleCookie,
-        isAdmin,
-      })
     }
 
     const searchParams = request.nextUrl.searchParams

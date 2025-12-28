@@ -60,7 +60,6 @@ export default function VoiceoverInbox({
   showBulkActions = true,
   title = 'Seslendirme Metinleri'
 }: VoiceoverInboxProps) {
-  console.log('[VoiceoverInbox] Component mounted', { initialFilters, showBulkActions, title })
   const [scripts, setScripts] = useState<Script[]>([])
   const [voiceActors, setVoiceActors] = useState<VoiceActor[]>([])
   const [loading, setLoading] = useState(true)
@@ -190,7 +189,6 @@ export default function VoiceoverInbox({
 
   // Scripts yükle
   const loadScripts = useCallback(async () => {
-    console.log('[VoiceoverInbox] loadScripts called')
     setLoading(true)
     try {
       const params = new URLSearchParams({
