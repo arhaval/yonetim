@@ -14,38 +14,37 @@ export async function GET(request: NextRequest) {
     const voiceActorIdCookie = cookieStore.get('voice-actor-id')?.value
     const userRoleCookie = cookieStore.get('user-role')?.value
 
-    // Admin kontrolü - önce cookie'den kontrol et (daha hızlı)
-    const isAdminFromCookie = userRoleCookie === 'admin' || userRoleCookie === 'ADMIN'
+    // Admin kontrolü - önce cookie'den kontrol et (daha hızlı ve güvenilir)
+    let finalIsAdmin = false
+    
+    // Cookie'den admin kontrolü
+    if (userRoleCookie && (userRoleCookie.toLowerCase() === 'admin')) {
+      finalIsAdmin = true
+    }
     
     // Eğer cookie'de admin yoksa ama userId varsa, veritabanından kontrol et
-    let isAdminFromDB = false
-    if (userId && !isAdminFromCookie) {
+    if (!finalIsAdmin && userId) {
       try {
         const user = await prisma.user.findUnique({
           where: { id: userId },
           select: { role: true },
         })
-        isAdminFromDB = user?.role === 'admin' || user?.role === 'ADMIN'
+        if (user?.role) {
+          finalIsAdmin = user.role.toLowerCase() === 'admin'
+        }
       } catch (error) {
         // Veritabanı hatası durumunda cookie'ye güven
-        isAdminFromDB = false
+        // finalIsAdmin zaten false
       }
     }
-    
-    const finalIsAdmin = isAdminFromCookie || isAdminFromDB
 
-    // Admin ise her şeyi görebilir - erken return
-    if (finalIsAdmin) {
-      // Admin için filtreleme yapma, tüm script'leri göster
-      // (whereClause boş kalacak)
-    } else {
-      // Admin değilse, içerik üreticisi veya seslendirmen kontrolü
-      if (!userId && !creatorId && !voiceActorIdCookie) {
-        return NextResponse.json(
-          { error: 'Yetkisiz erişim' },
-          { status: 401 }
-        )
-      }
+    // Admin ise her şeyi görebilir - erken devam et
+    // Admin değilse, içerik üreticisi veya seslendirmen kontrolü
+    if (!finalIsAdmin && !userId && !creatorId && !voiceActorIdCookie) {
+      return NextResponse.json(
+        { error: 'Yetkisiz erişim' },
+        { status: 401 }
+      )
     }
 
     const searchParams = request.nextUrl.searchParams
