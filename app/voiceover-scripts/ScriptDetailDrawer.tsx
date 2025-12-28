@@ -1193,7 +1193,7 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 return null
               })()}
 
-              {/* Admin Final Onay Butonu - VOICE_UPLOADED status'ünde ve producerApproved true ise */}
+              {/* Admin Final Onay Butonu - TEST: Her zaman göster */}
               {(() => {
                 const shouldShow = isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved
                 console.log('[ScriptDetailDrawer] Footer Admin button check:', {
@@ -1201,34 +1201,47 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                   status: script.status,
                   producerApproved: script.producerApproved,
                   adminApproved: script.adminApproved,
-                  shouldShow
+                  shouldShow,
+                  roleLoading
                 })
-                return shouldShow ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={adminPrice}
-                      onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
-                      placeholder="Fiyat (₺)"
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500"
-                      min="0"
-                      step="0.01"
-                      disabled={loading}
-                    />
-                    <button
-                      onClick={handleAdminApprove}
-                      disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                
+                // TEST: Admin ise her zaman göster
+                if (isAdmin || roleLoading) {
+                  return (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={adminPrice}
+                          onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
+                          placeholder="Fiyat (₺)"
+                          className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500"
+                          min="0"
+                          step="0.01"
+                          disabled={loading || script.adminApproved}
+                        />
+                        <button
+                          onClick={handleAdminApprove}
+                          disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0 || script.adminApproved}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                          )}
+                          Final Onay Ver {!shouldShow && '(Test)'}
+                        </button>
+                      </div>
+                      {!shouldShow && (
+                        <div className="text-xs text-red-600 w-full">
+                          Debug: isAdmin={String(isAdmin)}, status={script.status}, producerApproved={String(script.producerApproved)}, adminApproved={String(script.adminApproved)}
+                        </div>
                       )}
-                      Final Onay Ver
-                    </button>
-                  </div>
-                ) : null
+                    </>
+                  )
+                }
+                return null
               })()}
               
               {/* Reddet Butonu - Admin ve Creator için */}
