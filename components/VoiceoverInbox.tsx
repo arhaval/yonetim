@@ -34,6 +34,7 @@ interface Script {
     id: string
     name: string
   } | null
+  voiceActorId: string | null
   editPack: {
     token: string
     expiresAt: string
