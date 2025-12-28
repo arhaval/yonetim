@@ -51,7 +51,7 @@ export default function EditVoiceoverScriptPage() {
       const data = await res.json()
 
       if (res.ok) {
-        router.push(`/voiceover-scripts/${scriptId}`)
+        router.refresh()
       } else {
         alert(data.error || 'Bir hata oluştu')
         setLoading(false)

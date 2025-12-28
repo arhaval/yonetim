@@ -25,7 +25,7 @@ export default function DeleteScriptButton({ scriptId }: { scriptId: string }) {
       }
 
       alert('Metin başarıyla silindi')
-      router.push('/voiceover-scripts')
+      router.refresh()
     } catch (error: any) {
       console.error('Error deleting script:', error)
       alert(`Hata: ${error.message || 'Metin silinemedi'}`)

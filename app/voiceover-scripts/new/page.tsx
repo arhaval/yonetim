@@ -28,7 +28,8 @@ export default function NewVoiceoverScriptPage() {
       const data = await res.json()
 
       if (res.ok) {
-        router.push('/voiceover-scripts')
+        router.refresh()
+        router.back()
       } else {
         alert(data.error || 'Bir hata oluştu')
         setLoading(false)
