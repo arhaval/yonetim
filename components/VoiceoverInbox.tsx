@@ -235,49 +235,20 @@ export default function VoiceoverInbox({
       }
 
       const res = await fetch(`/api/voiceover-scripts?${params.toString()}`, { cache: 'no-store' })
-      
-      // Debug logging
-      console.log('[VoiceoverInbox] API Response:', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok,
-        url: `/api/voiceover-scripts?${params.toString()}`,
-      })
-      
       const data = await res.json()
-      
-      // Debug logging - response data
-      console.log('[VoiceoverInbox] API Data:', {
-        hasScripts: !!data.scripts,
-        scriptsLength: data.scripts?.length || 0,
-        pagination: data.pagination,
-        error: data.error,
-        fullData: data,
-      })
 
       if (res.ok) {
         let filteredScripts = data.scripts || []
-        
-        console.log('[VoiceoverInbox] Filtered scripts:', {
-          beforeFilter: filteredScripts.length,
-          initialFilters,
-        })
         
         // Client-side filter for creatorId (API'de yok)
         if (initialFilters.creatorId) {
           filteredScripts = filteredScripts.filter((s: Script) => s.creator?.id === initialFilters.creatorId)
         }
         
-        console.log('[VoiceoverInbox] Final scripts:', {
-          afterFilter: filteredScripts.length,
-          scripts: filteredScripts,
-        })
-        
         setScripts(filteredScripts)
         setTotalPages(data.pagination?.totalPages || 1)
         setTotal(data.pagination?.total || filteredScripts.length)
       } else {
-        console.error('[VoiceoverInbox] Error loading scripts:', data.error, data)
         toast.error(data.error || 'Metinler yüklenemedi')
       }
     } catch (error) {
