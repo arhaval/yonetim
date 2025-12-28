@@ -276,18 +276,22 @@ export default function VoiceActorDashboardPage() {
                     .map((script) => {
                       // Status kontrolü - ödenmiş veya onaylanmış ise "Onaylı"
                       const isApproved = script.status === 'PAID' || script.status === 'APPROVED'
+                      const isUnassigned = !script.voiceActorId
+                      const isMyScript = script.voiceActorId === voiceActor?.id
                       
                       return (
                         <div 
                           key={script.id} 
-                          className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
-                          onClick={() => router.push(`/voice-actor/scripts/${script.id}`)}
+                          className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
                         >
-                          <div className="p-5">
+                          <div 
+                            className={`p-5 ${isMyScript ? 'cursor-pointer' : ''}`}
+                            onClick={isMyScript ? () => router.push(`/voice-actor/scripts/${script.id}`) : undefined}
+                          >
                             {/* Sadece başlık ve status */}
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-3 mb-3">
                               <h3 
-                                className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors flex-1"
+                                className={`text-lg font-semibold text-gray-900 flex-1 ${isMyScript ? 'hover:text-indigo-600 transition-colors' : ''}`}
                               >
                                 {script.title}
                               </h3>
@@ -300,6 +304,20 @@ export default function VoiceActorDashboardPage() {
                                 </span>
                               )}
                             </div>
+                            
+                            {/* Atanmamış scriptler için "Bana Ata" butonu */}
+                            {isUnassigned && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAssignScript(script.id)
+                                }}
+                                className="w-full mt-3 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                              >
+                                <Mic className="w-4 h-4" />
+                                Bana Ata
+                              </button>
+                            )}
                           </div>
                         </div>
                       )
