@@ -175,6 +175,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Voice Actor Payments sayfası - sadece voice actor erişebilir
+  const isVoiceActorPaymentsPage = request.nextUrl.pathname.startsWith('/voice-actor-payments')
+  if (isVoiceActorPaymentsPage) {
+    if (!voiceActorId) {
+      return NextResponse.redirect(new URL('/voice-actor-login', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // Voiceover scripts sayfası - creator, voice actor ve admin erişebilir
   const isVoiceoverScriptsPage = request.nextUrl.pathname.startsWith('/voiceover-scripts')
   if (isVoiceoverScriptsPage) {
@@ -203,6 +212,7 @@ export function middleware(request: NextRequest) {
                       !isVoiceoverScriptsPage && // Voiceover scripts sayfasını admin kontrolünden çıkar
                       !isMyVoiceoversPage && // My voiceovers sayfasını admin kontrolünden çıkar
                       !isMyAssignmentsPage && // My assignments sayfasını admin kontrolünden çıkar
+                      !isVoiceActorPaymentsPage && // Voice actor payments sayfasını admin kontrolünden çıkar
                       !isTeamLoginPage && 
                       !isTeamDashboard && 
                       !request.nextUrl.pathname.startsWith('/api')
