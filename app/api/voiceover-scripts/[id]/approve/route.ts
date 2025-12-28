@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
 import { generateEditPackToken } from '@/lib/edit-pack-token'
+import { canAdminApprove } from '@/lib/voiceover-permissions'
 
 // Admin metni onaylar ve ücreti girer
 export async function POST(
@@ -22,16 +23,18 @@ export async function POST(
     }
 
     // Admin kontrolü
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
-
-    if (!user || (user.role !== 'admin' && user.role !== 'ADMIN')) {
+    const canApprove = await canAdminApprove(userId)
+    if (!canApprove) {
       return NextResponse.json(
         { error: 'Bu işlem için admin yetkisi gerekmektedir' },
         { status: 403 }
       )
     }
+
+    // User bilgisini audit log için al
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    })
 
     const body = await request.json()
     const { price } = body

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
+import { canProducerApprove } from '@/lib/voiceover-permissions'
 
 // İçerik üreticisi (producer) ses linkini onaylar
 export async function POST(
@@ -12,8 +13,9 @@ export async function POST(
     const { id } = await Promise.resolve(params)
     const cookieStore = await cookies()
     const creatorId = cookieStore.get('creator-id')?.value
+    const userId = cookieStore.get('user-id')?.value
 
-    if (!creatorId) {
+    if (!creatorId && !userId) {
       return NextResponse.json(
         { error: 'Yetkisiz erişim' },
         { status: 401 }
@@ -32,10 +34,11 @@ export async function POST(
       )
     }
 
-    // Sadece kendi metinlerini onaylayabilir
-    if (script.creatorId !== creatorId) {
+    // Yetki kontrolü
+    const canApprove = await canProducerApprove(userId, creatorId, script)
+    if (!canApprove) {
       return NextResponse.json(
-        { error: 'Bu metin size ait değil' },
+        { error: 'Bu metni onaylama yetkiniz yok' },
         { status: 403 }
       )
     }
