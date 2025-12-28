@@ -68,10 +68,19 @@ export async function GET(request: NextRequest) {
     // Where clause oluştur
     let whereClause: any = {}
 
-    // Creator sadece kendi scriptlerini görmeli (admin değilse)
-    if (creatorId && !finalIsAdmin) {
-      whereClause.creatorId = creatorId
+    // Admin ise TÜM kayıtları görebilmeli - filtreleme yapma
+    // Admin değilse, creator veya voice actor sadece kendi kayıtlarını görebilir
+    if (!finalIsAdmin) {
+      // Creator sadece kendi scriptlerini görmeli
+      if (creatorId) {
+        whereClause.creatorId = creatorId
+      }
+      // Voice Actor sadece kendi scriptlerini görmeli (cookie'den gelen)
+      if (voiceActorIdCookie) {
+        whereClause.voiceActorId = voiceActorIdCookie
+      }
     }
+    // Admin için whereClause boş kalır, tüm kayıtlar görünür
 
     // ARCHIVED varsayılan olarak gösterilmez (tüm roller için)
     if (excludeArchived) {
@@ -97,7 +106,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Seslendiren filtresi
+    // Seslendiren filtresi (query parametresinden - admin için de geçerli)
+    // Bu bir filtre, admin de kullanabilir
     if (voiceActorId) {
       whereClause.voiceActorId = voiceActorId
     }

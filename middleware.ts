@@ -184,14 +184,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Voiceover scripts sayfası - creator, voice actor ve admin erişebilir
+  // Voiceover scripts sayfası - sadece auth kontrolü (role kontrolü YOK)
+  // Sayfa her zaman render edilmeli, yetki kontrolü API route'larda yapılacak
   const isVoiceoverScriptsPage = request.nextUrl.pathname.startsWith('/voiceover-scripts')
   if (isVoiceoverScriptsPage) {
-    // Creator, voice actor veya admin erişebilir
-    if (creatorId || voiceActorId || (userId && (userRole === 'admin' || userRole === 'ADMIN'))) {
+    // Sadece giriş yapmış mı kontrol et (herhangi bir role)
+    if (userId || creatorId || voiceActorId) {
       return NextResponse.next()
     }
-    // Hiçbiri yoksa login selection'a yönlendir
+    // Giriş yapmamışsa login selection'a yönlendir
     const redirectUrl = new URL('/login-selection', request.url)
     redirectUrl.searchParams.set('reason', 'middleware_denied_no_session')
     redirectUrl.searchParams.set('from', request.nextUrl.pathname)
