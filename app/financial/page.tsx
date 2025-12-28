@@ -156,8 +156,13 @@ export default function FinancialPage() {
       filtered = filtered.filter((r) => r.category?.includes('Sponsor'))
     }
 
-    // Sıralama (en eski önce)
-    filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    // Sıralama (en son güncellenen en üstte) - API'den zaten sıralı geliyor ama emin olmak için
+    filtered.sort((a, b) => {
+      // updatedAt öncelikli, yoksa occurredAt, yoksa paidAt, yoksa date, yoksa createdAt
+      const dateA = new Date(a.updatedAt || a.occurredAt || a.paidAt || a.date || a.createdAt || 0).getTime()
+      const dateB = new Date(b.updatedAt || b.occurredAt || b.paidAt || b.date || b.createdAt || 0).getTime()
+      return dateB - dateA // DESC - en yeni en üstte
+    })
 
     return filtered
   }
