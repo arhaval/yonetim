@@ -166,6 +166,12 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        editPack: {
+          select: {
+            token: true,
+            expiresAt: true,
+          },
+        },
       },
       // Varsayılan sıralama için daha fazla veri çek (gruplar için)
       take: useDefaultSorting && !statusFilter && !producerApprovedFilter && !adminApprovedFilter && !hasPriceFilter && !hasAudioLink && !voiceActorId && !search && !dateFrom && !dateTo ? limit * 10 : limit,

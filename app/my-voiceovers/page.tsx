@@ -1,7 +1,7 @@
 'use client'
 
 import Layout from '@/components/Layout'
-import VoiceoverScriptsTable from '@/components/VoiceoverScriptsTable'
+import VoiceoverInbox from '@/components/VoiceoverInbox'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -58,7 +58,7 @@ export default function MyVoiceoversPage() {
             Oluşturduğunuz tüm seslendirme metinlerini görüntüleyin ve yönetin
           </p>
         </div>
-        <VoiceoverScriptsTable
+        <VoiceoverInbox
           initialFilters={{ creatorId }}
           showBulkActions={false}
           title="Metinlerim"

@@ -3,7 +3,7 @@
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import VoiceoverScriptsTable from '@/components/VoiceoverScriptsTable'
+import VoiceoverInbox from '@/components/VoiceoverInbox'
 
 export default function VoiceoverScriptsPage() {
   return (
@@ -30,7 +30,7 @@ export default function VoiceoverScriptsPage() {
           </div>
         </div>
 
-        <VoiceoverScriptsTable
+        <VoiceoverInbox
           initialFilters={{}}
           showBulkActions={true}
           title="Seslendirme Metinleri"

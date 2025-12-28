@@ -34,6 +34,10 @@ interface Script {
     id: string
     name: string
   } | null
+  editPack: {
+    token: string
+    expiresAt: string
+  } | null
 }
 
 interface VoiceActor {
@@ -41,7 +45,7 @@ interface VoiceActor {
   name: string
 }
 
-interface VoiceoverScriptsTableProps {
+interface VoiceoverInboxProps {
   initialFilters?: {
     creatorId?: string
     voiceActorId?: string
@@ -50,7 +54,7 @@ interface VoiceoverScriptsTableProps {
   title?: string
 }
 
-export default function VoiceoverScriptsTable({ 
+export default function VoiceoverInbox({ 
   initialFilters = {},
   showBulkActions = true,
   title = 'Seslendirme Metinleri'
@@ -492,120 +496,154 @@ export default function VoiceoverScriptsTable({
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       İşlemler
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      EditPack
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {scripts.map((script) => (
-                    <tr
-                      key={script.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => {
-                        setSelectedScript(script)
-                        setIsDrawerOpen(true)
-                      }}
-                    >
-                      {showBulkActions && (
-                        <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                  {scripts.map((script) => {
+                    const editPackUrl = script.editPack?.token 
+                      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/edit-pack/${script.editPack.token}`
+                      : null
+                    const isEditPackExpired = script.editPack?.expiresAt 
+                      ? new Date(script.editPack.expiresAt) < new Date()
+                      : false
+
+                    return (
+                      <tr
+                        key={script.id}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedScript(script)
+                          setIsDrawerOpen(true)
+                        }}
+                      >
+                        {showBulkActions && (
+                          <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleSelectScript(script.id)
+                              }}
+                              className="flex items-center justify-center"
+                            >
+                              {selectedIds.has(script.id) ? (
+                                <CheckSquare2 className="w-5 h-5 text-indigo-600" />
+                              ) : (
+                                <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                              )}
+                            </button>
+                          </td>
+                        )}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(script.status)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">{script.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {script.creator?.name || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {script.voiceActor?.name || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {(script.voiceLink || script.audioFile) ? (
+                            <a
+                              href={script.voiceLink || script.audioFile || undefined}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (!script.voiceLink && !script.audioFile) {
+                                  e.preventDefault()
+                                }
+                              }}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Var
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Yok
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            script.producerApproved 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {script.producerApproved ? 'Onaylı' : 'Onaysız'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            script.adminApproved 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {script.adminApproved ? 'Onaylı' : 'Onaysız'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {script.price && script.price > 0
+                              ? script.price.toLocaleString('tr-TR', {
+                                  style: 'currency',
+                                  currency: 'TRY',
+                                })
+                              : '—'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleSelectScript(script.id)
+                            onClick={() => {
+                              setSelectedScript(script)
+                              setIsDrawerOpen(true)
                             }}
-                            className="flex items-center justify-center"
+                            className="text-indigo-600 hover:text-indigo-900"
                           >
-                            {selectedIds.has(script.id) ? (
-                              <CheckSquare2 className="w-5 h-5 text-indigo-600" />
-                            ) : (
-                              <Square className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                            )}
+                            Detay
                           </button>
                         </td>
-                      )}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(script.status)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{script.title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {script.creator?.name || '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {script.voiceActor?.name || '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {(script.voiceLink || script.audioFile) ? (
-                          <a
-                            href={script.voiceLink || script.audioFile || undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              if (!script.voiceLink && !script.audioFile) {
-                                e.preventDefault()
-                              }
-                            }}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
-                          >
-                            <ExternalLink className="w-3 h-3 mr-1" />
-                            Var
-                          </a>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            Yok
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          script.producerApproved 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {script.producerApproved ? 'Onaylı' : 'Onaysız'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          script.adminApproved 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {script.adminApproved ? 'Onaylı' : 'Onaysız'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {script.price && script.price > 0
-                            ? script.price.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                              })
-                            : '—'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => {
-                            setSelectedScript(script)
-                            setIsDrawerOpen(true)
-                          }}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          Detay
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          {editPackUrl && !isEditPackExpired ? (
+                            <a
+                              href={editPackUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                              title="EditPack Linki"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Link
+                            </a>
+                          ) : script.adminApproved ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                              Yok
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
+                              —
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
