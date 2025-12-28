@@ -126,8 +126,9 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         }
 
         // Ownership bazlı creator kontrolü - script.creatorId ile currentCreatorId karşılaştırması
-        const scriptCreatorId = script.creatorId ? String(script.creatorId) : null
-        const isCreatorByOwnership = scriptCreatorId && currentCreatorId && scriptCreatorId === currentCreatorId
+        // script.creatorId yoksa script.creator?.id kullan (fallback)
+        const scriptCreatorId = script.creatorId ? String(script.creatorId) : (script.creator?.id ? String(script.creator.id) : null)
+        const isCreatorByOwnership = scriptCreatorId && currentCreatorId && String(scriptCreatorId) === String(currentCreatorId)
 
         // Debug logging
         console.log('[ScriptDetailDrawer] Ownership check:', {
