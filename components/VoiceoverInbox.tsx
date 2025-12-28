@@ -58,7 +58,7 @@ export default function VoiceoverInbox({
   initialFilters = {},
   showBulkActions = true,
   title = 'Seslendirme Metinleri'
-}: VoiceoverScriptsTableProps) {
+}: VoiceoverInboxProps) {
   const [scripts, setScripts] = useState<Script[]>([])
   const [voiceActors, setVoiceActors] = useState<VoiceActor[]>([])
   const [loading, setLoading] = useState(true)
