@@ -184,13 +184,10 @@ export async function DELETE(
     }
 
     // Admin kontrolü
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    })
-
-    if (!user || user.role !== 'admin') {
+    const canDelete = await canDeleteVoiceover(userId)
+    if (!canDelete) {
       return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
+        { error: 'Bu işlem için admin yetkisi gerekmektedir' },
         { status: 403 }
       )
     }
