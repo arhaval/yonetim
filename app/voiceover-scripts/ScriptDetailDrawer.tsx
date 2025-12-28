@@ -44,6 +44,8 @@ interface ScriptDetailDrawerProps {
 }
 
 export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }: ScriptDetailDrawerProps) {
+  console.log('[ScriptDetailDrawer] Component rendered', { isOpen, scriptId: script?.id, scriptStatus: script?.status })
+  
   const [loading, setLoading] = useState(false)
   const [price, setPrice] = useState(script.price || 0)
   const [adminPrice, setAdminPrice] = useState(script.price || 0)
@@ -780,22 +782,32 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 </p>
               )}
 
-              {isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved && (
-                <div className="space-y-2">
-                  <button
-                    onClick={handleProducerApprove}
-                    disabled={loading}
-                    className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                    )}
-                    Metni Onayla
-                  </button>
-                </div>
-              )}
+              {/* DEBUG: Buton görünürlük kontrolü */}
+              {(() => {
+                const shouldShow = isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved
+                console.log('[ScriptDetailDrawer] Creator button check:', {
+                  isCreator,
+                  status: script.status,
+                  producerApproved: script.producerApproved,
+                  shouldShow
+                })
+                return shouldShow ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleProducerApprove}
+                      disabled={loading}
+                      className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      )}
+                      Metni Onayla
+                    </button>
+                  </div>
+                ) : null
+              })()}
               
               {script.producerApproved && (
                 <div className="flex items-start space-x-2 text-xs text-green-600 bg-green-50 p-2 rounded mt-2">
@@ -1089,48 +1101,67 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <div className="flex flex-wrap gap-3">
               {/* İçerik Üreticisi Onayla Butonu - WAITING_VOICE status'ünde */}
-              {isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved && (
-                <button
-                  onClick={handleProducerApprove}
-                  disabled={loading}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Metni Onayla
-                </button>
-              )}
-
-              {/* Admin Final Onay Butonu - VOICE_UPLOADED status'ünde ve producerApproved true ise */}
-              {isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={adminPrice}
-                    onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
-                    placeholder="Fiyat (₺)"
-                    className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500"
-                    min="0"
-                    step="0.01"
-                    disabled={loading}
-                  />
+              {(() => {
+                const shouldShow = isCreator && script.status === 'WAITING_VOICE' && !script.producerApproved
+                console.log('[ScriptDetailDrawer] Footer Creator button check:', {
+                  isCreator,
+                  status: script.status,
+                  producerApproved: script.producerApproved,
+                  shouldShow
+                })
+                return shouldShow ? (
                   <button
-                    onClick={handleAdminApprove}
-                    disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleProducerApprove}
+                    disabled={loading}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
                       <CheckCircle className="w-4 h-4 mr-2" />
                     )}
-                    Final Onay Ver
+                    Metni Onayla
                   </button>
-                </div>
-              )}
+                ) : null
+              })()}
+
+              {/* Admin Final Onay Butonu - VOICE_UPLOADED status'ünde ve producerApproved true ise */}
+              {(() => {
+                const shouldShow = isAdmin && script.status === 'VOICE_UPLOADED' && script.producerApproved && !script.adminApproved
+                console.log('[ScriptDetailDrawer] Footer Admin button check:', {
+                  isAdmin,
+                  status: script.status,
+                  producerApproved: script.producerApproved,
+                  adminApproved: script.adminApproved,
+                  shouldShow
+                })
+                return shouldShow ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={adminPrice}
+                      onChange={(e) => setAdminPrice(parseFloat(e.target.value) || 0)}
+                      placeholder="Fiyat (₺)"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm w-32 focus:ring-purple-500 focus:border-purple-500"
+                      min="0"
+                      step="0.01"
+                      disabled={loading}
+                    />
+                    <button
+                      onClick={handleAdminApprove}
+                      disabled={loading || !script.producerApproved || !adminPrice || adminPrice <= 0}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      )}
+                      Final Onay Ver
+                    </button>
+                  </div>
+                ) : null
+              })()}
               
               {/* Reddet Butonu - Admin ve Creator için */}
               {((isAdmin && (script.status === 'VOICE_UPLOADED' || script.status === 'APPROVED')) || 
