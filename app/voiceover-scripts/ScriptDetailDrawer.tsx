@@ -115,15 +115,26 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
       const res = await fetch(`/api/edit-pack/voiceover/${script.id}`)
       if (res.ok) {
         const data = await res.json()
-        setEditPack(data.editPack)
-        setEditorNotes(data.editPack.editorNotes || '')
-        setAssetsLinks(data.editPack.assetsLinks || [])
+        if (data.editPack) {
+          setEditPack(data.editPack)
+          setEditorNotes(data.editPack.editorNotes || '')
+          setAssetsLinks(data.editPack.assetsLinks || [])
+        } else {
+          setEditPack(null)
+          setEditorNotes('')
+          setAssetsLinks([])
+        }
       } else if (res.status === 404) {
         // EditPack yok, bu normal
         setEditPack(null)
+        setEditorNotes('')
+        setAssetsLinks([])
       }
     } catch (error) {
       console.error('Error loading EditPack:', error)
+      setEditPack(null)
+      setEditorNotes('')
+      setAssetsLinks([])
     } finally {
       setEditPackLoading(false)
     }
@@ -173,8 +184,14 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
       if (res.ok) {
         const data = await res.json()
-        setEditPack(data.editPack)
-        toast.success('EditPack kaydedildi')
+        if (data.editPack) {
+          setEditPack(data.editPack)
+          setEditorNotes(data.editPack.editorNotes || '')
+          setAssetsLinks(data.editPack.assetsLinks || [])
+          toast.success('EditPack kaydedildi')
+        } else {
+          toast.error('Kaydetme başarısız')
+        }
       } else {
         const errorData = await res.json()
         toast.error(errorData.error || 'Kaydetme başarısız')
@@ -790,38 +807,42 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 ) : (
                   <div className="space-y-4">
                     {/* EditPack URL */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
-                        EditPack URL
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={getEditPackUrl(editPack.token)}
-                          readOnly
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
-                        />
-                        <button
-                          onClick={() => copyToClipboard(getEditPackUrl(editPack.token))}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        >
-                          <Copy className="w-4 h-4 mr-1" />
-                          Kopyala
-                        </button>
-                        <a
-                          href={getEditPackUrl(editPack.token)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          Aç
-                        </a>
+                    {editPack && editPack.token && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          EditPack URL
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={getEditPackUrl(editPack.token)}
+                            readOnly
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(getEditPackUrl(editPack.token))}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                          >
+                            <Copy className="w-4 h-4 mr-1" />
+                            Kopyala
+                          </button>
+                          <a
+                            href={getEditPackUrl(editPack.token)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Aç
+                          </a>
+                        </div>
+                        {editPack.expiresAt && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            Süresi: {format(new Date(editPack.expiresAt), 'dd MMM yyyy HH:mm', { locale: tr })} (7 gün)
+                          </p>
+                        )}
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Süresi: {format(new Date(editPack.expiresAt), 'dd MMM yyyy HH:mm', { locale: tr })} (7 gün)
-                      </p>
-                    </div>
+                    )}
 
                     {/* Ek Linkler */}
                     <div>

@@ -164,14 +164,18 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
                 <ExternalLink className="w-4 h-4" />
                 Aç
               </a>
-              <button
-                onClick={() => copyToClipboard(voiceover.voiceLink!, 'Ses linki')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-              >
-                <Copy className="w-4 h-4" />
-                Kopyala
-              </button>
-              <span className="text-sm text-gray-600 break-all flex-1">{voiceover.voiceLink}</span>
+              {voiceover.voiceLink && (
+                <>
+                  <button
+                    onClick={() => copyToClipboard(voiceover.voiceLink!, 'Ses linki')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Kopyala
+                  </button>
+                  <span className="text-sm text-gray-600 break-all flex-1">{voiceover.voiceLink}</span>
+                </>
+              )}
             </div>
           </div>
         )}

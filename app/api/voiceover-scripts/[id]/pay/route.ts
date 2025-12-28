@@ -5,9 +5,10 @@ import { cookies } from 'next/headers'
 // Admin metni ödendi olarak işaretler ve giderlere ekler
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params)
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
 
@@ -32,7 +33,7 @@ export async function POST(
 
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         voiceActor: {
           select: {
@@ -65,7 +66,7 @@ export async function POST(
 
     // Metni ödendi olarak işaretle
     await prisma.voiceoverScript.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         status: 'PAID',
       },

@@ -7,9 +7,10 @@ import { generateEditPackToken } from '@/lib/edit-pack-token'
 // Admin metni onaylar ve ücreti girer
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params)
     const cookieStore = await cookies()
     const userId = cookieStore.get('user-id')?.value
 
@@ -37,7 +38,7 @@ export async function POST(
 
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     })
 
     if (!script) {
@@ -75,7 +76,7 @@ export async function POST(
 
     // Admin onayını ver ve ücreti güncelle
     const updatedScript = await prisma.voiceoverScript.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         status: 'APPROVED',
         price: finalPrice,
@@ -99,26 +100,26 @@ export async function POST(
       },
     })
 
-    // EditPack oluştur (idempotent - varsa tekrar oluşturma)
-    const existingEditPack = await prisma.editPack.findUnique({
-      where: { voiceoverId: params.id },
-    })
+        // EditPack oluştur (idempotent - varsa tekrar oluşturma)
+        const existingEditPack = await prisma.editPack.findUnique({
+          where: { voiceoverId: resolvedParams.id },
+        })
 
-    if (!existingEditPack) {
-      const token = generateEditPackToken()
-      const createdAt = new Date()
-      const expiresAt = new Date(createdAt)
-      expiresAt.setDate(expiresAt.getDate() + 7) // +7 gün
+        if (!existingEditPack) {
+          const token = generateEditPackToken()
+          const createdAt = new Date()
+          const expiresAt = new Date(createdAt)
+          expiresAt.setDate(expiresAt.getDate() + 7) // +7 gün
 
-      await prisma.editPack.create({
-        data: {
-          voiceoverId: params.id,
-          token,
-          createdAt,
-          expiresAt,
-        },
-      })
-    }
+          await prisma.editPack.create({
+            data: {
+              voiceoverId: resolvedParams.id,
+              token,
+              createdAt,
+              expiresAt,
+            },
+          })
+        }
 
     // Finansal kayıt oluştur (gider olarak) - Sadece voice actor için
     // Creator maaş alıyor, script ücretinden pay almıyor
@@ -156,7 +157,7 @@ export async function POST(
       userRole: user.role,
       action: 'script_approved',
       entityType: 'VoiceoverScript',
-      entityId: params.id,
+      entityId: resolvedParams.id,
       oldValue,
       newValue: {
         status: updatedScript.status,

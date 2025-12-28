@@ -6,9 +6,10 @@ import { createAuditLog } from '@/lib/audit-log'
 // İçerik üreticisi sesi onaylar
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const resolvedParams = await Promise.resolve(params)
     const cookieStore = await cookies()
     const creatorId = cookieStore.get('creator-id')?.value
 
@@ -21,7 +22,7 @@ export async function POST(
 
     // Metni kontrol et
     const script = await prisma.voiceoverScript.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
     })
 
     if (!script) {
@@ -64,7 +65,7 @@ export async function POST(
 
     // Producer onayını ver (status: VOICE_UPLOADED - ses linki var, admin onayı bekliyor)
     const updatedScript = await prisma.voiceoverScript.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         status: 'VOICE_UPLOADED',
         producerApproved: true,
@@ -94,7 +95,7 @@ export async function POST(
       userRole: 'creator',
       action: 'script_creator_approved',
       entityType: 'VoiceoverScript',
-      entityId: params.id,
+      entityId: resolvedParams.id,
       oldValue,
       newValue: {
         status: updatedScript.status,
