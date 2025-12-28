@@ -77,7 +77,6 @@ export default function VoiceActorDashboardPage() {
 
   const handleAssignScript = async (scriptId: string) => {
     try {
-      setLoading(true)
       const res = await fetch('/api/voiceover-scripts/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,25 +87,19 @@ export default function VoiceActorDashboardPage() {
       const data = await res.json()
 
       if (res.ok) {
-        // Optimistic update - script'i hemen listeden güncelle
-        setScripts(prevScripts => 
-          prevScripts.map(script => 
-            script.id === scriptId 
-              ? { ...script, voiceActorId: voiceActor?.id }
-              : script
-          )
-        )
+        console.log('Script assigned successfully:', data)
         alert('Metin başarıyla size atandı!')
-        // Fresh data için tekrar yükle
+        // Fresh data için tekrar yükle - loadScripts kendi loading state'ini yönetiyor
         await loadScripts()
+        // Sayfayı yenile (güvenli fallback)
+        window.location.reload()
       } else {
+        console.error('Assignment failed:', data)
         alert(data.error || 'Bir hata oluştu')
-        setLoading(false)
       }
     } catch (error) {
       console.error('Error assigning script:', error)
       alert('Bir hata oluştu')
-      setLoading(false)
     }
   }
 
