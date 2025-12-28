@@ -1,12 +1,14 @@
 'use client'
 
-import Layout from '@/components/Layout'
 import VoiceoverInbox from '@/components/VoiceoverInbox'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { LogOut, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export default function MyAssignmentsPage() {
   const router = useRouter()
+  const [voiceActor, setVoiceActor] = useState<any>(null)
   const [voiceActorId, setVoiceActorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -21,6 +23,7 @@ export default function MyAssignmentsPage() {
           return
         }
 
+        setVoiceActor(data.voiceActor)
         setVoiceActorId(data.voiceActor.id)
       } catch (error) {
         router.push('/voice-actor-login')
@@ -32,39 +35,90 @@ export default function MyAssignmentsPage() {
     checkAuth()
   }, [router])
 
+  const handleLogout = async () => {
+    await fetch('/api/voice-actor-auth/logout', { method: 'POST' })
+    router.push('/voice-actor-login')
+  }
+
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Yükleniyor...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Yükleniyor...</p>
         </div>
-      </Layout>
+      </div>
     )
   }
 
-  if (!voiceActorId) {
+  if (!voiceActorId || !voiceActor) {
     return null
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Bekleyen Seslendirmelerim</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Size atanan seslendirme metinlerini görüntüleyin ve yönetin
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/voice-actor-dashboard"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Dashboard'a Dön
+              </Link>
+              <div className="flex items-center space-x-4 ml-4">
+                {voiceActor.profilePhoto ? (
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-pink-200">
+                    <img
+                      src={voiceActor.profilePhoto}
+                      alt={voiceActor.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg ring-2 ring-pink-200">
+                    <span className="text-white font-bold text-lg">
+                      {voiceActor.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    {voiceActor.name}
+                  </h1>
+                  <p className="text-sm text-gray-600">Seslendirmen</p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Çıkış Yap
+            </button>
+          </div>
         </div>
-        <VoiceoverInbox
-          initialFilters={{ voiceActorId }}
-          showBulkActions={false}
-          title="Atanan Metinler"
-        />
+
+        {/* Content */}
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Bekleyen Seslendirmelerim</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Size atanan seslendirme metinlerini görüntüleyin ve yönetin
+            </p>
+          </div>
+          <VoiceoverInbox
+            initialFilters={{ voiceActorId }}
+            showBulkActions={false}
+            title="Atanan Metinler"
+          />
+        </div>
       </div>
-    </Layout>
+    </div>
   )
 }
 
