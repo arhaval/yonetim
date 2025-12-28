@@ -15,11 +15,11 @@ export async function GET(request: NextRequest) {
     const userRoleCookie = cookieStore.get('user-role')?.value
 
     // Admin kontrolü - önce cookie'den kontrol et (daha hızlı)
-    const isAdmin = userRoleCookie === 'admin' || userRoleCookie === 'ADMIN'
+    const isAdminFromCookie = userRoleCookie === 'admin' || userRoleCookie === 'ADMIN'
     
     // Eğer cookie'de admin yoksa ama userId varsa, veritabanından kontrol et
     let isAdminFromDB = false
-    if (!isAdmin && userId) {
+    if (userId && !isAdminFromCookie) {
       try {
         const user = await prisma.user.findUnique({
           where: { id: userId },
@@ -32,14 +32,20 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    const finalIsAdmin = isAdmin || isAdminFromDB
+    const finalIsAdmin = isAdminFromCookie || isAdminFromDB
 
-    // Admin, içerik üreticisi veya seslendirmen kontrolü
-    if (!finalIsAdmin && !userId && !creatorId && !voiceActorIdCookie) {
-      return NextResponse.json(
-        { error: 'Yetkisiz erişim' },
-        { status: 401 }
-      )
+    // Admin ise her şeyi görebilir - erken return
+    if (finalIsAdmin) {
+      // Admin için filtreleme yapma, tüm script'leri göster
+      // (whereClause boş kalacak)
+    } else {
+      // Admin değilse, içerik üreticisi veya seslendirmen kontrolü
+      if (!userId && !creatorId && !voiceActorIdCookie) {
+        return NextResponse.json(
+          { error: 'Yetkisiz erişim' },
+          { status: 401 }
+        )
+      }
     }
 
     const searchParams = request.nextUrl.searchParams
