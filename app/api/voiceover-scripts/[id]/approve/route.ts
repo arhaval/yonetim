@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { createAuditLog } from '@/lib/audit-log'
 import { generateEditPackToken } from '@/lib/edit-pack-token'
 import { canAdminApprove } from '@/lib/voiceover-permissions'
+import { createEditPackUrl } from '@/lib/edit-pack-url'
 
 // Admin metni onaylar ve ücreti girer
 export async function POST(
@@ -77,52 +78,82 @@ export async function POST(
       adminApprovedBy: script.adminApprovedBy,
     }
 
-    // Admin onayını ver ve ücreti güncelle
-    const updatedScript = await prisma.voiceoverScript.update({
-      where: { id: resolvedParams.id },
-      data: {
-        status: 'APPROVED',
-        price: finalPrice,
-        adminApproved: true,
-        adminApprovedAt: new Date(),
-        adminApprovedBy: userId,
-      },
-      include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
-          },
+    // TEK TRANSACTION İÇİNDE: Admin onayı, price kaydı ve EditPack oluşturma
+    const updatedScript = await prisma.$transaction(async (tx) => {
+      // 1. Admin onayını ver ve ücreti güncelle
+      const updated = await tx.voiceoverScript.update({
+        where: { id: resolvedParams.id },
+        data: {
+          status: 'APPROVED',
+          price: finalPrice,
+          adminApproved: true,
+          adminApprovedAt: new Date(),
+          adminApprovedBy: userId,
         },
-        voiceActor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    })
-
-        // EditPack oluştur (idempotent - varsa tekrar oluşturma)
-        const existingEditPack = await prisma.editPack.findUnique({
-          where: { voiceoverId: resolvedParams.id },
-        })
-
-        if (!existingEditPack) {
-          const token = generateEditPackToken()
-          const createdAt = new Date()
-          const expiresAt = new Date(createdAt)
-          expiresAt.setDate(expiresAt.getDate() + 7) // +7 gün
-
-          await prisma.editPack.create({
-            data: {
-              voiceoverId: resolvedParams.id,
-              token,
-              createdAt,
-              expiresAt,
+        include: {
+          creator: {
+            select: {
+              id: true,
+              name: true,
             },
+          },
+          voiceActor: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          editPack: true, // EditPack'i de dahil et
+        },
+      })
+
+      // 2. EditPack kontrolü ve oluşturma (eğer yoksa)
+      let editPack = updated.editPack
+      
+      if (!editPack) {
+        // Token'un unique olduğundan emin olmak için retry mekanizması
+        let token: string
+        let attempts = 0
+        const maxAttempts = 10
+
+        while (attempts < maxAttempts) {
+          token = generateEditPackToken()
+          
+          // Token'un unique olduğunu kontrol et
+          const existingToken = await tx.editPack.findUnique({
+            where: { token },
           })
+
+          if (!existingToken) {
+            // Unique token bulundu, EditPack oluştur
+            const createdAt = new Date()
+            const expiresAt = new Date(createdAt)
+            expiresAt.setDate(expiresAt.getDate() + 7) // +7 gün
+
+            editPack = await tx.editPack.create({
+              data: {
+                voiceoverId: resolvedParams.id,
+                token,
+                createdAt,
+                expiresAt,
+              },
+            })
+            break
+          }
+
+          attempts++
+          if (attempts >= maxAttempts) {
+            throw new Error('EditPack token oluşturulamadı: unique token bulunamadı')
+          }
         }
+      }
+
+      // Updated script'i editPack ile birlikte döndür
+      return {
+        ...updated,
+        editPack,
+      }
+    })
 
     // Finansal kayıt oluştur (gider olarak) - Sadece voice actor için
     // Creator maaş alıyor, script ücretinden pay almıyor
@@ -184,11 +215,24 @@ export async function POST(
         creatorId: updatedScript.creatorId,
         creatorName: updatedScript.creator?.name,
         financialRecordId,
+        editPackId: updatedScript.editPack?.id,
       },
     })
 
+    // Response'da script objesini ve editPack bilgisini dön
+    const editPackUrl = createEditPackUrl(updatedScript.editPack?.token)
+
     return NextResponse.json({
       message: 'Metin başarıyla onaylandı ve finansal kayıt oluşturuldu',
+      script: {
+        ...updatedScript,
+        editPack: updatedScript.editPack ? {
+          id: updatedScript.editPack.id,
+          token: updatedScript.editPack.token,
+          expiresAt: updatedScript.editPack.expiresAt,
+          url: editPackUrl,
+        } : null,
+      },
     })
   } catch (error: any) {
     console.error('Error approving script:', error)

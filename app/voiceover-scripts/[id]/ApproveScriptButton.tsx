@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { CheckCircle, DollarSign } from 'lucide-react'
 
 export default function ApproveScriptButton({ scriptId, currentStatus, currentPrice }: { scriptId: string, currentStatus: string, currentPrice: number }) {
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false)
   const [price, setPrice] = useState(currentPrice > 0 ? currentPrice.toString() : '')
   const [submitting, setSubmitting] = useState(false)
@@ -33,7 +35,8 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
         alert('Metin başarıyla onaylandı ve ücret kaydedildi!')
         setShowModal(false)
         setShowPaidButton(true)
-        window.location.reload()
+        // Server component'i yeniden render et (state güncellemesi için)
+        router.refresh()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
@@ -60,7 +63,8 @@ export default function ApproveScriptButton({ scriptId, currentStatus, currentPr
 
       if (res.ok) {
         alert('Metin ödendi olarak işaretlendi ve giderlere eklendi!')
-        window.location.reload()
+        // Server component'i yeniden render et
+        router.refresh()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }

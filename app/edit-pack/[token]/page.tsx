@@ -25,6 +25,7 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expired, setExpired] = useState(false)
+  const [notFound, setNotFound] = useState(false)
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null)
 
   useEffect(() => {
@@ -39,7 +40,10 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
         if (!res.ok) {
           if (res.status === 410) {
             setExpired(true)
-            setError('Link süresi doldu')
+            setError('Süresi doldu')
+          } else if (res.status === 404) {
+            setNotFound(true)
+            setError('Link bulunamadı')
           } else {
             setError(responseData.error || 'Bir hata oluştu')
           }
@@ -91,8 +95,20 @@ export default function EditPackPage({ params }: { params: Promise<{ token: stri
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Link Süresi Doldu</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Süresi Doldu</h1>
           <p className="text-gray-600 mb-6">Bu link 7 gün geçerlidir. Yeni link iste.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Link Bulunamadı</h1>
+          <p className="text-gray-600">{error || 'Bu link geçersiz veya silinmiş olabilir.'}</p>
         </div>
       </div>
     )

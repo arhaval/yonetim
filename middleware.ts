@@ -33,9 +33,10 @@ export function middleware(request: NextRequest) {
   const isApiVoiceoverScripts = request.nextUrl.pathname.startsWith('/api/voiceover-scripts')
   const isApiUpload = request.nextUrl.pathname.startsWith('/api/upload')
   const isApiMigrate = request.nextUrl.pathname.startsWith('/api/migrate')
+  const isApiEditPack = request.nextUrl.pathname.startsWith('/api/edit-pack') // Public route
 
   // API auth endpoint'lerine izin ver
-  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiVoiceActorContents || isApiTeamAuth || isApiTeam || isApiContent || isApiVoiceoverScripts || isApiUpload || isApiMigrate) {
+  if (isApiAuth || isApiStreamerAuth || isApiStreamer || isApiCreatorAuth || isApiCreator || isApiContentCreators || isApiVoiceActorAuth || isApiVoiceActor || isApiVoiceActors || isApiVoiceActorContents || isApiTeamAuth || isApiTeam || isApiContent || isApiVoiceoverScripts || isApiUpload || isApiMigrate || isApiEditPack) {
     return NextResponse.next()
   }
 
@@ -147,6 +148,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Edit-pack sayfası - PUBLIC (login gerektirmez)
+  const isEditPackPage = request.nextUrl.pathname.startsWith('/edit-pack/')
+  if (isEditPackPage) {
+    return NextResponse.next()
+  }
+
   // Ana sayfa (/) - giriş yapmamışsa login selection'a yönlendir
   if (request.nextUrl.pathname === '/') {
     // Cookie kontrolü - userId yoksa veya boşsa login selection'a yönlendir
@@ -217,6 +224,7 @@ export function middleware(request: NextRequest) {
                       !isMyVoiceoversPage && // My voiceovers sayfasını admin kontrolünden çıkar
                       !isMyAssignmentsPage && // My assignments sayfasını admin kontrolünden çıkar
                       !isVoiceActorPaymentsPage && // Voice actor payments sayfasını admin kontrolünden çıkar
+                      !isEditPackPage && // Edit-pack sayfasını admin kontrolünden çıkar (public route)
                       !isTeamLoginPage && 
                       !isTeamDashboard && 
                       !request.nextUrl.pathname.startsWith('/api')

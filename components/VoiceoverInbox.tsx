@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
 import ScriptDetailDrawer from '@/app/voiceover-scripts/ScriptDetailDrawer'
+import { createEditPackUrl } from '@/lib/edit-pack-url'
 
 interface Script {
   id: string
@@ -586,14 +587,7 @@ export default function VoiceoverInbox({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scripts.map((script) => {
-                    const getEditPackUrl = (token: string) => {
-                      if (typeof window === 'undefined') return ''
-                      const baseUrl = window.location.origin
-                      return `${baseUrl}/edit-pack/${token}`
-                    }
-                    const editPackUrl = script.editPack?.token 
-                      ? getEditPackUrl(script.editPack.token)
-                      : null
+                    const editPackUrl = createEditPackUrl(script.editPack?.token)
                     const isEditPackExpired = script.editPack?.expiresAt 
                       ? new Date(script.editPack.expiresAt) < new Date()
                       : false
@@ -732,10 +726,6 @@ export default function VoiceoverInbox({
                               <ExternalLink className="w-3 h-3 mr-1" />
                               Link
                             </a>
-                          ) : script.adminApproved ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                              Yok
-                            </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
                               —

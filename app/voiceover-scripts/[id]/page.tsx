@@ -44,6 +44,13 @@ export default async function VoiceoverScriptDetailPage({
             email: true,
           },
         },
+        editPack: {
+          select: {
+            id: true,
+            token: true,
+            expiresAt: true,
+          },
+        },
       },
     })
   } catch (error: any) {

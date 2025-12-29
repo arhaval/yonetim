@@ -5,6 +5,7 @@ import { X, CheckCircle, XCircle, Archive, FileText, Mic, DollarSign, Calendar, 
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { toast } from 'sonner'
+import { createEditPackUrl } from '@/lib/edit-pack-url'
 
 interface Script {
   id: string
@@ -333,11 +334,6 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
     }
   }
 
-  const getEditPackUrl = (token: string) => {
-    // Production URL - environment variable'dan al veya default kullan
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://yonetim.arhaval.com'
-    return `${baseUrl}/edit-pack/${token}`
-  }
 
   const handleApprove = async () => {
     if (price <= 0) {
@@ -603,24 +599,29 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
 
       if (res.ok) {
         toast.success('Admin onayı başarıyla verildi')
-        // Script'i refetch et ve güncelle
-        try {
-          const scriptRes = await fetch(`/api/voiceover-scripts/${script.id}`)
-          if (scriptRes.ok) {
-            const updatedScript = await scriptRes.json()
-            // Local state'i güncelle
-            setAdminPrice(updatedScript.price?.toString() || '')
-            // Parent'a güncellenmiş script'i bildir - parent selectedScript'i güncelleyecek
-            onUpdate()
-          } else {
-            // Hata olsa bile parent'a bildir
-            onUpdate()
+        
+        // Response'dan gelen script objesini kullan
+        if (data.script) {
+          const updatedScript = data.script
+          
+          // Local state'i güncelle
+          setAdminPrice(updatedScript.price?.toString() || '')
+          
+          // EditPack varsa state'i güncelle
+          if (updatedScript.editPack) {
+            setEditPack({
+              id: updatedScript.editPack.id,
+              token: updatedScript.editPack.token,
+              editorNotes: null,
+              assetsLinks: null,
+              createdAt: new Date().toISOString(),
+              expiresAt: updatedScript.editPack.expiresAt,
+            })
           }
-        } catch (err) {
-          console.error('Error refetching script:', err)
-          // Hata olsa bile parent'a bildir
-          onUpdate()
         }
+        
+        // Parent'a güncellenmiş script'i bildir - parent selectedScript'i güncelleyecek
+        onUpdate()
       } else {
         console.error('Admin approve error:', { status: res.status, data })
         if (res.status === 401) {
@@ -1036,42 +1037,52 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
                 ) : (
                   <div className="space-y-4">
                     {/* EditPack URL */}
-                    {editPack && editPack.token && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                          EditPack URL
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={getEditPackUrl(editPack.token)}
-                            readOnly
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
-                          />
-                          <button
-                            onClick={() => copyToClipboard(getEditPackUrl(editPack.token))}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                          >
-                            <Copy className="w-4 h-4 mr-1" />
-                            Kopyala
-                          </button>
-                          <a
-                            href={getEditPackUrl(editPack.token)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            Aç
-                          </a>
+                    {(() => {
+                      const editPackUrl = createEditPackUrl(editPack?.token)
+                      return editPackUrl ? (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-2">
+                            EditPack URL
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editPackUrl}
+                              readOnly
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                            />
+                            <button
+                              onClick={() => copyToClipboard(editPackUrl)}
+                              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                              <Copy className="w-4 h-4 mr-1" />
+                              Kopyala
+                            </button>
+                            <a
+                              href={editPackUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-3 py-2 border border-transparent rounded-md bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Aç
+                            </a>
+                          </div>
+                          {editPack?.expiresAt && (
+                            <p className="mt-1 text-xs text-gray-500">
+                              Süresi: {format(new Date(editPack.expiresAt), 'dd MMM yyyy HH:mm', { locale: tr })} (7 gün)
+                            </p>
+                          )}
                         </div>
-                        {editPack.expiresAt && (
-                          <p className="mt-1 text-xs text-gray-500">
-                            Süresi: {format(new Date(editPack.expiresAt), 'dd MMM yyyy HH:mm', { locale: tr })} (7 gün)
-                          </p>
-                        )}
-                      </div>
-                    )}
+                      ) : (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-900 mb-2">
+                            EditPack URL
+                          </label>
+                          <p className="text-sm text-gray-500">—</p>
+                        </div>
+                      )
+                    })()}
 
                     {/* Ek Linkler */}
                     <div>
