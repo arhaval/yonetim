@@ -139,8 +139,10 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
         // Önce cookie'den kontrol et (hızlı)
         if (userRoleCookie && (userRoleCookie.toLowerCase() === 'admin' || userRoleCookie === 'ADMIN')) {
           isAdminByRole = true
-        } else {
-          // Cookie'de yoksa veya admin değilse API'den user bilgisini al ve role kontrolü yap
+        }
+        
+        // Cookie'de admin yoksa veya emin olmak için API'den de kontrol et
+        if (!isAdminByRole) {
           try {
             const userRes = await fetch('/api/auth/me')
             const userData = await userRes.json()
@@ -152,7 +154,8 @@ export default function ScriptDetailDrawer({ script, isOpen, onClose, onUpdate }
               userId: currentUserId,
               userRoleCookie,
               apiRole: userData.user?.role,
-              isAdmin: isAdminByRole
+              isAdmin: isAdminByRole,
+              userData: userData.user
             })
           } catch (error) {
             console.error('[ScriptDetailDrawer] Error checking admin:', error)
