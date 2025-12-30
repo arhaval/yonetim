@@ -63,11 +63,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gradient-bg">
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -78,15 +78,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           sidebarOpen && mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
           !sidebarOpen ? 'lg:w-28' : 'lg:w-72'
-        } w-72 shadow-2xl border-r border-slate-700/20`}
-        style={{ backgroundColor: '#1e293b' }}
+        } w-72 shadow-xl-enhanced border-r border-slate-700/30`}
+        style={{ 
+          background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+        }}
       >
         <div className="flex flex-col h-full">
-          {/* Logo & Header - Büyütülmüş */}
-          <div className="p-5 border-b border-slate-700/50">
+          {/* Logo & Header - Enhanced */}
+          <div className="p-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
             <div className="flex items-center justify-between">
               <div className={`flex items-center space-x-3 transition-all duration-300 ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 bg-white overflow-hidden p-2 relative">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-glow flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 overflow-hidden p-2.5 relative ring-2 ring-blue-400/30">
                   <Image
                     src="/arhaval-logo.svg"
                     alt="Arhaval Logo"
@@ -99,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       const target = e.target as HTMLImageElement
                       target.style.display = 'none'
                       if (target.parentElement) {
-                        target.parentElement.innerHTML = '<span class="text-white font-bold text-lg">A</span>'
+                        target.parentElement.innerHTML = '<span class="text-white font-bold text-xl">A</span>'
                         target.parentElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                       }
                     }}
@@ -107,10 +109,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 {sidebarOpen && (
                   <div className="lg:block hidden">
-                    <h1 className="text-lg font-semibold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
                       Arhaval
                     </h1>
-                    <p className="text-sm text-slate-400">Denetim Merkezi</p>
+                    <p className="text-sm text-slate-400 font-medium">Denetim Merkezi</p>
                   </div>
                 )}
               </div>
@@ -119,21 +121,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   setSidebarOpen(!sidebarOpen)
                   setMobileMenuOpen(false)
                 }}
-                className="lg:flex hidden items-center justify-center w-7 h-7 rounded-md bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="lg:flex hidden items-center justify-center w-8 h-8 rounded-xl bg-slate-700/60 hover:bg-slate-600 text-slate-300 hover:text-white transition-all duration-200 hover:scale-110 shadow-md hover:shadow-lg"
               >
-                {sidebarOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
+                {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                className="lg:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-slate-700/60 hover:bg-slate-600 text-slate-300 hover:text-white transition-all duration-200 hover:scale-110 shadow-md hover:shadow-lg"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Navigation - Büyütülmüş */}
-          <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-1.5">
+          {/* Navigation - Enhanced */}
+          <nav className="flex-1 overflow-y-auto py-5 px-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -142,26 +144,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`group relative flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`group relative flex items-center px-4 py-3.5 rounded-xl transition-all duration-300 ${
                     isActive
-                      ? 'text-white shadow-md'
-                      : 'text-gray-400 hover:bg-slate-700/50 hover:text-white'
+                      ? 'text-white shadow-glow scale-[1.02]'
+                      : 'text-gray-400 hover:bg-slate-700/60 hover:text-white hover:scale-[1.01]'
                   }`}
-                  style={isActive ? { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' } : {}}
+                  style={isActive ? { 
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)'
+                  } : {}}
                 >
-                  <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center lg:w-full'}`}>
-                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                  <div className={`flex items-center w-full ${!sidebarOpen && 'lg:justify-center lg:w-full'}`}>
+                    <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white scale-110' : 'text-slate-400 group-hover:text-white group-hover:scale-110'}`} />
                     {sidebarOpen && (
-                      <span className="ml-3 font-medium text-base">{item.name}</span>
+                      <span className={`ml-3 font-semibold text-base transition-all duration-200 ${isActive ? 'text-white' : 'text-slate-300'}`}>{item.name}</span>
                     )}
                     {isActive && sidebarOpen && (
-                      <ChevronRight className="w-4 h-4 ml-auto" />
+                      <ChevronRight className="w-4 h-4 ml-auto animate-pulse" />
                     )}
                   </div>
                   {!sidebarOpen && (
-                    <div className="absolute left-full ml-2 px-2 py-1.5 bg-slate-800 text-white text-xs rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap shadow-lg border border-slate-700 z-50">
+                    <div className="absolute left-full ml-3 px-3 py-2 bg-slate-800/95 backdrop-blur-md text-white text-xs font-semibold rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap shadow-xl-enhanced border border-slate-700/50 z-50">
                       {item.name}
-                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-800" />
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-800/95" />
                     </div>
                   )}
                 </Link>
@@ -169,33 +174,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* User Section - Büyütülmüş */}
-          <div className="p-5 border-t border-slate-700/50">
+          {/* User Section - Enhanced */}
+          <div className="p-6 border-t border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-transparent">
             {user && (
-              <div className={`flex items-center ${!sidebarOpen && 'lg:justify-center'}`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                  <span className="text-white text-base font-medium">
+              <div className={`flex items-center mb-4 ${!sidebarOpen && 'lg:justify-center'}`}>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center flex-shrink-0 shadow-glow ring-2 ring-blue-400/30">
+                  <span className="text-white text-lg font-bold">
                     {user.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 {sidebarOpen && (
                   <div className="ml-3 flex-1 min-w-0">
-                    <p className="text-base font-medium text-white truncate">{user.name}</p>
-                    <p className="text-sm text-slate-400 truncate">Yönetici</p>
+                    <p className="text-base font-bold text-white truncate">{user.name}</p>
+                    <p className="text-sm text-slate-400 font-medium truncate">Yönetici</p>
                   </div>
                 )}
               </div>
             )}
             <button
               onClick={handleLogout}
-              className={`mt-4 w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-white text-base font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                !sidebarOpen && 'lg:px-2'
+              className={`w-full flex items-center justify-center px-4 py-3 rounded-xl text-white text-base font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                !sidebarOpen && 'lg:px-3'
               }`}
-              style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}
+              style={{ 
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(220, 38, 38, 0.4)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
+              }}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-5 h-5" />
               {sidebarOpen && <span className="ml-2">Çıkış Yap</span>}
             </button>
           </div>
@@ -204,46 +218,48 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar - Büyütülmüş */}
-        <header className="sticky top-0 z-30 backdrop-blur-lg border-b border-gray-200 shadow-sm bg-white/90">
-          <div className="px-5 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+        {/* Top Bar - Enhanced */}
+        <header className="sticky top-0 z-30 glass-effect border-b border-gray-200/50 shadow-medium">
+          <div className="px-6 sm:px-8 lg:px-10">
+            <div className="flex items-center justify-between h-20">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="lg:hidden p-2.5 rounded-xl text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
               >
                 <Menu className="w-6 h-6" />
               </button>
               <div className="flex-1 lg:ml-0 ml-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-bold gradient-text">
                   {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h2>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 {/* Logo - Sağ tarafta */}
                 <div className="hidden sm:flex items-center">
-                  <Image
-                    src="/arhaval-logo.svg"
-                    alt="Arhaval Logo"
-                    width={120}
-                    height={40}
-                    className="h-10 w-auto object-contain"
-                    priority
-                    unoptimized={true}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                    }}
-                  />
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-50 to-white shadow-sm hover:shadow-md transition-all duration-200">
+                    <Image
+                      src="/arhaval-logo.svg"
+                      alt="Arhaval Logo"
+                      width={120}
+                      height={40}
+                      className="h-10 w-auto object-contain"
+                      priority
+                      unoptimized={true}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                      }}
+                    />
+                  </div>
                 </div>
                 {user && (
-                  <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-md border bg-blue-50 border-blue-200">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
-                      <span className="text-white text-sm font-medium">
+                  <div className="hidden sm:flex items-center space-x-3 px-4 py-2 rounded-xl border-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/50 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 shadow-md ring-2 ring-blue-400/30">
+                      <span className="text-white text-sm font-bold">
                         {user.name?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <span className="text-base font-medium text-gray-700">{user.name}</span>
+                    <span className="text-base font-bold text-gray-800">{user.name}</span>
                   </div>
                 )}
               </div>
@@ -251,10 +267,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Page Content - Büyütülmüş */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-7xl mx-auto py-6 px-5 sm:px-6 lg:px-8">
-            <div className="fade-in">
+        {/* Page Content - Enhanced */}
+        <main className="flex-1 overflow-y-auto bg-gradient-bg">
+          <div className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-10">
+            <div className="fade-in scale-in">
               {children}
             </div>
           </div>
