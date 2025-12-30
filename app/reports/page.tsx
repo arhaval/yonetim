@@ -20,6 +20,14 @@ export default function ReportsPage() {
     totalStreamerPayments: 0,
     totalVoiceActorPayments: 0,
   })
+  const [contentStats, setContentStats] = useState({
+    totalViews: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    totalShares: 0,
+    totalSaves: 0,
+    totalEngagement: 0,
+  })
   const [streamerPayments, setStreamerPayments] = useState<any[]>([])
   const [voiceActorPayments, setVoiceActorPayments] = useState<any[]>([])
   const [allContentsDetailed, setAllContentsDetailed] = useState<any[]>([])
@@ -80,6 +88,14 @@ export default function ReportsPage() {
         streamCost: data.stats?.streamCost || 0,
         totalStreamerPayments: data.stats?.totalStreamerPayments || 0,
         totalVoiceActorPayments: data.stats?.totalVoiceActorPayments || 0,
+      })
+      setContentStats(data.contentStats || {
+        totalViews: 0,
+        totalLikes: 0,
+        totalComments: 0,
+        totalShares: 0,
+        totalSaves: 0,
+        totalEngagement: 0,
       })
       setStreamerPayments(data.streamerPayments || [])
       setVoiceActorPayments(data.voiceActorPayments || [])
@@ -149,14 +165,7 @@ export default function ReportsPage() {
               filter="monthly"
               selectedMonth={selectedMonth}
               stats={safeStats}
-              contentStats={{
-                totalViews: 0,
-                totalLikes: 0,
-                totalComments: 0,
-                totalShares: 0,
-                totalSaves: 0,
-                totalEngagement: 0,
-              }}
+              contentStats={contentStats}
               topStreamers={[]}
               topContentByViews={[]}
               topContent={[]}
