@@ -140,6 +140,7 @@ export async function GET(request: NextRequest) {
         description: true,
         paidAt: true,
         createdAt: true,
+        updatedAt: true,
         teamMemberId: true,
         teamMember: {
           select: {
