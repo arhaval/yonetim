@@ -5,8 +5,8 @@ import { createAuditLog } from '@/lib/audit-log'
 import { cookies } from 'next/headers'
 import { getFinancialRecordLastActivityAt, getPaymentLastActivityAt, getTeamPaymentLastActivityAt, getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
-// Cache GET requests for 30 seconds
-export const revalidate = 30
+// Cache GET requests for 60 seconds - agresif cache
+export const revalidate = 60
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,47 +46,63 @@ export async function GET(request: NextRequest) {
       whereClause.contentCreatorId = contentCreatorId
     }
 
-    // Finansal kayıtları getir - date ASC ile (eski → yeni) - Optimize: sadece gerekli field'lar
+    // Finansal kayıtları getir - occurredAt ASC ile (eski → yeni) - Optimize: conditional select
+    // Sadece gerekli relation'ları çek (gereksiz join'leri önle)
+    const selectClause: any = {
+      id: true,
+      type: true,
+      amount: true,
+      date: true, // Backward compatibility
+      description: true,
+      streamerId: true,
+      teamMemberId: true,
+      contentCreatorId: true,
+      voiceActorId: true,
+      entryType: true,
+      direction: true,
+      occurredAt: true,
+      updatedAt: true,
+      createdAt: true,
+    }
+    
+    // Conditional select - sadece gerekli relation'ları çek
+    // Eğer belirli bir ID filtresi varsa, sadece o relation'ı çek
+    if (streamerId || (!voiceActorId && !teamMemberId && !contentCreatorId)) {
+      selectClause.streamer = {
+        select: {
+          id: true,
+          name: true,
+        },
+      }
+    }
+    if (teamMemberId) {
+      selectClause.teamMember = {
+        select: {
+          id: true,
+          name: true,
+        },
+      }
+    }
+    if (contentCreatorId) {
+      selectClause.contentCreator = {
+        select: {
+          id: true,
+          name: true,
+        },
+      }
+    }
+    if (voiceActorId) {
+      selectClause.voiceActor = {
+        select: {
+          id: true,
+          name: true,
+        },
+      }
+    }
+    
     const records = await prisma.financialRecord.findMany({
       where: whereClause,
-      select: {
-        id: true,
-        type: true,
-        amount: true,
-        date: true,
-        description: true,
-        streamerId: true,
-        teamMemberId: true,
-        contentCreatorId: true,
-        voiceActorId: true,
-        entryType: true,
-        direction: true,
-        occurredAt: true,
-        streamer: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        teamMember: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        contentCreator: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        voiceActor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: selectClause,
       orderBy: { occurredAt: 'asc' }, // Eski → Yeni sıralama (occurredAt index'li)
     }).catch(() => [])
 
