@@ -29,6 +29,12 @@ export default async function StreamerDetailPage({
   let totalStreams = 0
   let totalExternalStreams = 0
   let totalCost = { _sum: { cost: null as number | null } }
+  let teamEarnings: any[] = []
+  let totalStreamerEarning = { _sum: { streamerEarning: null as number | null } }
+  let unpaidStreams = { _sum: { streamerEarning: null as number | null } }
+  let unpaidPayments = { _sum: { amount: null as number | null } }
+  let financialRecords: any[] = []
+  let payouts: any[] = []
   
   try {
     // Tüm verileri paralel çek - Promise.all ile waterfall sorunu çözüldü
@@ -38,12 +44,12 @@ export default async function StreamerDetailPage({
       totalStreamsResult,
       totalExternalStreamsResult,
       totalCostResult,
-      teamEarnings,
-      totalStreamerEarning,
-      unpaidStreams,
-      unpaidPayments,
-      financialRecords,
-      payouts,
+      teamEarningsResult,
+      totalStreamerEarningResult,
+      unpaidStreamsResult,
+      unpaidPaymentsResult,
+      financialRecordsResult,
+      payoutsResult,
     ] = await Promise.all([
       // Streamer bilgileri (tüm ilişkilerle birlikte)
       prisma.streamer.findUnique({
@@ -152,6 +158,12 @@ export default async function StreamerDetailPage({
     totalStreams = totalStreamsResult
     totalExternalStreams = totalExternalStreamsResult
     totalCost = totalCostResult
+    teamEarnings = teamEarningsResult
+    totalStreamerEarning = totalStreamerEarningResult
+    unpaidStreams = unpaidStreamsResult
+    unpaidPayments = unpaidPaymentsResult
+    financialRecords = financialRecordsResult
+    payouts = payoutsResult
   } catch (error) {
     console.error('Error fetching streamer:', error)
     notFound()
