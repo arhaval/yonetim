@@ -115,7 +115,9 @@ export async function GET(request: NextRequest) {
 
     // Seslendiren filtresi (query parametresinden - admin için de geçerli)
     // Bu bir filtre, admin de kullanabilir
-    if (voiceActorId) {
+    // NOT: Voice actor cookie'den geldiğinde bu filtreyi kullanma (zaten OR koşulu var)
+    // Ayrıca, eğer query parametresi cookie'deki ile aynıysa da ignore et
+    if (voiceActorId && !voiceActorIdCookie && voiceActorId !== voiceActorIdCookie) {
       andConditions.push({ voiceActorId })
     }
 
