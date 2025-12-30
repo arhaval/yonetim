@@ -230,20 +230,22 @@ model FinancialRecord {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  @@index([date])
-  @@index([occurredAt])
+  @@index([date]) // Deprecated ama backward compatibility için
+  @@index([occurredAt]) // Ana tarih field'ı
   @@index([type])
   @@index([entryType])
-  @@index([entryType, occurredAt])
+  @@index([entryType, occurredAt]) // Composite index - entryType + tarih sorguları için
   @@index([direction])
   @@index([streamerId])
   @@index([teamMemberId])
   @@index([contentCreatorId])
   @@index([voiceActorId])
-  @@index([streamerId, occurredAt])
-  @@index([teamMemberId, occurredAt])
-  @@index([contentCreatorId, occurredAt])
-  @@index([voiceActorId, occurredAt])
+  @@index([streamerId, occurredAt]) // Composite index - streamer + tarih sorguları için
+  @@index([teamMemberId, occurredAt]) // Composite index - team member + tarih sorguları için
+  @@index([contentCreatorId, occurredAt]) // Composite index - creator + tarih sorguları için
+  @@index([voiceActorId, occurredAt]) // Composite index - voice actor + tarih sorguları için
+  @@index([type, occurredAt]) // Composite index - type + tarih sorguları için (monthly filter optimize)
+  @@index([date, occurredAt]) // Composite index - date ve occurredAt birlikte sorgular için
 }
 
 model Payment {

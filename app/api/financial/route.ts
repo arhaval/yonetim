@@ -20,11 +20,13 @@ export async function GET(request: NextRequest) {
 
     let whereClause: any = {}
 
-    if (filter === 'monthly') {
-      const monthDate = parse(monthParam, 'yyyy-MM', new Date())
-      const monthStart = startOfMonth(monthDate)
-      const monthEnd = endOfMonth(monthDate)
-      whereClause.date = {
+    // Monthly filter için occurredAt kullan (date deprecated)
+    const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
+    const monthEnd = filter === 'monthly' ? endOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
+    
+    if (filter === 'monthly' && monthStart && monthEnd) {
+      // occurredAt kullan (date deprecated) - index optimize edildi
+      whereClause.occurredAt = {
         gte: monthStart,
         lte: monthEnd,
       }
@@ -85,15 +87,11 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
+      orderBy: { occurredAt: 'asc' }, // Eski → Yeni sıralama (occurredAt index'li)
     }).catch(() => [])
 
-    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
+    // Tarih bazlı sıralama zaten yapıldı (occurredAt: 'asc')
     const sortedRecords = records
-
-    // Payment ve TeamPayment kayıtlarını da ekle
-    const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
-    const monthEnd = filter === 'monthly' ? endOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
 
     const payments = await prisma.payment.findMany({
       where: filter === 'monthly' && monthStart && monthEnd ? {
@@ -125,10 +123,11 @@ export async function GET(request: NextRequest) {
     // Tarih bazlı sıralama zaten yapıldı (createdAt: 'asc')
     const sortedPayments = payments
 
+    // TeamPayment query optimize edildi - index kullanımı
     const teamPayments = await prisma.teamPayment.findMany({
       where: filter === 'monthly' && monthStart && monthEnd ? {
         OR: [
-          { paidAt: { gte: monthStart, lte: monthEnd } },
+          { paidAt: { gte: monthStart, lte: monthEnd } }, // paidAt index'li
           { createdAt: { gte: monthStart, lte: monthEnd } },
         ],
       } : {},

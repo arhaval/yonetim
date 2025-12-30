@@ -129,10 +129,22 @@ export default async function StreamerDetailPage({
         _sum: { amount: true },
       }).catch(() => ({ _sum: { amount: null } })),
       
-      // Finansal kayıtlar
+      // Finansal kayıtlar - occurredAt kullan (date deprecated, index optimize edildi)
       prisma.financialRecord.findMany({
         where: { streamerId: id },
-        orderBy: { date: 'asc' },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          date: true,
+          occurredAt: true,
+          description: true,
+          entryType: true,
+          direction: true,
+          updatedAt: true,
+          createdAt: true,
+        },
+        orderBy: { occurredAt: 'asc' }, // occurredAt index'li
       }).catch(() => []),
       
       // Payout kayıtları
