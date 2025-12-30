@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
-import { getContentLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
@@ -16,9 +15,8 @@ export async function GET(request: NextRequest) {
 
     let whereClause: any = {}
 
-    // Sadece admin tarafından manuel eklenen içerikler (creatorId null olanlar)
-    // Seslendirme metinleri ve otomatik eklenen içerikler buraya düşmez
-    whereClause.creatorId = null
+    // Tüm içerikleri göster (creatorId filtresi kaldırıldı)
+    // Artık hem admin tarafından manuel eklenen hem de creator tarafından eklenen içerikler gözükecek
 
     // Platform filtresi - büyük/küçük harf duyarsız eşleşme
     if (platform) {
@@ -78,25 +76,15 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { publishDate: 'desc' },
+      orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
       take: 500, // Limit to 500 for performance
     }).catch((err) => {
       console.error('Error fetching contents:', err)
       return []
     })
 
-    // lastActivityAt'e göre sıralama
-    const contentsWithLastActivity = contents.map(content => ({
-      ...content,
-      lastActivityAt: getContentLastActivityAt(content),
-    }))
-    
-    contentsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    // lastActivityAt'i response'dan kaldır
-    const sortedContents = contentsWithLastActivity.map(({ lastActivityAt, ...content }) => content)
+    // publishDate'e göre sıralama zaten yapıldı, ekstra sıralama gerekmez
+    const sortedContents = contents
 
     const stats = {
       total: sortedContents.length,
