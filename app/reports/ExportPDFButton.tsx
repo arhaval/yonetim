@@ -352,7 +352,7 @@ export default function ExportPDFButton({
       }
 
       // Sayfa numaraları ekle
-      const totalPages = doc.internal.getNumberOfPages()
+      const totalPages = doc.internal.pages.length || 1
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i)
         doc.setFontSize(9)
