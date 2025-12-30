@@ -179,6 +179,9 @@ export async function GET(request: NextRequest) {
         price: true,
         status: true,
         updatedAt: true,
+        createdAt: true,
+        voiceActorId: true,
+        creatorId: true,
         voiceActor: {
           select: {
             id: true,
