@@ -20,6 +20,8 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
     // optimizeCss kaldırıldı - critters modülü eksik
+    // Optimize navigation
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'date-fns'],
   },
   // Bundle size optimizasyonu
   swcMinify: true,

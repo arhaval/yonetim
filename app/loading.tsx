@@ -1,11 +1,8 @@
-import LoadingSpinner from '@/components/LoadingSpinner'
-
+// Minimal loading state - sadece subtle indicator
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <LoadingSpinner size="lg" text="Yükleniyor..." />
-      </div>
+    <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+      <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" style={{ width: '30%' }} />
     </div>
   )
 }

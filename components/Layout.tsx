@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, UserCircle, CheckCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -20,9 +20,11 @@ const navigation = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     // Optimized fetch with cache and shorter timeout
@@ -221,6 +223,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Navigation Loading Indicator */}
+        {isPending && (
+          <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse transition-all duration-300" style={{ width: '60%' }} />
+          </div>
+        )}
+
         {/* Top Bar - Enhanced */}
         <header className="sticky top-0 z-30 glass-effect border-b border-gray-200/50 shadow-medium">
           <div className="px-6 sm:px-8 lg:px-10">
