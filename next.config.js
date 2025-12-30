@@ -32,8 +32,11 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'date-fns'],
   },
+  // Performance optimizations
+  productionBrowserSourceMaps: false, // Disable source maps in production for faster builds
+  optimizeFonts: true, // Optimize font loading
   // Production'da console.log'ları kaldır (performans için)
   // NOT: Debug modu için ?debug=1 parametresi ile console'lar görünebilir
   compiler: {

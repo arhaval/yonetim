@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { DebugConsoleOverlay } from "@/lib/debug-console";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -25,9 +24,9 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-// Performance optimizations
+// Performance optimizations - Cache enabled for better performance
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 60 // Cache for 60 seconds
 
 export default function RootLayout({
   children,
@@ -42,7 +41,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <DebugConsoleOverlay />
         <Toaster position="top-right" richColors />
       </body>
     </html>

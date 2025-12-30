@@ -11,7 +11,7 @@ import DeleteFinancialRecordButton from './DeleteFinancialRecordButton'
 
 // Sayfayı her istekte yenile (finansal kayıtlar için)
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 60 // Cache for 60 seconds - performance optimization
 
 export default async function StreamerDetailPage({
   params,

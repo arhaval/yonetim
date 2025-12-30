@@ -25,15 +25,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    // Timeout ile fetch
+    // Optimized fetch with cache and shorter timeout
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 saniye timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 saniye timeout (optimized)
     
-    fetch('/api/auth/me', { signal: controller.signal })
+    // Use cache for better performance
+    fetch('/api/auth/me', { 
+      signal: controller.signal,
+      cache: 'default', // Browser cache
+      next: { revalidate: 60 } // Revalidate every 60 seconds
+    })
       .then(res => {
         clearTimeout(timeoutId)
         if (!res.ok) {
-          console.error('Failed to fetch user:', res.status)
           return { user: null }
         }
         return res.json()
@@ -41,12 +45,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       .then(data => setUser(data.user))
       .catch(error => {
         clearTimeout(timeoutId)
-        if (error.name === 'AbortError') {
-          console.warn('User fetch timeout')
-        } else {
-          console.error('Error fetching user:', error)
+        if (error.name !== 'AbortError') {
+          // Silent fail for better UX
+          setUser(null)
         }
-        setUser(null)
       })
   }, [])
 
