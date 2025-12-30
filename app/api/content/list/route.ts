@@ -76,14 +76,14 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
+      orderBy: { publishDate: 'desc' }, // En son yüklenen → Eski (Yeni → Eski)
       take: 500, // Limit to 500 for performance
     }).catch((err) => {
       console.error('Error fetching contents:', err)
       return []
     })
 
-    // publishDate'e göre sıralama zaten yapıldı, ekstra sıralama gerekmez
+    // publishDate'e göre sıralama zaten yapıldı (desc: yeni → eski)
     const sortedContents = contents
 
     const stats = {
