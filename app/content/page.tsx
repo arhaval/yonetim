@@ -116,7 +116,7 @@ export default function ContentPage() {
       if (response.ok) {
         const message = `${data.message}\n\nGüncellenen: ${data.updated}\nHatalar: ${data.errors || 0}\nToplam: ${data.total}`
         alert(message)
-        window.location.reload()
+        router.refresh()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
@@ -157,7 +157,7 @@ export default function ContentPage() {
               ? `${data.message}\n\nYeni içerik eklendi.`
               : `${data.message}\n\nİçerik güncellendi.`
             alert(message)
-            window.location.reload()
+            router.refresh()
           } else {
             alert(data.error || 'Bir hata oluştu')
           }
@@ -187,7 +187,7 @@ export default function ContentPage() {
           if (response.ok) {
             const message = `${data.message}\n\n${data.created || 0} yeni içerik eklendi.\n${data.updated || 0} içerik güncellendi.\nToplam ${data.total || 0} video bulundu.`
             alert(message)
-            window.location.reload()
+            router.refresh()
           } else {
             alert(data.error || 'Bir hata oluştu')
           }

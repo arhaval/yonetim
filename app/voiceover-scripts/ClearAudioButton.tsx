@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 
 export default function ClearAudioButton() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   const handleClear = async () => {
@@ -28,15 +30,11 @@ export default function ClearAudioButton() {
       const data = await res.json()
 
       if (data.count !== undefined) {
-        alert(`${data.count} ses dosyası temizlendi. Sayfa yenilenecek.`)
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
+        alert(`${data.count} ses dosyası temizlendi.`)
+        router.refresh()
       } else {
-        alert(data.message || 'Ses dosyaları temizlendi. Sayfa yenilenecek.')
-        setTimeout(() => {
-          window.location.reload()
-        }, 500)
+        alert(data.message || 'Ses dosyaları temizlendi.')
+        router.refresh()
       }
     } catch (error: any) {
       console.error('Error clearing audio:', error)

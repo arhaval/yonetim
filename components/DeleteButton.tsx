@@ -52,7 +52,6 @@ export default function DeleteButton({ id, type, onDelete, compact = false }: De
           onDelete()
         } else {
           router.refresh()
-          window.location.reload()
         }
       } else {
         const errorMsg = responseData.error || 'Silme işlemi başarısız oldu'

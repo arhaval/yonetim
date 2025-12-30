@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
@@ -9,6 +10,7 @@ import DeleteStreamButton from '@/components/DeleteStreamButton'
 import StreamCostModal from '@/components/StreamCostModal'
 
 export default function StreamList({ streams, streamerId }: { streams: any[], streamerId: string }) {
+  const router = useRouter()
   const [selectedStream, setSelectedStream] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -22,7 +24,7 @@ export default function StreamList({ streams, streamerId }: { streams: any[], st
 
   const handleUpdate = () => {
     setRefreshKey(prev => prev + 1)
-    window.location.reload()
+    router.refresh()
   }
 
   return (

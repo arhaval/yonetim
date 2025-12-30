@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { CheckCircle } from 'lucide-react'
 
 export default function CreatorApproveButton({ scriptId }: { scriptId: string }) {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
 
   const handleApprove = async () => {
@@ -22,7 +24,7 @@ export default function CreatorApproveButton({ scriptId }: { scriptId: string })
 
       if (res.ok) {
         alert('Metin başarıyla onaylandı! Admin fiyat girip final onayı yapacak.')
-        window.location.reload()
+        router.refresh()
       } else {
         alert(data.error || 'Bir hata oluştu')
       }

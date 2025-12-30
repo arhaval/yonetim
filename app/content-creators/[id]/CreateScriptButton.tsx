@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { FileText, X } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
 
@@ -17,6 +18,7 @@ export default function CreateScriptButton({
   creatorId,
   onSuccess,
 }: CreateScriptButtonProps) {
+  const router = useRouter()
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -47,7 +49,7 @@ export default function CreateScriptButton({
         if (onSuccess) {
           onSuccess()
         } else {
-          window.location.reload()
+          router.refresh()
         }
       } else {
         alert(data.error || 'Bir hata oluştu')
