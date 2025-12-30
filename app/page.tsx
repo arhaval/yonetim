@@ -307,44 +307,37 @@ export default async function DashboardPage() {
     console.error('Error fetching dashboard widgets:', error)
   }
 
-  // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
+  // Son yayınlar ve içerikler - PARALEL ÇEKİLİYOR
   let recentStreams: any[] = []
-  try {
-    recentStreams = await prisma.stream.findMany({
-      // Status filtresi kaldırıldı - tüm yayınlar gösterilir
-      take: 5,
-      orderBy: { date: 'asc' },
-      include: { streamer: true },
-    })
-  } catch (error: any) {
-    // Eğer status alanı henüz tanınmıyorsa, tüm yayınları göster
-    if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
-      console.warn('Status alanı henüz tanınmıyor. Tüm yayınlar gösteriliyor.')
-      try {
-        recentStreams = await prisma.stream.findMany({
-          take: 5,
-          orderBy: { date: 'asc' },
-          include: { streamer: true },
-        })
-      } catch (e) {
-        console.error('Error fetching streams:', e)
-        recentStreams = []
-      }
-    } else {
-      console.error('Error fetching streams:', error)
-      recentStreams = []
-    }
-  }
-  
   let recentContent: any[] = []
+  
   try {
-    recentContent = await prisma.content.findMany({
-      take: 5,
-      orderBy: { publishDate: 'asc' },
-    })
+    [recentStreams, recentContent] = await Promise.all([
+      // Son yayınlar (streamer bilgileriyle birlikte)
+      prisma.stream.findMany({
+        take: 5,
+        orderBy: { date: 'asc' },
+        include: { streamer: { select: { id: true, name: true } } },
+      }).catch(() => []),
+      
+      // Son içerikler
+      prisma.content.findMany({
+        take: 5,
+        orderBy: { publishDate: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          platform: true,
+          url: true,
+          publishDate: true,
+          views: true,
+          likes: true,
+        },
+      }).catch(() => []),
+    ])
   } catch (error) {
-    console.error('Error fetching content:', error)
-    recentContent = []
+    console.error('Error fetching recent data:', error)
   }
 
   const currentMonth = format(new Date(), 'MMMM yyyy', { locale: tr })
