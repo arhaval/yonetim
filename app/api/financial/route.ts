@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
         teamMemberId: true,
         contentCreatorId: true,
         voiceActorId: true,
-        isPayout: true,
-        payoutStatus: true,
+        entryType: true,
+        direction: true,
+        occurredAt: true,
         streamer: {
           select: {
             id: true,
