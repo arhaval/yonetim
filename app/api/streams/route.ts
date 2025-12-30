@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getStreamLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache GET requests for 30 seconds
 export const revalidate = 30
@@ -33,22 +32,12 @@ export async function GET() {
           },
         },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       take: 100, // İlk 100 kayıt - pagination için
     })
     
-    // lastActivityAt'e göre sıralama
-    const streamsWithLastActivity = streams.map(stream => ({
-      ...stream,
-      lastActivityAt: getStreamLastActivityAt(stream),
-    }))
-    
-    streamsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    // lastActivityAt'i response'dan kaldır
-    const sortedStreams = streamsWithLastActivity.map(({ lastActivityAt, ...stream }) => stream)
+    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
+    const sortedStreams = streams
     
     const duration = Date.now() - startTime
     console.log(`[Streams API] Fetched ${sortedStreams.length} streams in ${duration}ms`)

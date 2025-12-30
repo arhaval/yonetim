@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       where: {
         publishDate: { gte: thirtyDaysAgo },
       },
-      orderBy: { publishDate: 'desc' },
+      orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
     })
 
     if (contents.length === 0) {

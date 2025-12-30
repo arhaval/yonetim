@@ -8,7 +8,7 @@ export async function GET(
   try {
     const tasks = await prisma.task.findMany({
       where: { teamMemberId: params.id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
 
     return NextResponse.json({ tasks })

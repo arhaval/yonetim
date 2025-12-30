@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       where: {
         isActive: true, // Sadece aktif üyeleri göster
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       take: limit,
       skip: offset,
     })

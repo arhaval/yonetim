@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
 
     const payouts = await prisma.payout.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       take: limit,
       skip: offset,
     })

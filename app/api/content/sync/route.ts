@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Güncellenecek içerikleri bul
     const contents = await prisma.content.findMany({
       where,
-      orderBy: { publishDate: 'desc' },
+      orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
     })
 
     if (contents.length === 0) {

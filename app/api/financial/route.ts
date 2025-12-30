@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       whereClause.contentCreatorId = contentCreatorId
     }
 
-    // Finansal kayıtları getir - updatedAt DESC ile (en son güncellenen en üstte)
+    // Finansal kayıtları getir - date ASC ile (eski → yeni)
     const records = await prisma.financialRecord.findMany({
       where: whereClause,
       include: {
@@ -53,21 +53,11 @@ export async function GET(request: NextRequest) {
         contentCreator: true,
         voiceActor: true,
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
-    // lastActivityAt'e göre sıralama
-    const recordsWithLastActivity = records.map(record => ({
-      ...record,
-      lastActivityAt: getFinancialRecordLastActivityAt(record),
-    }))
-    
-    recordsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    // lastActivityAt'i response'dan kaldır
-    const sortedRecords = recordsWithLastActivity.map(({ lastActivityAt, ...record }) => record)
+    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
+    const sortedRecords = records
 
     // Payment ve TeamPayment kayıtlarını da ekle
     const monthStart = filter === 'monthly' ? startOfMonth(parse(monthParam, 'yyyy-MM', new Date())) : null
@@ -83,20 +73,11 @@ export async function GET(request: NextRequest) {
       include: {
         streamer: true,
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
-    // Payment'ları lastActivityAt'e göre sıralama
-    const paymentsWithLastActivity = payments.map(payment => ({
-      ...payment,
-      lastActivityAt: getPaymentLastActivityAt(payment),
-    }))
-    
-    paymentsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    const sortedPayments = paymentsWithLastActivity.map(({ lastActivityAt, ...payment }) => payment)
+    // Tarih bazlı sıralama zaten yapıldı (createdAt: 'asc')
+    const sortedPayments = payments
 
     const teamPayments = await prisma.teamPayment.findMany({
       where: filter === 'monthly' && monthStart && monthEnd ? {
@@ -108,20 +89,11 @@ export async function GET(request: NextRequest) {
       include: {
         teamMember: true,
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
-    // TeamPayment'ları lastActivityAt'e göre sıralama
-    const teamPaymentsWithLastActivity = teamPayments.map(payment => ({
-      ...payment,
-      lastActivityAt: getTeamPaymentLastActivityAt(payment),
-    }))
-    
-    teamPaymentsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    const sortedTeamPayments = teamPaymentsWithLastActivity.map(({ lastActivityAt, ...payment }) => payment)
+    // Tarih bazlı sıralama zaten yapıldı (createdAt: 'asc')
+    const sortedTeamPayments = teamPayments
 
     // Ödenen seslendirmen metinlerini getir
     let voiceoverScriptsWhere: any = {
@@ -155,20 +127,11 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
-    // VoiceoverScript'leri lastActivityAt'e göre sıralama
-    const scriptsWithLastActivity = paidVoiceoverScripts.map(script => ({
-      ...script,
-      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
-    }))
-    
-    scriptsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    const sortedPaidVoiceoverScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => script)
+    // Tarih bazlı sıralama zaten yapıldı (createdAt: 'asc')
+    const sortedPaidVoiceoverScripts = paidVoiceoverScripts
 
     // Payment'ları FinancialRecord formatına çevir
     const paymentRecords = sortedPayments.map((p) => ({

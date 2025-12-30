@@ -27,7 +27,7 @@ export async function GET(
       where: { 
         teamMemberId: teamMemberId 
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     })
 
     console.log(`[Financial API] Team member ${teamMemberId}: Found ${financialRecords.length} financial records`)
@@ -53,7 +53,7 @@ export async function GET(
           date: true,
         },
         take: 20,
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
       console.log(`[Financial API] Debug: Total financial records in DB:`, allRecords.length)
       console.log(`[Financial API] Debug: Records with teamMemberId:`, allRecords.filter(r => r.teamMemberId))

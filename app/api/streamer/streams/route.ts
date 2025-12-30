@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { getStreamLastActivityAt } from '@/lib/lastActivityAt'
 
 // Yayıncının kendi yayınlarını getir
 export async function GET(request: NextRequest) {
@@ -32,21 +31,11 @@ export async function GET(request: NextRequest) {
       where: { 
         streamerId,
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     })
 
-    // lastActivityAt'e göre sıralama
-    const streamsWithLastActivity = streams.map(stream => ({
-      ...stream,
-      lastActivityAt: getStreamLastActivityAt(stream),
-    }))
-    
-    streamsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    // lastActivityAt'i response'dan kaldır
-    const sortedStreams = streamsWithLastActivity.map(({ lastActivityAt, ...stream }) => stream)
+    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
+    const sortedStreams = streams
 
     return NextResponse.json(sortedStreams)
   } catch (error) {

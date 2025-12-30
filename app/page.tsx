@@ -271,7 +271,7 @@ export default async function DashboardPage() {
     pendingPayments = await prisma.stream.findMany({
       where: { paymentStatus: 'pending' },
       take: 5,
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       include: { streamer: { select: { id: true, name: true } } },
     }).catch(() => [])
     
@@ -279,7 +279,7 @@ export default async function DashboardPage() {
     pendingScripts = await prisma.voiceoverScript.findMany({
       where: { status: { in: ['WAITING_VOICE', 'VOICE_UPLOADED'] } },
       take: 5,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       include: { 
         creator: { select: { id: true, name: true } },
         voiceActor: { select: { id: true, name: true } },

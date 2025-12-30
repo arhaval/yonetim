@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
       financialRecords = await prisma.financialRecord.findMany({
         where: { date: { gte: monthStart } },
         include: { streamer: true },
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
     } else {
       financialRecords = await prisma.financialRecord.findMany({
         include: { streamer: true },
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
     }
 
@@ -32,12 +32,12 @@ export async function GET(request: NextRequest) {
       streams = await prisma.stream.findMany({
         where: { date: { gte: monthStart } },
         include: { streamer: true },
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
     } else {
       streams = await prisma.stream.findMany({
         include: { streamer: true },
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
     }
 
@@ -46,11 +46,11 @@ export async function GET(request: NextRequest) {
     if (type === 'monthly') {
       contents = await prisma.content.findMany({
         where: { publishDate: { gte: monthStart } },
-        orderBy: { publishDate: 'desc' },
+        orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
       })
     } else {
       contents = await prisma.content.findMany({
-        orderBy: { publishDate: 'desc' },
+        orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
       })
     }
 

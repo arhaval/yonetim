@@ -34,7 +34,7 @@ export default async function ContentCreatorDetailPage({
           },
         },
         financialRecords: {
-          orderBy: { date: 'desc' },
+          orderBy: { date: 'asc' }, // Eski → Yeni sıralama
         },
         _count: {
           select: {

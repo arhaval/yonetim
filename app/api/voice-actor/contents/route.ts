@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { publishDate: 'desc' },
+      orderBy: { publishDate: 'asc' }, // Eski → Yeni sıralama
     })
 
     // lastActivityAt'e göre sıralama

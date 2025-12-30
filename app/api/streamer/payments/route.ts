@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         streamerId,
         paidAt: { not: null },
       },
-      orderBy: { paidAt: 'desc' },
+      orderBy: { paidAt: 'asc' }, // Eski → Yeni sıralama
       take: 50, // Son 50 ödemeyi getir
     })
 
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
         recipientType: 'streamer',
         recipientId: streamerId,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       take: 50,
     })
 

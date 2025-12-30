@@ -53,7 +53,7 @@ export default async function StreamerDetailPage({
           // Status filtresi kaldırıldı - tüm yayınlar gösterilir
         },
         take: 50,
-        orderBy: { date: 'desc' },
+        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
       })
     } catch (error: any) {
       console.warn('Streams çekilemedi:', error.message)
@@ -145,7 +145,7 @@ export default async function StreamerDetailPage({
     where: {
       streamerId: streamer.id,
     },
-    orderBy: { date: 'desc' },
+    orderBy: { date: 'asc' }, // Eski → Yeni sıralama
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
     return []
@@ -157,7 +157,7 @@ export default async function StreamerDetailPage({
       recipientType: 'streamer',
       recipientId: streamer.id,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
   }).catch((error) => {
     console.error(`[Streamer Profile] Error fetching payouts for ${streamer.id}:`, error)
     return []
@@ -179,7 +179,7 @@ export default async function StreamerDetailPage({
   const allFinancialRecords = [
     ...financialRecords,
     ...payoutRecords.filter(p => !financialRecords.some(fr => fr.relatedPaymentId === p.id.replace('payout-', '')))
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Eski → Yeni sıralama
   
   // Toplam kayıt sayısı
   const totalFinancialRecords = allFinancialRecords.length

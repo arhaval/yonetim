@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
-import { getStreamLastActivityAt } from '@/lib/lastActivityAt'
 
 // Cache for 30 seconds
 export const revalidate = 30
@@ -56,21 +55,11 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { date: 'asc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     })
 
-    // lastActivityAt'e göre sıralama
-    const streamsWithLastActivity = (streams || []).map(stream => ({
-      ...stream,
-      lastActivityAt: getStreamLastActivityAt(stream),
-    }))
-    
-    streamsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
-    // lastActivityAt'i response'dan kaldır
-    const sortedStreams = streamsWithLastActivity.map(({ lastActivityAt, ...stream }) => stream)
+    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
+    const sortedStreams = streams || []
 
     const response = NextResponse.json(sortedStreams)
     // Cache için header ekle (1 dakika)

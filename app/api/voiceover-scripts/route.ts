@@ -232,27 +232,14 @@ export async function GET(request: NextRequest) {
       },
       // Varsayılan sıralama için daha fazla veri çek (gruplar için)
       take: useDefaultSorting && !statusFilter && !producerApprovedFilter && !adminApprovedFilter && !hasPriceFilter && !hasAudioLink && !voiceActorId && !search && !dateFrom && !dateTo ? limit * 10 : limit,
-      orderBy: { createdAt: 'desc' }, // İçerik üreticisinin metni yüklediği tarih (createdAt) bazlı
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
 
-      // lastActivityAt'e göre sıralama
-    const scriptsWithLastActivity = scripts.map(script => ({
-      ...script,
-      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
-    }))
-    
-    // Varsayılan sıralama: lastActivityAt DESC (en son işlem gören en üstte)
-    scriptsWithLastActivity.sort((a, b) => {
-      const dateA = a.lastActivityAt.getTime()
-      const dateB = b.lastActivityAt.getTime()
-      return dateB - dateA // DESC
-    })
-    
+      // Tarih bazlı sıralama zaten yapıldı (createdAt: 'asc')
     // Pagination için limit uygula
-    const paginatedScripts = scriptsWithLastActivity.slice(skip, skip + limit)
+    const paginatedScripts = scripts.slice(skip, skip + limit)
     
-    // lastActivityAt'i response'dan kaldır (client'a göndermeye gerek yok)
-    const sortedScripts = paginatedScripts.map(({ lastActivityAt, ...script }) => script)
+    const sortedScripts = paginatedScripts
 
     return NextResponse.json({
       scripts: sortedScripts,

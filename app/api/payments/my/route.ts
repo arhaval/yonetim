@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           paidAt: true,
           createdAt: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
         take: limit,
         skip: offset,
       })
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           paidAt: true,
           createdAt: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
         take: limit,
         skip: offset,
       })
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         entryType: true,
         direction: true,
       },
-      orderBy: { occurredAt: 'desc' },
+      orderBy: { occurredAt: 'asc' }, // Eski → Yeni sıralama
       take: limit,
       skip: offset,
     })

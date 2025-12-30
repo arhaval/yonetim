@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       where: {
         isActive: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       take: limit,
       skip: offset,
     })

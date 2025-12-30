@@ -20,7 +20,7 @@ export async function GET() {
         createdAt: true,
         updatedAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
     
     // Streamer'ları da kontrol et
@@ -30,7 +30,7 @@ export async function GET() {
         name: true,
         email: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
     
     // ContentCreator'ları kontrol et
@@ -40,7 +40,7 @@ export async function GET() {
         name: true,
         email: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
     
     // VoiceActor'ları kontrol et
@@ -50,7 +50,7 @@ export async function GET() {
         name: true,
         email: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
     
     return NextResponse.json({

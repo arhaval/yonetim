@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     })
 
     // lastActivityAt'e göre sıralama

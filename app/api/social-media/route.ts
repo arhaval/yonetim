@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       for (const platform of platforms) {
         const platformStats = await prisma.socialMediaStats.findMany({
           where: { platform },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
           take: 2,
         })
         
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     for (const platform of platforms) {
       const platformStats = await prisma.socialMediaStats.findMany({
         where: { platform },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
         take: 2,
       })
       

@@ -95,7 +95,7 @@ export default async function TeamMemberDetailPage({
       where: {
         voiceActorId: voiceActor.id,
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
   } else if (member) {
     tasks = member.tasks || []
@@ -119,7 +119,7 @@ export default async function TeamMemberDetailPage({
       where: {
         teamMemberId: member.id,
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
     // Payout kayıtlarını getir (bu ekip üyesine ait olanlar)
@@ -129,7 +129,7 @@ export default async function TeamMemberDetailPage({
         recipientId: member.id,
         status: 'paid',
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
 
     totalUnpaid = unpaidPayments._sum.amount || 0

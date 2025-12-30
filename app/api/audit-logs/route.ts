@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     // Audit logları getir
     const logs = await prisma.auditLog.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
       skip: (page - 1) * limit,
       take: limit,
     })
