@@ -105,8 +105,12 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         amount: true,
+        type: true,
+        period: true,
+        description: true,
         paidAt: true,
         createdAt: true,
+        streamerId: true,
         streamer: {
           select: {
             id: true,
