@@ -97,6 +97,13 @@ export const prisma =
     errorFormat: "minimal",
     // Connection pooling optimizasyonu
     // Supabase connection pooler kullanıyorsanız bu ayarlar otomatik
+    // Performance optimizations
+    __internal: {
+      engine: {
+        connectTimeout: 10000, // 10 saniye connection timeout
+        queryTimeout: 30000, // 30 saniye query timeout
+      },
+    },
   });
 
 // Connection test ve error handling

@@ -145,6 +145,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch={true}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`group relative flex items-center px-4 py-3.5 rounded-xl transition-all duration-300 ${
                     isActive

@@ -636,6 +636,7 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href="/payment-approval"
+              prefetch={true}
               className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between mb-3">
@@ -653,6 +654,7 @@ export default async function DashboardPage() {
             </Link>
             <Link
               href="/financial"
+              prefetch={true}
               className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between mb-3">
@@ -665,6 +667,7 @@ export default async function DashboardPage() {
             </Link>
             <Link
               href="/voiceover-scripts"
+              prefetch={true}
               className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between mb-3">
@@ -682,6 +685,7 @@ export default async function DashboardPage() {
             </Link>
             <Link
               href="/streams"
+              prefetch={true}
               className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 border-2 border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md transition-all group"
             >
               <div className="flex items-center justify-between mb-3">
