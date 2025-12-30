@@ -44,14 +44,45 @@ export async function GET(request: NextRequest) {
       whereClause.contentCreatorId = contentCreatorId
     }
 
-    // Finansal kayıtları getir - date ASC ile (eski → yeni)
+    // Finansal kayıtları getir - date ASC ile (eski → yeni) - Optimize: sadece gerekli field'lar
     const records = await prisma.financialRecord.findMany({
       where: whereClause,
-      include: {
-        streamer: true,
-        teamMember: true,
-        contentCreator: true,
-        voiceActor: true,
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        date: true,
+        description: true,
+        streamerId: true,
+        teamMemberId: true,
+        contentCreatorId: true,
+        voiceActorId: true,
+        isPayout: true,
+        payoutStatus: true,
+        streamer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        teamMember: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        contentCreator: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { date: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
@@ -70,8 +101,17 @@ export async function GET(request: NextRequest) {
           { createdAt: { gte: monthStart, lte: monthEnd } },
         ],
       } : {},
-      include: {
-        streamer: true,
+      select: {
+        id: true,
+        amount: true,
+        paidAt: true,
+        createdAt: true,
+        streamer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])
@@ -86,8 +126,21 @@ export async function GET(request: NextRequest) {
           { createdAt: { gte: monthStart, lte: monthEnd } },
         ],
       } : {},
-      include: {
-        teamMember: true,
+      select: {
+        id: true,
+        amount: true,
+        type: true,
+        period: true,
+        description: true,
+        paidAt: true,
+        createdAt: true,
+        teamMemberId: true,
+        teamMember: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
     }).catch(() => [])

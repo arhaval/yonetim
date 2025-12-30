@@ -6,8 +6,8 @@ import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, T
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Dashboard cache optimizasyonu - 60 saniye cache
-export const revalidate = 60 // 60 saniye cache - performans için
+// Dashboard cache optimizasyonu - 120 saniye cache (agresif)
+export const revalidate = 120 // 120 saniye cache - maksimum performans için
 
 async function getStats() {
   try {

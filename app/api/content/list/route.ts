@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { publishDate: 'desc' }, // En son yüklenen → Eski (Yeni → Eski)
-      take: 500, // Limit to 500 for performance
+      take: 200, // Limit to 200 for better performance
     }).catch((err) => {
       console.error('Error fetching contents:', err)
       return []

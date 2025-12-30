@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
-// Cache for 30 seconds
-export const revalidate = 30
+// Cache for 60 seconds - agresif cache
+export const revalidate = 60
 
 // Tüm metinleri getir (admin için) - Filtreleme, sıralama, pagination ile
 export async function GET(request: NextRequest) {

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, parse } from 'date-fns'
 
-// Cache for 30 seconds
-export const revalidate = 30
+// Cache for 60 seconds - agresif cache
+export const revalidate = 60
 
 export async function GET(request: NextRequest) {
   try {
