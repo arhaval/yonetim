@@ -74,6 +74,8 @@ export default function ReportsPage() {
           income: 0,
           expense: 0,
           streamCost: 0,
+          totalStreamerPayments: 0,
+          totalVoiceActorPayments: 0,
         })
         return
       }
