@@ -32,6 +32,7 @@ export default function ReportsPage() {
   const [voiceActorPayments, setVoiceActorPayments] = useState<any[]>([])
   const [allContentsDetailed, setAllContentsDetailed] = useState<any[]>([])
   const [allStreams, setAllStreams] = useState<any[]>([])
+  const [socialMediaGrowth, setSocialMediaGrowth] = useState<any[]>([])
   
   // Stats'ın her zaman geçerli olduğundan emin ol
   const safeStats = stats || {
@@ -103,6 +104,7 @@ export default function ReportsPage() {
       setVoiceActorPayments(data.voiceActorPayments || [])
       setAllContentsDetailed(data.allContentsDetailed || [])
       setAllStreams(data.allStreams || [])
+      setSocialMediaGrowth(data.socialMediaGrowth || [])
     } catch (error) {
       console.error('Error fetching reports:', error)
     } finally {
@@ -176,6 +178,7 @@ export default function ReportsPage() {
               voiceActorPayments={voiceActorPayments}
               allContentsDetailed={allContentsDetailed}
               allStreams={allStreams}
+              socialMediaGrowth={socialMediaGrowth}
             />
           </div>
         </div>

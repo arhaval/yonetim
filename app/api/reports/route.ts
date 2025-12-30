@@ -221,6 +221,34 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { date: 'desc' },
       }).catch(() => []),
+      // Sosyal medya istatistikleri (ay bazlı)
+      prisma.socialMediaStats.findMany({
+        where: {
+          month: monthParam,
+        },
+        select: {
+          platform: true,
+          followerCount: true,
+          target: true,
+        },
+        orderBy: { platform: 'asc' },
+      }).catch(() => []),
+      // Önceki ay sosyal medya istatistikleri (büyüme hesaplama için)
+      prisma.socialMediaStats.findMany({
+        where: {
+          month: monthParam ? (() => {
+            const [year, month] = monthParam.split('-').map(Number)
+            const prevMonth = month === 1 ? 12 : month - 1
+            const prevYear = month === 1 ? year - 1 : year
+            return `${prevYear}-${String(prevMonth).padStart(2, '0')}`
+          })() : null,
+        },
+        select: {
+          platform: true,
+          followerCount: true,
+        },
+        orderBy: { platform: 'asc' },
+      }).catch(() => []),
     ])
 
     // İçerik istatistikleri
@@ -271,6 +299,24 @@ export async function GET(request: NextRequest) {
     
     // Seslendirmene toplam ödenen ücret
     const totalVoiceActorPayments = (voiceActorPayments || []).reduce((sum, v) => sum + (v.price || 0), 0)
+
+    // Sosyal medya büyümesi hesapla
+    const socialMediaGrowth = (socialMediaStats || []).map((current) => {
+      const previous = (previousSocialMediaStats || []).find((p) => p.platform === current.platform)
+      const previousCount = previous?.followerCount || 0
+      const currentCount = current.followerCount || 0
+      const growth = previousCount > 0 ? ((currentCount - previousCount) / previousCount) * 100 : 0
+      const growthCount = currentCount - previousCount
+      
+      return {
+        platform: current.platform,
+        currentCount,
+        previousCount,
+        growth,
+        growthCount,
+        target: current.target,
+      }
+    })
 
     const response = NextResponse.json({
       stats: {
@@ -330,6 +376,7 @@ export async function GET(request: NextRequest) {
         cost: s.cost || 0,
         streamerEarning: s.streamerEarning || 0,
       })),
+      socialMediaGrowth,
     })
     // Cache için header ekle (2 dakika)
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')

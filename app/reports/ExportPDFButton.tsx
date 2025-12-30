@@ -34,6 +34,7 @@ interface ExportPDFButtonProps {
   voiceActorPayments?: Array<{ id: string; title: string; voiceActorName: string; price: number | null; paidAt: Date }>
   allContentsDetailed?: Array<{ id: string; title: string; type: string | null; platform: string | null; views: number; likes: number; comments: number; shares: number; saves: number; publishDate: Date }>
   allStreams?: Array<{ id: string; date: Date; matchInfo: string | null; streamerName: string; cost: number; streamerEarning: number }>
+  socialMediaGrowth?: Array<{ platform: string; currentCount: number; previousCount: number; growth: number; growthCount: number; target: number | null }>
 }
 
 export default function ExportPDFButton({
@@ -49,13 +50,13 @@ export default function ExportPDFButton({
   voiceActorPayments = [],
   allContentsDetailed = [],
   allStreams = [],
+  socialMediaGrowth = [],
 }: ExportPDFButtonProps) {
   const [exporting, setExporting] = useState(false)
 
   const generatePDF = async () => {
     setExporting(true)
     try {
-      // Dynamic import for client-side only
       const jsPDFModule = await import('jspdf')
       const autoTableModule = await import('jspdf-autotable')
       
@@ -80,7 +81,6 @@ export default function ExportPDFButton({
       const pageHeight = doc.internal.pageSize.getHeight()
       let yPos = 20
       
-      // Helper function to add new page if needed
       const checkPageBreak = (requiredSpace: number = 30) => {
         if (yPos + requiredSpace > pageHeight - 20) {
           doc.addPage()
@@ -88,12 +88,12 @@ export default function ExportPDFButton({
         }
       }
 
-      // Başlık
-      doc.setFontSize(22)
+      // Başlık - Daha büyük ve belirgin
+      doc.setFontSize(24)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(30, 30, 30)
       doc.text('AYLIK RAPOR', pageWidth / 2, yPos, { align: 'center' })
-      yPos += 10
+      yPos += 12
 
       // Tarih bilgisi
       doc.setFontSize(14)
@@ -103,14 +103,14 @@ export default function ExportPDFButton({
       yPos += 15
 
       // ========== FİNANSAL ÖZET ==========
-      checkPageBreak(40)
+      checkPageBreak(35)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(30, 30, 30)
       doc.text('FİNANSAL ÖZET', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(10)
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const financialData = [
         ['Gelir', stats.income.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
@@ -133,17 +133,18 @@ export default function ExportPDFButton({
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
       // ========== ÖDEMELER ==========
-      checkPageBreak(40)
+      checkPageBreak(35)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.text('ÖDEMELER', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(10)
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const paymentSummary = [
         ['Yayıncılara Ödenen Toplam', (stats.totalStreamerPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
         ['Seslendirmene Ödenen Toplam', (stats.totalVoiceActorPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Toplam Ödeme', ((stats.totalStreamerPayments || 0) + (stats.totalVoiceActorPayments || 0)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
       ]
 
       autoTable(doc, {
@@ -159,75 +160,111 @@ export default function ExportPDFButton({
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
-      // Yayıncılara Ödenen Detaylar
-      if (streamerPayments.length > 0) {
-        checkPageBreak(50)
-        doc.setFontSize(14)
+      // ========== SOSYAL MEDYA BÜYÜMESİ ==========
+      if (socialMediaGrowth.length > 0) {
+        checkPageBreak(40)
+        doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('Yayıncılara Ödenen Ücretler', 14, yPos)
+        doc.text('SOSYAL MEDYA BÜYÜMESİ', 14, yPos)
         yPos += 8
 
-        const streamerPaymentData = streamerPayments.map((p) => [
-          p.streamerName,
-          p.amount.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
-          p.type,
-          p.period,
-          p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
+        const socialMediaData = socialMediaGrowth.map((s) => [
+          s.platform,
+          s.currentCount.toLocaleString('tr-TR'),
+          s.previousCount > 0 ? s.previousCount.toLocaleString('tr-TR') : '-',
+          s.growthCount > 0 ? `+${s.growthCount.toLocaleString('tr-TR')}` : s.growthCount.toLocaleString('tr-TR'),
+          s.growth !== 0 ? `${s.growth > 0 ? '+' : ''}${s.growth.toFixed(1)}%` : '-',
+          s.target ? s.target.toLocaleString('tr-TR') : '-',
         ])
 
         autoTable(doc, {
           startY: yPos,
-          head: [['Yayıncı', 'Tutar', 'Tür', 'Dönem', 'Ödeme Tarihi']],
-          body: streamerPaymentData,
+          head: [['Platform', 'Mevcut', 'Önceki', 'Artış', 'Büyüme %', 'Hedef']],
+          body: socialMediaData,
           theme: 'striped',
-          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 9 },
           bodyStyles: { fontSize: 8 },
           margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
-          columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 }, 4: { cellWidth: 30 } },
+          styles: { cellPadding: 3, overflow: 'linebreak' },
+          columnStyles: { 
+            0: { cellWidth: 35 }, 
+            1: { cellWidth: 30 }, 
+            2: { cellWidth: 30 }, 
+            3: { cellWidth: 25 }, 
+            4: { cellWidth: 25 },
+            5: { cellWidth: 25 },
+          },
         })
 
         yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
       }
 
-      // Seslendirmene Ödenen Detaylar
-      if (voiceActorPayments.length > 0) {
-        checkPageBreak(50)
+      // Yayıncılara Ödenen Detaylar (sadece özet)
+      if (streamerPayments.length > 0) {
+        checkPageBreak(40)
         doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text('Seslendirmene Ödenen Ücretler', 14, yPos)
+        doc.text('Yayıncılara Ödenen Ücretler (Özet)', 14, yPos)
         yPos += 8
 
-        const voiceActorPaymentData = voiceActorPayments.map((v) => [
-          v.voiceActorName,
-          (v.price || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
-          v.title.length > 40 ? v.title.substring(0, 40) + '...' : v.title,
-          format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }),
+        const streamerPaymentData = streamerPayments.slice(0, 15).map((p) => [
+          p.streamerName.length > 20 ? p.streamerName.substring(0, 20) + '...' : p.streamerName,
+          p.amount.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
         ])
 
         autoTable(doc, {
           startY: yPos,
-          head: [['Seslendirmen', 'Tutar', 'Proje', 'Ödeme Tarihi']],
+          head: [['Yayıncı', 'Tutar', 'Tarih']],
+          body: streamerPaymentData,
+          theme: 'striped',
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 3, overflow: 'linebreak' },
+          columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 40 }, 2: { cellWidth: 40 } },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // Seslendirmene Ödenen Detaylar (sadece özet)
+      if (voiceActorPayments.length > 0) {
+        checkPageBreak(40)
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Seslendirmene Ödenen Ücretler (Özet)', 14, yPos)
+        yPos += 8
+
+        const voiceActorPaymentData = voiceActorPayments.slice(0, 15).map((v) => [
+          v.voiceActorName.length > 20 ? v.voiceActorName.substring(0, 20) + '...' : v.voiceActorName,
+          (v.price || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title,
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Seslendirmen', 'Tutar', 'Proje']],
           body: voiceActorPaymentData,
           theme: 'striped',
           headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
           bodyStyles: { fontSize: 8 },
           margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
-          columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 30 }, 2: { cellWidth: 70 }, 3: { cellWidth: 30 } },
+          styles: { cellPadding: 3, overflow: 'linebreak' },
+          columnStyles: { 0: { cellWidth: 45 }, 1: { cellWidth: 35 }, 2: { cellWidth: 60 } },
         })
 
         yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
       }
 
       // ========== YAYINLAR ==========
-      checkPageBreak(40)
+      checkPageBreak(35)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.text('YAYINLAR', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(10)
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const streamData = [
         ['Toplam Yayın', stats.streamCount.toString()],
@@ -248,37 +285,6 @@ export default function ExportPDFButton({
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
-      // Yayın Detayları
-      if (allStreams.length > 0) {
-        checkPageBreak(60)
-        doc.setFontSize(14)
-        doc.setFont('helvetica', 'bold')
-        doc.text('Yayın Detayları', 14, yPos)
-        yPos += 8
-
-        const streamDetailsData = allStreams.slice(0, 50).map((s) => [
-          format(new Date(s.date), 'dd.MM.yyyy', { locale: tr }),
-          s.streamerName,
-          s.matchInfo ? (s.matchInfo.length > 30 ? s.matchInfo.substring(0, 30) + '...' : s.matchInfo) : '-',
-          s.cost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
-          s.streamerEarning.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
-        ])
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Tarih', 'Yayıncı', 'Maç Bilgisi', 'Maliyet', 'Kazanç']],
-          body: streamDetailsData,
-          theme: 'striped',
-          headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
-          columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 35 }, 2: { cellWidth: 50 }, 3: { cellWidth: 30 }, 4: { cellWidth: 30 } },
-        })
-
-        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
-      }
-
       // ========== İÇERİKLER ==========
       checkPageBreak(40)
       doc.setFontSize(16)
@@ -286,7 +292,7 @@ export default function ExportPDFButton({
       doc.text('İÇERİKLER', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(10)
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const contentData = [
         ['İçerik Sayısı', stats.contentCount.toString()],
@@ -309,47 +315,6 @@ export default function ExportPDFButton({
       })
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
-
-      // İçerik Detayları
-      if (allContentsDetailed.length > 0) {
-        checkPageBreak(60)
-        doc.setFontSize(14)
-        doc.setFont('helvetica', 'bold')
-        doc.text('İçerik Detayları', 14, yPos)
-        yPos += 8
-
-        const contentDetailsData = allContentsDetailed.slice(0, 50).map((c) => [
-          c.title.length > 35 ? c.title.substring(0, 35) + '...' : c.title,
-          c.platform || '-',
-          c.type || '-',
-          c.views.toLocaleString('tr-TR'),
-          c.likes.toLocaleString('tr-TR'),
-          c.comments.toLocaleString('tr-TR'),
-          format(new Date(c.publishDate), 'dd.MM.yyyy', { locale: tr }),
-        ])
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Başlık', 'Platform', 'Tür', 'Görüntülenme', 'Beğeni', 'Yorum', 'Yayın Tarihi']],
-          body: contentDetailsData,
-          theme: 'striped',
-          headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 7 },
-          bodyStyles: { fontSize: 6 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
-          columnStyles: { 
-            0: { cellWidth: 50 }, 
-            1: { cellWidth: 25 }, 
-            2: { cellWidth: 20 }, 
-            3: { cellWidth: 25 }, 
-            4: { cellWidth: 20 }, 
-            5: { cellWidth: 20 },
-            6: { cellWidth: 25 },
-          },
-        })
-
-        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
-      }
 
       // Sayfa numaraları ekle
       const totalPages = doc.internal.pages.length || 1
