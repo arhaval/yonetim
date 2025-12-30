@@ -17,7 +17,13 @@ export default function ReportsPage() {
     income: 0,
     expense: 0,
     streamCost: 0,
+    totalStreamerPayments: 0,
+    totalVoiceActorPayments: 0,
   })
+  const [streamerPayments, setStreamerPayments] = useState<any[]>([])
+  const [voiceActorPayments, setVoiceActorPayments] = useState<any[]>([])
+  const [allContentsDetailed, setAllContentsDetailed] = useState<any[]>([])
+  const [allStreams, setAllStreams] = useState<any[]>([])
   
   // Stats'ın her zaman geçerli olduğundan emin ol
   const safeStats = stats || {
@@ -72,7 +78,13 @@ export default function ReportsPage() {
         income: data.stats?.income || 0,
         expense: data.stats?.expense || 0,
         streamCost: data.stats?.streamCost || 0,
+        totalStreamerPayments: data.stats?.totalStreamerPayments || 0,
+        totalVoiceActorPayments: data.stats?.totalVoiceActorPayments || 0,
       })
+      setStreamerPayments(data.streamerPayments || [])
+      setVoiceActorPayments(data.voiceActorPayments || [])
+      setAllContentsDetailed(data.allContentsDetailed || [])
+      setAllStreams(data.allStreams || [])
     } catch (error) {
       console.error('Error fetching reports:', error)
     } finally {
@@ -149,6 +161,10 @@ export default function ReportsPage() {
               topContentByViews={[]}
               topContent={[]}
               contentByPlatform={[]}
+              streamerPayments={streamerPayments}
+              voiceActorPayments={voiceActorPayments}
+              allContentsDetailed={allContentsDetailed}
+              allStreams={allStreams}
             />
           </div>
         </div>

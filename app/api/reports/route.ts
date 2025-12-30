@@ -62,6 +62,14 @@ export async function GET(request: NextRequest) {
       streamers,
       contents,
       allContents,
+      // Yayıncılara ödenen ücretler
+      streamerPayments,
+      // Seslendirmene ödenen ücretler
+      voiceActorPayments,
+      // Tüm içerikler (detaylı)
+      allContentsDetailed,
+      // Tüm yayınlar (detaylı)
+      allStreams,
     ] = await Promise.all([
       prisma.stream.count({ where: whereClause }).catch(() => 0),
       prisma.externalStream.count({ where: whereClause }).catch(() => 0),
@@ -133,6 +141,86 @@ export async function GET(request: NextRequest) {
           type: true,
         },
       }).catch(() => []),
+      // Yayıncılara ödenen ücretler
+      prisma.payment.findMany({
+        where: filter === 'monthly' && monthStart && monthEnd ? {
+          paidAt: { gte: monthStart, lte: monthEnd },
+        } : filter === 'monthly' && monthStart && monthEnd ? {
+          createdAt: { gte: monthStart, lte: monthEnd },
+        } : {},
+        select: {
+          id: true,
+          amount: true,
+          type: true,
+          period: true,
+          description: true,
+          paidAt: true,
+          streamer: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { paidAt: 'desc' },
+      }).catch(() => []),
+      // Seslendirmene ödenen ücretler (PAID status'lu voiceover scripts)
+      prisma.voiceoverScript.findMany({
+        where: {
+          status: 'PAID',
+          ...(filter === 'monthly' && monthStart && monthEnd ? {
+            updatedAt: { gte: monthStart, lte: monthEnd },
+          } : {}),
+        },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          updatedAt: true,
+          voiceActor: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }).catch(() => []),
+      // Tüm içerikler (detaylı)
+      prisma.content.findMany({
+        where: contentWhereClause,
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          platform: true,
+          views: true,
+          likes: true,
+          comments: true,
+          shares: true,
+          saves: true,
+          publishDate: true,
+        },
+        orderBy: { publishDate: 'desc' },
+      }).catch(() => []),
+      // Tüm yayınlar (detaylı)
+      prisma.stream.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          date: true,
+          matchInfo: true,
+          cost: true,
+          streamerEarning: true,
+          streamer: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: { date: 'desc' },
+      }).catch(() => []),
     ])
 
     // İçerik istatistikleri
@@ -178,6 +266,12 @@ export async function GET(request: NextRequest) {
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count)
 
+    // Yayıncılara toplam ödenen ücret
+    const totalStreamerPayments = (streamerPayments || []).reduce((sum, p) => sum + (p.amount || 0), 0)
+    
+    // Seslendirmene toplam ödenen ücret
+    const totalVoiceActorPayments = (voiceActorPayments || []).reduce((sum, v) => sum + (v.price || 0), 0)
+
     const response = NextResponse.json({
       stats: {
         streamCount,
@@ -186,18 +280,56 @@ export async function GET(request: NextRequest) {
         income: income._sum.amount || 0,
         expense: expense._sum.amount || 0,
         streamCost: streamCost._sum.cost || 0,
+        totalStreamerPayments,
+        totalVoiceActorPayments,
       },
       contentStats,
       topStreamers: (streamers || []).map((s) => ({
         id: s.id,
         name: s.name,
-        // platform: s.platform, // BU SATIR SİLİNDİ (Veritabanında yoksa hata verir)
         streamCount: s._count?.streams || 0,
       })),
       topContent: contents,
       topContentByViews,
       contentByPlatform,
       contentByType,
+      // Yeni eklenen detaylı veriler
+      streamerPayments: (streamerPayments || []).map((p) => ({
+        id: p.id,
+        streamerName: p.streamer?.name || 'Bilinmiyor',
+        amount: p.amount,
+        type: p.type,
+        period: p.period,
+        description: p.description,
+        paidAt: p.paidAt,
+      })),
+      voiceActorPayments: (voiceActorPayments || []).map((v) => ({
+        id: v.id,
+        title: v.title,
+        voiceActorName: v.voiceActor?.name || 'Bilinmiyor',
+        price: v.price,
+        paidAt: v.updatedAt,
+      })),
+      allContentsDetailed: (allContentsDetailed || []).map((c) => ({
+        id: c.id,
+        title: c.title,
+        type: c.type,
+        platform: c.platform,
+        views: c.views || 0,
+        likes: c.likes || 0,
+        comments: c.comments || 0,
+        shares: c.shares || 0,
+        saves: c.saves || 0,
+        publishDate: c.publishDate,
+      })),
+      allStreams: (allStreams || []).map((s) => ({
+        id: s.id,
+        date: s.date,
+        matchInfo: s.matchInfo,
+        streamerName: s.streamer?.name || 'Bilinmiyor',
+        cost: s.cost || 0,
+        streamerEarning: s.streamerEarning || 0,
+      })),
     })
     // Cache için header ekle (2 dakika)
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')

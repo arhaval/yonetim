@@ -1,22 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, FileText } from 'lucide-react'
-import { format } from 'date-fns'
+import { FileText } from 'lucide-react'
+import { format, parse } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-
-// Dynamic import for jsPDF to avoid SSR issues
-let jsPDF: any
-let autoTable: any
-
-if (typeof window !== 'undefined') {
-  import('jspdf').then((module) => {
-    jsPDF = module.default
-  })
-  import('jspdf-autotable').then((module) => {
-    autoTable = module.default
-  })
-}
 
 interface ExportPDFButtonProps {
   filter: 'monthly' | 'total'
@@ -28,6 +15,8 @@ interface ExportPDFButtonProps {
     income: number
     expense: number
     streamCost: number
+    totalStreamerPayments?: number
+    totalVoiceActorPayments?: number
   }
   contentStats: {
     totalViews: number
@@ -41,6 +30,10 @@ interface ExportPDFButtonProps {
   topContentByViews: Array<{ id: string; title: string; platform: string; type: string; views: number }>
   topContent: Array<{ id: string; title: string; platform: string; type: string; likes: number }>
   contentByPlatform: Array<{ platform: string; count: number }>
+  streamerPayments?: Array<{ id: string; streamerName: string; amount: number; type: string; period: string; description: string | null; paidAt: Date | null }>
+  voiceActorPayments?: Array<{ id: string; title: string; voiceActorName: string; price: number | null; paidAt: Date }>
+  allContentsDetailed?: Array<{ id: string; title: string; type: string | null; platform: string | null; views: number; likes: number; comments: number; shares: number; saves: number; publishDate: Date }>
+  allStreams?: Array<{ id: string; date: Date; matchInfo: string | null; streamerName: string; cost: number; streamerEarning: number }>
 }
 
 export default function ExportPDFButton({
@@ -52,36 +45,30 @@ export default function ExportPDFButton({
   topContentByViews,
   topContent,
   contentByPlatform,
+  streamerPayments = [],
+  voiceActorPayments = [],
+  allContentsDetailed = [],
+  allStreams = [],
 }: ExportPDFButtonProps) {
   const [exporting, setExporting] = useState(false)
 
   const generatePDF = async () => {
     setExporting(true)
     try {
-      console.log('Starting PDF generation...')
-      
       // Dynamic import for client-side only
       const jsPDFModule = await import('jspdf')
       const autoTableModule = await import('jspdf-autotable')
       
-      if (!jsPDFModule || !jsPDFModule.default) {
+      if (!jsPDFModule?.default) {
         throw new Error('jsPDF modülü yüklenemedi')
       }
       
-      if (!autoTableModule) {
-        throw new Error('jspdf-autotable modülü yüklenemedi')
-      }
-      
       const jsPDF = jsPDFModule.default
-      // autoTable default export olmayabilir, doğrudan modülü kullan
       const autoTable = (autoTableModule as any).default || autoTableModule
       
       if (typeof autoTable !== 'function') {
         throw new Error('autoTable fonksiyonu bulunamadı')
       }
-      
-      console.log('jsPDF loaded:', !!jsPDF)
-      console.log('autoTable loaded:', typeof autoTable)
       
       const doc = new jsPDF({
         orientation: 'portrait',
@@ -89,38 +76,41 @@ export default function ExportPDFButton({
         format: 'a4',
       })
       
-      if (!doc || !doc.internal) {
-        throw new Error('PDF dokümanı oluşturulamadı')
-      }
-      
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
       let yPos = 20
       
-      console.log('PDF document created, page size:', pageWidth, 'x', pageHeight)
+      // Helper function to add new page if needed
+      const checkPageBreak = (requiredSpace: number = 30) => {
+        if (yPos + requiredSpace > pageHeight - 20) {
+          doc.addPage()
+          yPos = 20
+        }
+      }
 
       // Başlık
-      doc.setFontSize(20)
+      doc.setFontSize(22)
       doc.setFont('helvetica', 'bold')
-      doc.text('Aylık Rapor', pageWidth / 2, yPos, { align: 'center' })
+      doc.setTextColor(30, 30, 30)
+      doc.text('AYLIK RAPOR', pageWidth / 2, yPos, { align: 'center' })
       yPos += 10
 
       // Tarih bilgisi
-      doc.setFontSize(12)
+      doc.setFontSize(14)
       doc.setFont('helvetica', 'normal')
-      const monthLabel = filter === 'monthly'
-        ? format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: tr })
-        : 'Tüm Zamanlar'
+      const monthLabel = format(parse(selectedMonth + '-01', 'yyyy-MM-dd', new Date()), 'MMMM yyyy', { locale: tr })
       doc.text(`Dönem: ${monthLabel}`, pageWidth / 2, yPos, { align: 'center' })
       yPos += 15
 
-      // Finansal Özet
+      // ========== FİNANSAL ÖZET ==========
+      checkPageBreak(40)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Finansal Özet', 14, yPos)
+      doc.setTextColor(30, 30, 30)
+      doc.text('FİNANSAL ÖZET', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(11)
+      doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       const financialData = [
         ['Gelir', stats.income.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
@@ -134,29 +124,115 @@ export default function ExportPDFButton({
         head: [['Kategori', 'Tutar']],
         body: financialData,
         theme: 'striped',
-        headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 10 },
+        headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+        bodyStyles: { fontSize: 10 },
         margin: { left: 14, right: 14 },
+        styles: { cellPadding: 5 },
       })
 
-      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
-      // Yayın İstatistikleri
-      if (yPos > pageHeight - 40) {
-        doc.addPage()
-        yPos = 20
-      }
-
+      // ========== ÖDEMELER ==========
+      checkPageBreak(40)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Yayın İstatistikleri', 14, yPos)
+      doc.text('ÖDEMELER', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(11)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      const paymentSummary = [
+        ['Yayıncılara Ödenen Toplam', (stats.totalStreamerPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Seslendirmene Ödenen Toplam', (stats.totalVoiceActorPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+      ]
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Kategori', 'Tutar']],
+        body: paymentSummary,
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+        bodyStyles: { fontSize: 10 },
+        margin: { left: 14, right: 14 },
+        styles: { cellPadding: 5 },
+      })
+
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+
+      // Yayıncılara Ödenen Detaylar
+      if (streamerPayments.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Yayıncılara Ödenen Ücretler', 14, yPos)
+        yPos += 8
+
+        const streamerPaymentData = streamerPayments.map((p) => [
+          p.streamerName,
+          p.amount.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          p.type,
+          p.period,
+          p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Yayıncı', 'Tutar', 'Tür', 'Dönem', 'Ödeme Tarihi']],
+          body: streamerPaymentData,
+          theme: 'striped',
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
+          columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 35 }, 2: { cellWidth: 25 }, 3: { cellWidth: 25 }, 4: { cellWidth: 30 } },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // Seslendirmene Ödenen Detaylar
+      if (voiceActorPayments.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(14)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Seslendirmene Ödenen Ücretler', 14, yPos)
+        yPos += 8
+
+        const voiceActorPaymentData = voiceActorPayments.map((v) => [
+          v.voiceActorName,
+          (v.price || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          v.title.length > 40 ? v.title.substring(0, 40) + '...' : v.title,
+          format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }),
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Seslendirmen', 'Tutar', 'Proje', 'Ödeme Tarihi']],
+          body: voiceActorPaymentData,
+          theme: 'striped',
+          headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
+          columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: 30 }, 2: { cellWidth: 70 }, 3: { cellWidth: 30 } },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // ========== YAYINLAR ==========
+      checkPageBreak(40)
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('YAYINLAR', 14, yPos)
+      yPos += 8
+
+      doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       const streamData = [
         ['Toplam Yayın', stats.streamCount.toString()],
         ['Dış Yayın', stats.externalStreamCount.toString()],
+        ['Toplam Yayın Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
       ]
 
       autoTable(doc, {
@@ -164,63 +240,61 @@ export default function ExportPDFButton({
         head: [['Kategori', 'Değer']],
         body: streamData,
         theme: 'striped',
-        headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 10 },
+        headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+        bodyStyles: { fontSize: 10 },
         margin: { left: 14, right: 14 },
+        styles: { cellPadding: 5 },
       })
 
-      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
-      // En Aktif Yayıncılar
-      if (topStreamers.length > 0) {
-        if (yPos > pageHeight - 60) {
-          doc.addPage()
-          yPos = 20
-        }
-
-        doc.setFontSize(16)
+      // Yayın Detayları
+      if (allStreams.length > 0) {
+        checkPageBreak(60)
+        doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text('En Aktif Yayıncılar', 14, yPos)
+        doc.text('Yayın Detayları', 14, yPos)
         yPos += 8
 
-        const streamerData = topStreamers.slice(0, 10).map((s) => [
-          s.name,
-          s.streamCount.toString(),
+        const streamDetailsData = allStreams.slice(0, 50).map((s) => [
+          format(new Date(s.date), 'dd.MM.yyyy', { locale: tr }),
+          s.streamerName,
+          s.matchInfo ? (s.matchInfo.length > 30 ? s.matchInfo.substring(0, 30) + '...' : s.matchInfo) : '-',
+          s.cost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          s.streamerEarning.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
         ])
 
         autoTable(doc, {
           startY: yPos,
-          head: [['Yayıncı', 'Yayın Sayısı']],
-          body: streamerData,
+          head: [['Tarih', 'Yayıncı', 'Maç Bilgisi', 'Maliyet', 'Kazanç']],
+          body: streamDetailsData,
           theme: 'striped',
-          headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-          styles: { fontSize: 10 },
+          headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
           margin: { left: 14, right: 14 },
+          styles: { cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+          columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 35 }, 2: { cellWidth: 50 }, 3: { cellWidth: 30 }, 4: { cellWidth: 30 } },
         })
 
-        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
       }
 
-      // İçerik İstatistikleri
-      if (yPos > pageHeight - 40) {
-        doc.addPage()
-        yPos = 20
-      }
-
+      // ========== İÇERİKLER ==========
+      checkPageBreak(40)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('İçerik İstatistikleri', 14, yPos)
+      doc.text('İÇERİKLER', 14, yPos)
       yPos += 8
 
-      doc.setFontSize(11)
+      doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       const contentData = [
         ['İçerik Sayısı', stats.contentCount.toString()],
-        ['Görüntülenme', (contentStats.totalViews / 1000).toFixed(1) + 'K'],
-        ['Beğeni', (contentStats.totalLikes / 1000).toFixed(1) + 'K'],
-        ['Yorum', (contentStats.totalComments / 1000).toFixed(1) + 'K'],
-        ['Paylaşım', (contentStats.totalShares / 1000).toFixed(1) + 'K'],
-        ['Etkileşim', (contentStats.totalEngagement / 1000).toFixed(1) + 'K'],
+        ['Toplam Görüntülenme', contentStats.totalViews.toLocaleString('tr-TR')],
+        ['Toplam Beğeni', contentStats.totalLikes.toLocaleString('tr-TR')],
+        ['Toplam Yorum', contentStats.totalComments.toLocaleString('tr-TR')],
+        ['Toplam Paylaşım', contentStats.totalShares.toLocaleString('tr-TR')],
+        ['Toplam Kaydetme', contentStats.totalSaves.toLocaleString('tr-TR')],
       ]
 
       autoTable(doc, {
@@ -228,104 +302,75 @@ export default function ExportPDFButton({
         head: [['Kategori', 'Değer']],
         body: contentData,
         theme: 'striped',
-        headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 10 },
+        headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+        bodyStyles: { fontSize: 10 },
         margin: { left: 14, right: 14 },
+        styles: { cellPadding: 5 },
       })
 
-      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
+      yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
-      // En Çok Görüntülenen İçerikler
-      if (topContentByViews.length > 0) {
-        if (yPos > pageHeight - 60) {
-          doc.addPage()
-          yPos = 20
-        }
-
-        doc.setFontSize(16)
+      // İçerik Detayları
+      if (allContentsDetailed.length > 0) {
+        checkPageBreak(60)
+        doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text('En Çok Görüntülenen İçerikler', 14, yPos)
+        doc.text('İçerik Detayları', 14, yPos)
         yPos += 8
 
-        const topViewsData = topContentByViews.slice(0, 10).map((c) => [
-          c.title.length > 40 ? c.title.substring(0, 40) + '...' : c.title,
-          c.platform,
+        const contentDetailsData = allContentsDetailed.slice(0, 50).map((c) => [
+          c.title.length > 35 ? c.title.substring(0, 35) + '...' : c.title,
+          c.platform || '-',
+          c.type || '-',
           c.views.toLocaleString('tr-TR'),
+          c.likes.toLocaleString('tr-TR'),
+          c.comments.toLocaleString('tr-TR'),
+          format(new Date(c.publishDate), 'dd.MM.yyyy', { locale: tr }),
         ])
 
         autoTable(doc, {
           startY: yPos,
-          head: [['İçerik', 'Platform', 'Görüntülenme']],
-          body: topViewsData,
+          head: [['Başlık', 'Platform', 'Tür', 'Görüntülenme', 'Beğeni', 'Yorum', 'Yayın Tarihi']],
+          body: contentDetailsData,
           theme: 'striped',
-          headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-          styles: { fontSize: 9 },
+          headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+          bodyStyles: { fontSize: 6 },
           margin: { left: 14, right: 14 },
-          columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 40 }, 2: { cellWidth: 40 } },
+          styles: { cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+          columnStyles: { 
+            0: { cellWidth: 50 }, 
+            1: { cellWidth: 25 }, 
+            2: { cellWidth: 20 }, 
+            3: { cellWidth: 25 }, 
+            4: { cellWidth: 20 }, 
+            5: { cellWidth: 20 },
+            6: { cellWidth: 25 },
+          },
         })
 
-        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 15 : yPos + 30
-      }
-
-      // Platform Dağılımı
-      if (contentByPlatform.length > 0) {
-        if (yPos > pageHeight - 60) {
-          doc.addPage()
-          yPos = 20
-        }
-
-        doc.setFontSize(16)
-        doc.setFont('helvetica', 'bold')
-        doc.text('Platform Dağılımı', 14, yPos)
-        yPos += 8
-
-        const platformData = contentByPlatform.map((p) => [
-          p.platform,
-          p.count.toString(),
-        ])
-
-        autoTable(doc, {
-          startY: yPos,
-          head: [['Platform', 'İçerik Sayısı']],
-          body: platformData,
-          theme: 'striped',
-          headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
-          styles: { fontSize: 10 },
-          margin: { left: 14, right: 14 },
-        })
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
       }
 
       // Sayfa numaraları ekle
-      try {
-        const totalPages = (doc as any).internal?.getNumberOfPages?.() || doc.internal.pages?.length || 1
-        for (let i = 1; i <= totalPages; i++) {
-          doc.setPage(i)
-          doc.setFontSize(10)
-          doc.setFont('helvetica', 'normal')
-          doc.text(
-            `Sayfa ${i} / ${totalPages}`,
-            pageWidth / 2,
-            pageHeight - 10,
-            { align: 'center' }
-          )
-        }
-      } catch (pageError) {
-        console.warn('Sayfa numaraları eklenirken hata:', pageError)
-        // Sayfa numarası eklenemezse devam et
+      const totalPages = doc.internal.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(128, 128, 128)
+        doc.text(
+          `Sayfa ${i} / ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        )
       }
 
       // PDF'i indir
-      const fileName = `rapor_${filter === 'monthly' ? selectedMonth : 'tum_zamanlar'}_${format(new Date(), 'yyyyMMdd')}.pdf`
-      console.log('Saving PDF with filename:', fileName)
+      const fileName = `rapor_${selectedMonth}_${format(new Date(), 'yyyyMMdd')}.pdf`
       doc.save(fileName)
-      console.log('PDF saved successfully')
     } catch (error: any) {
       console.error('PDF oluşturma hatası:', error)
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      })
       alert(`PDF oluşturulurken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`)
     } finally {
       setExporting(false)
@@ -352,4 +397,3 @@ export default function ExportPDFButton({
     </button>
   )
 }
-
