@@ -117,6 +117,11 @@ export async function PUT(
         )
       }
       
+      // Eğer metin henüz atanmamışsa ve voice actor ses linki ekliyorsa, otomatik olarak atan
+      if (voiceActorId && existingScript.voiceActorId === null) {
+        updateData.voiceActorId = voiceActorId
+      }
+      
       // voiceLink veya audioFile (backward compatibility)
       if (voiceLink !== undefined) {
         updateData.voiceLink = voiceLink

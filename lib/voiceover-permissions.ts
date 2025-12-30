@@ -98,6 +98,11 @@ export async function canEditVoiceLink(
     return true
   }
 
+  // Voice actor henüz atanmamış metinlere ses linki ekleyebilir (bu durumda otomatik olarak atanır)
+  if (voiceActorId && script.voiceActorId === null) {
+    return true
+  }
+
   return false
 }
 
