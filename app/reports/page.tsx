@@ -2,7 +2,7 @@
 
 import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
+import { format, parse } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { Video, DollarSign, TrendingUp } from 'lucide-react'
 import ExportPDFButton from './ExportPDFButton'
