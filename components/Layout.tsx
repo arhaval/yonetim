@@ -24,7 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
     // Optimized fetch with cache and shorter timeout
@@ -60,6 +60,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       setSidebarOpen(true)
     }
   }, [])
+
+  // Pathname değiştiğinde navigation state'ini sıfırla
+  useEffect(() => {
+    setIsNavigating(false)
+  }, [pathname])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -148,12 +153,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   href={item.href}
                   prefetch={true}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    if (!isActive) {
+                      setIsNavigating(true)
+                    }
+                  }}
                   className={`group relative flex items-center px-4 py-3.5 rounded-xl transition-all duration-300 ${
                     isActive
                       ? 'text-white shadow-glow scale-[1.02]'
                       : 'text-gray-400 hover:bg-slate-700/60 hover:text-white hover:scale-[1.01]'
-                  }`}
+                  } ${isNavigating && !isActive ? 'opacity-70' : ''}`}
                   style={isActive ? { 
                     background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                     boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15)'
@@ -223,10 +233,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Navigation Loading Indicator */}
-        {isPending && (
-          <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gray-200">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse transition-all duration-300" style={{ width: '60%' }} />
+        {/* Navigation Loading Indicator - Minimal */}
+        {isNavigating && (
+          <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-gray-200">
+            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse transition-all duration-200" style={{ width: '40%' }} />
           </div>
         )}
 
