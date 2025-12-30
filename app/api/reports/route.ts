@@ -70,6 +70,10 @@ export async function GET(request: NextRequest) {
       allContentsDetailed,
       // Tüm yayınlar (detaylı)
       allStreams,
+      // Sosyal medya istatistikleri
+      socialMediaStats,
+      // Önceki ay sosyal medya istatistikleri
+      previousSocialMediaStats,
     ] = await Promise.all([
       prisma.stream.count({ where: whereClause }).catch(() => 0),
       prisma.externalStream.count({ where: whereClause }).catch(() => 0),
