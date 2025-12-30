@@ -31,137 +31,131 @@ export default async function StreamerDetailPage({
   let totalCost = { _sum: { cost: null as number | null } }
   
   try {
-    // Önce streamer'ı çek
-    streamer = await prisma.streamer.findUnique({
-      where: { id },
-      include: {
-        teamRates: true,
-      },
-    })
-
-    if (!streamer) {
-      notFound()
-    }
-
-    // Tüm yayınları çek (yayıncılar yayınları girince direkt onaylanır)
-    let allStreams: any[] = []
-    
-    try {
-      allStreams = await prisma.stream.findMany({
+    // Tüm verileri paralel çek - Promise.all ile waterfall sorunu çözüldü
+    const [
+      streamerData,
+      allStreams,
+      totalStreamsResult,
+      totalExternalStreamsResult,
+      totalCostResult,
+      teamEarnings,
+      totalStreamerEarning,
+      unpaidStreams,
+      unpaidPayments,
+      financialRecords,
+      payouts,
+    ] = await Promise.all([
+      // Streamer bilgileri (tüm ilişkilerle birlikte)
+      prisma.streamer.findUnique({
+        where: { id },
+        include: {
+          externalStreams: {
+            take: 10,
+            orderBy: { date: 'asc' },
+          },
+          payments: {
+            orderBy: { paidAt: 'asc' },
+          },
+          teamRates: true,
+        },
+      }),
+      
+      // Tüm yayınlar
+      prisma.stream.findMany({
+        where: { streamerId: id },
+        take: 50,
+        orderBy: { date: 'asc' },
+      }).catch(() => []),
+      
+      // Toplam yayın sayısı
+      prisma.stream.count({
+        where: { streamerId: id },
+      }).catch(() => 0),
+      
+      // Toplam external stream sayısı
+      prisma.externalStream.count({
+        where: { streamerId: id },
+      }).catch(() => 0),
+      
+      // Toplam maliyet
+      prisma.stream.aggregate({
+        where: { streamerId: id },
+        _sum: { cost: true },
+      }).catch(() => ({ _sum: { cost: null } })),
+      
+      // Takım bazlı kazanç hesaplamaları
+      prisma.stream.groupBy({
+        by: ['teamName'],
         where: {
           streamerId: id,
-          // Status filtresi kaldırıldı - tüm yayınlar gösterilir
+          teamName: { not: null },
         },
-        take: 50,
-        orderBy: { date: 'asc' }, // Eski → Yeni sıralama
-      })
-    } catch (error: any) {
-      console.warn('Streams çekilemedi:', error.message)
-      allStreams = []
-    }
+        _sum: {
+          streamerEarning: true,
+          totalRevenue: true,
+        },
+        _count: {
+          id: true,
+        },
+      }).catch(() => []),
+      
+      // Toplam kazanç
+      prisma.stream.aggregate({
+        where: { streamerId: id },
+        _sum: { streamerEarning: true },
+      }).catch(() => ({ _sum: { streamerEarning: null } })),
+      
+      // Ödenmemiş yayınlar
+      prisma.stream.aggregate({
+        where: {
+          streamerId: id,
+          paymentStatus: 'pending',
+        },
+        _sum: { streamerEarning: true },
+      }).catch(() => ({ _sum: { streamerEarning: null } })),
+      
+      // Ödenmemiş ödemeler
+      prisma.payment.aggregate({
+        where: {
+          streamerId: id,
+          paidAt: null,
+        },
+        _sum: { amount: true },
+      }).catch(() => ({ _sum: { amount: null } })),
+      
+      // Finansal kayıtlar
+      prisma.financialRecord.findMany({
+        where: { streamerId: id },
+        orderBy: { date: 'asc' },
+      }).catch(() => []),
+      
+      // Payout kayıtları
+      prisma.payout.findMany({
+        where: {
+          recipientType: 'streamer',
+          recipientId: id,
+        },
+        orderBy: { createdAt: 'asc' },
+      }).catch(() => []),
+    ])
 
-    // Diğer verileri çek
-    const streamerWithRelations = await prisma.streamer.findUnique({
-      where: { id },
-      include: {
-        externalStreams: {
-          take: 10,
-          orderBy: { date: 'asc' },
-        },
-        payments: {
-          orderBy: { paidAt: 'asc' },
-        },
-        teamRates: true,
-      },
-    })
-
-    if (!streamerWithRelations) {
+    if (!streamerData) {
       notFound()
     }
 
     // Streams'i manuel olarak ekle
     streamer = {
-      ...streamerWithRelations,
+      ...streamerData,
       streams: allStreams,
     }
 
-    totalStreams = await prisma.stream.count({
-      where: { streamerId: streamer.id },
-    }).catch(() => 0)
-    
-    totalExternalStreams = await prisma.externalStream.count({
-      where: { streamerId: streamer.id },
-    }).catch(() => 0)
-    
-    totalCost = await prisma.stream.aggregate({
-      where: { streamerId: streamer.id },
-      _sum: { cost: true },
-    }).catch(() => ({ _sum: { cost: null } }))
+    totalStreams = totalStreamsResult
+    totalExternalStreams = totalExternalStreamsResult
+    totalCost = totalCostResult
   } catch (error) {
     console.error('Error fetching streamer:', error)
     notFound()
   }
-
-  // Takım bazlı kazanç hesaplamaları
-  const teamEarnings = await prisma.stream.groupBy({
-    by: ['teamName'],
-    where: {
-      streamerId: streamer.id,
-      teamName: { not: null },
-    },
-    _sum: {
-      streamerEarning: true,
-      totalRevenue: true,
-    },
-    _count: {
-      id: true,
-    },
-  }).catch(() => [])
-
-  const totalStreamerEarning = await prisma.stream.aggregate({
-    where: { streamerId: streamer.id },
-    _sum: { streamerEarning: true },
-  }).catch(() => ({ _sum: { streamerEarning: null } }))
-
-  // Ödenmemiş paraları hesapla
-  const unpaidStreams = await prisma.stream.aggregate({
-    where: {
-      streamerId: streamer.id,
-      paymentStatus: 'pending',
-    },
-    _sum: { streamerEarning: true },
-  }).catch(() => ({ _sum: { streamerEarning: null } }))
-
-  const unpaidPayments = await prisma.payment.aggregate({
-    where: {
-      streamerId: streamer.id,
-      paidAt: null,
-    },
-    _sum: { amount: true },
-  }).catch(() => ({ _sum: { amount: null } }))
-
-  // Finansal kayıtları getir (bu yayıncıya ait olanlar) - tümünü çek
-  const financialRecords = await prisma.financialRecord.findMany({
-    where: {
-      streamerId: streamer.id,
-    },
-    orderBy: { date: 'asc' }, // Eski → Yeni sıralama
-  }).catch((error) => {
-    console.error(`[Streamer Profile] Error fetching financial records for ${streamer.id}:`, error)
-    return []
-  })
-  
-  // Payout kayıtlarını da getir (bu yayıncıya ait olanlar) - tümünü çek
-  const payouts = await prisma.payout.findMany({
-    where: {
-      recipientType: 'streamer',
-      recipientId: streamer.id,
-    },
-    orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
-  }).catch((error) => {
-    console.error(`[Streamer Profile] Error fetching payouts for ${streamer.id}:`, error)
-    return []
-  })
   
   // Payout'ları FinancialRecord formatına çevir (görünüm için)
   const payoutRecords = payouts.map(payout => ({
