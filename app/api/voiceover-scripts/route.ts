@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
 
     // Where clause oluştur
     let whereClause: any = {}
+    const andConditions: any[] = []
 
     // Admin ise TÜM kayıtları görebilmeli - filtreleme yapma
     // Admin değilse, creator veya voice actor sadece kendi kayıtlarını görebilir
@@ -76,94 +77,111 @@ export async function GET(request: NextRequest) {
       if (creatorId) {
         whereClause.creatorId = creatorId
       }
-      // Voice Actor sadece kendi scriptlerini görmeli (cookie'den gelen)
+      // Voice Actor hem henüz atanmamış hem de kendisine atanmış metinleri görmeli
       if (voiceActorIdCookie) {
-        whereClause.voiceActorId = voiceActorIdCookie
+        andConditions.push({
+          OR: [
+            { voiceActorId: null }, // Henüz atanmamış metinler
+            { voiceActorId: voiceActorIdCookie }, // Kendisine atanmış metinler
+          ]
+        })
       }
     }
     // Admin için whereClause boş kalır, tüm kayıtlar görünür
 
     // ARCHIVED varsayılan olarak gösterilmez (tüm roller için)
     if (excludeArchived) {
-      whereClause.status = { not: 'ARCHIVED' }
+      andConditions.push({ status: { not: 'ARCHIVED' } })
     }
 
     // Durum filtresi
     if (statusFilter && statusFilter !== 'all') {
       if (statusFilter === 'VOICE_UPLOADED') {
-        whereClause.status = 'VOICE_UPLOADED'
+        andConditions.push({ status: 'VOICE_UPLOADED' })
       } else if (statusFilter === 'WAITING_VOICE') {
-        whereClause.status = 'WAITING_VOICE'
+        andConditions.push({ status: 'WAITING_VOICE' })
       } else if (statusFilter === 'APPROVED') {
-        whereClause.status = 'APPROVED'
+        andConditions.push({ status: 'APPROVED' })
       } else if (statusFilter === 'REJECTED') {
-        whereClause.status = 'REJECTED'
+        andConditions.push({ status: 'REJECTED' })
       } else if (statusFilter === 'PAID') {
-        whereClause.status = 'PAID'
+        andConditions.push({ status: 'PAID' })
       } else if (statusFilter === 'ARCHIVED') {
-        whereClause.status = 'ARCHIVED'
+        andConditions.push({ status: 'ARCHIVED' })
       } else {
-        whereClause.status = statusFilter as any
+        andConditions.push({ status: statusFilter as any })
       }
     }
 
     // Seslendiren filtresi (query parametresinden - admin için de geçerli)
     // Bu bir filtre, admin de kullanabilir
     if (voiceActorId) {
-      whereClause.voiceActorId = voiceActorId
+      andConditions.push({ voiceActorId })
     }
 
     // Link var/yok filtresi (voiceLink veya audioFile kontrolü)
     if (hasAudioLink === 'true') {
-      whereClause.OR = [
-        { voiceLink: { not: null } },
-        { audioFile: { not: null } }
-      ]
+      andConditions.push({
+        OR: [
+          { voiceLink: { not: null } },
+          { audioFile: { not: null } }
+        ]
+      })
     } else if (hasAudioLink === 'false') {
-      whereClause.AND = [
-        { voiceLink: null },
-        { audioFile: null }
-      ]
+      andConditions.push({
+        AND: [
+          { voiceLink: null },
+          { audioFile: null }
+        ]
+      })
     }
 
     // Üretici Onayı filtresi
     if (producerApprovedFilter === 'true') {
-      whereClause.producerApproved = true
+      andConditions.push({ producerApproved: true })
     } else if (producerApprovedFilter === 'false') {
-      whereClause.producerApproved = false
+      andConditions.push({ producerApproved: false })
     }
 
     // Admin Onayı filtresi
     if (adminApprovedFilter === 'true') {
-      whereClause.adminApproved = true
+      andConditions.push({ adminApproved: true })
     } else if (adminApprovedFilter === 'false') {
-      whereClause.adminApproved = false
+      andConditions.push({ adminApproved: false })
     }
 
     // Fiyat var/yok filtresi
     if (hasPriceFilter === 'true') {
-      whereClause.price = { not: null }
+      andConditions.push({ price: { not: null } })
     } else if (hasPriceFilter === 'false') {
-      whereClause.price = null
+      andConditions.push({ price: null })
     }
 
     // Arama filtresi (başlık veya metin içinde)
     if (search) {
-      whereClause.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { text: { contains: search, mode: 'insensitive' } },
-      ]
+      andConditions.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { text: { contains: search, mode: 'insensitive' } },
+        ]
+      })
     }
 
     // Tarih aralığı filtresi
     if (dateFrom || dateTo) {
-      whereClause.createdAt = {}
+      const dateCondition: any = {}
       if (dateFrom) {
-        whereClause.createdAt.gte = new Date(dateFrom)
+        dateCondition.gte = new Date(dateFrom)
       }
       if (dateTo) {
-        whereClause.createdAt.lte = new Date(dateTo)
+        dateCondition.lte = new Date(dateTo)
       }
+      andConditions.push({ createdAt: dateCondition })
+    }
+
+    // AND koşullarını whereClause'a ekle
+    if (andConditions.length > 0) {
+      whereClause.AND = andConditions
     }
 
     // Toplam sayı
