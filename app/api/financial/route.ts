@@ -166,7 +166,12 @@ export async function GET(request: NextRequest) {
     
     const paidVoiceoverScripts = await prisma.voiceoverScript.findMany({
       where: voiceoverScriptsWhere,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        status: true,
+        updatedAt: true,
         voiceActor: {
           select: {
             id: true,
