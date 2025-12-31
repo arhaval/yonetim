@@ -3,6 +3,8 @@
 import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, CheckCircle2, Circle, Edit2, Save, X } from 'lucide-react'
+import { format } from 'date-fns'
+import { tr } from 'date-fns/locale/tr'
 
 interface Todo {
   id: string
