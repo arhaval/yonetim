@@ -223,7 +223,7 @@ export default function ExportPDFButton({
 
         const streamerPaymentData = streamerPayments.slice(0, 15).map((p) => [
           p.streamerName.length > 20 ? p.streamerName.substring(0, 20) + '...' : p.streamerName,
-          p.amount.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          formatCurrency(p.amount),
           p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
         ])
 

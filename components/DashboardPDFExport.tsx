@@ -11,6 +11,17 @@ export default function DashboardPDFExport() {
 
   useEffect(() => {
     // Select element'ten ay değerini dinle
+    const updateMonth = () => {
+      const selectElement = document.getElementById('month-select') as HTMLSelectElement
+      if (selectElement) {
+        setSelectedMonth(selectElement.value)
+      }
+    }
+    
+    // İlk yüklemede ayı al
+    updateMonth()
+    
+    // Select element'i bul ve event listener ekle
     const selectElement = document.getElementById('month-select') as HTMLSelectElement
     if (selectElement) {
       const handleChange = () => {
@@ -282,7 +293,9 @@ export default function DashboardPDFExport() {
       }
 
       // PDF'i indir
-      const fileName = `rapor_${selectedMonth}_${format(new Date(), 'yyyyMMdd')}.pdf`
+      const selectElement = document.getElementById('month-select') as HTMLSelectElement
+      const currentMonth = selectElement?.value || selectedMonth
+      const fileName = `rapor_${currentMonth}_${format(new Date(), 'yyyyMMdd')}.pdf`
       doc.save(fileName)
     } catch (error: any) {
       console.error('PDF oluşturma hatası:', error)

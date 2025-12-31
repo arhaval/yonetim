@@ -626,7 +626,29 @@ export default async function DashboardPage() {
 
         {/* Hızlı Erişim Butonları - Büyük ve Göze Çarpan */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Hızlı İşlemler</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hızlı İşlemler</h2>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">PDF Rapor:</label>
+              <select
+                id="month-select"
+                defaultValue={format(new Date(), 'yyyy-MM')}
+                className="border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm font-medium bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date(new Date().getFullYear(), new Date().getMonth() - i, 1)
+                  const value = format(date, 'yyyy-MM')
+                  const label = format(date, 'MMMM yyyy', { locale: tr })
+                  return (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  )
+                })}
+              </select>
+              <DashboardPDFExport />
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href="/payment-approval"
