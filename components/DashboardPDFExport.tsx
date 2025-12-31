@@ -146,13 +146,16 @@ export default function DashboardPDFExport() {
         doc.text('GELIRLER (DETAYLI)', margin + 2, yPos + 5)
         yPos += 12
 
-        const incomeData = allIncomes.map((income: any) => [
-          format(new Date(income.date), 'dd.MM.yyyy', { locale: tr }),
-          removeTurkishChars(income.category || '-'),
-          income.description ? removeTurkishChars(income.description.length > 30 ? income.description.substring(0, 30) + '...' : income.description) : '-',
-          formatCurrency(income.amount),
-          removeTurkishChars(income.streamerName || income.teamMemberName || income.contentCreatorName || income.voiceActorName || '-'),
-        ])
+        const incomeData = allIncomes.map((income: any) => {
+          const dateStr = format(new Date(income.date), 'dd.MM.yyyy', { locale: tr })
+          return [
+            removeTurkishChars(dateStr),
+            removeTurkishChars(income.category || '-'),
+            income.description ? removeTurkishChars(income.description.length > 30 ? income.description.substring(0, 30) + '...' : income.description) : '-',
+            formatCurrency(income.amount),
+            removeTurkishChars(income.streamerName || income.teamMemberName || income.contentCreatorName || income.voiceActorName || '-'),
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -188,13 +191,16 @@ export default function DashboardPDFExport() {
         doc.text('GIDERLER (DETAYLI)', margin + 2, yPos + 5)
         yPos += 12
 
-        const expenseData = allExpenses.map((expense: any) => [
-          format(new Date(expense.date), 'dd.MM.yyyy', { locale: tr }),
-          removeTurkishChars(expense.category || '-'),
-          expense.description ? removeTurkishChars(expense.description.length > 30 ? expense.description.substring(0, 30) + '...' : expense.description) : '-',
-          formatCurrency(expense.amount),
-          removeTurkishChars(expense.streamerName || expense.teamMemberName || expense.contentCreatorName || expense.voiceActorName || '-'),
-        ])
+        const expenseData = allExpenses.map((expense: any) => {
+          const dateStr = format(new Date(expense.date), 'dd.MM.yyyy', { locale: tr })
+          return [
+            removeTurkishChars(dateStr),
+            removeTurkishChars(expense.category || '-'),
+            expense.description ? removeTurkishChars(expense.description.length > 30 ? expense.description.substring(0, 30) + '...' : expense.description) : '-',
+            formatCurrency(expense.amount),
+            removeTurkishChars(expense.streamerName || expense.teamMemberName || expense.contentCreatorName || expense.voiceActorName || '-'),
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -259,13 +265,16 @@ export default function DashboardPDFExport() {
         doc.text('YAYINLAR (DETAYLI)', 14, yPos)
         yPos += 8
 
-        const streamData = allStreams.map((stream: any) => [
-          format(new Date(stream.date), 'dd.MM.yyyy', { locale: tr }),
-          removeTurkishChars(stream.streamerName || '-'),
-          stream.matchInfo ? removeTurkishChars(stream.matchInfo.length > 25 ? stream.matchInfo.substring(0, 25) + '...' : stream.matchInfo) : '-',
-          formatCurrency(stream.cost),
-          formatCurrency(stream.streamerEarning || 0),
-        ])
+        const streamData = allStreams.map((stream: any) => {
+          const dateStr = format(new Date(stream.date), 'dd.MM.yyyy', { locale: tr })
+          return [
+            removeTurkishChars(dateStr),
+            removeTurkishChars(stream.streamerName || '-'),
+            stream.matchInfo ? removeTurkishChars(stream.matchInfo.length > 25 ? stream.matchInfo.substring(0, 25) + '...' : stream.matchInfo) : '-',
+            formatCurrency(stream.cost),
+            formatCurrency(stream.streamerEarning || 0),
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -301,15 +310,18 @@ export default function DashboardPDFExport() {
         doc.text('ICERIKLER (DETAYLI)', margin + 2, yPos + 5)
         yPos += 12
 
-        const contentData = allContentsDetailed.map((content: any) => [
-          content.title ? removeTurkishChars(content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
-          removeTurkishChars(content.platform || '-'),
-          removeTurkishChars(content.type || '-'),
-          content.views?.toLocaleString('tr-TR') || '0',
-          content.likes?.toLocaleString('tr-TR') || '0',
-          content.comments?.toLocaleString('tr-TR') || '0',
-          format(new Date(content.publishDate), 'dd.MM.yyyy', { locale: tr }),
-        ])
+        const contentData = allContentsDetailed.map((content: any) => {
+          const dateStr = format(new Date(content.publishDate), 'dd.MM.yyyy', { locale: tr })
+          return [
+            content.title ? removeTurkishChars(content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
+            removeTurkishChars(content.platform || '-'),
+            removeTurkishChars(content.type || '-'),
+            content.views?.toLocaleString('tr-TR') || '0',
+            content.likes?.toLocaleString('tr-TR') || '0',
+            content.comments?.toLocaleString('tr-TR') || '0',
+            removeTurkishChars(dateStr),
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -346,14 +358,17 @@ export default function DashboardPDFExport() {
         doc.text('YAYINCI ODEMELERI (DETAYLI - TUMU)', margin + 2, yPos + 5)
         yPos += 12
 
-        const streamerPaymentData = streamerPayments.map((p: any) => [
-          removeTurkishChars(p.streamerName || '-'),
-          formatCurrency(p.amount),
-          removeTurkishChars(p.type || '-'),
-          removeTurkishChars(p.period || '-'),
-          p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
-          p.description ? removeTurkishChars(p.description.length > 20 ? p.description.substring(0, 20) + '...' : p.description) : '-',
-        ])
+        const streamerPaymentData = streamerPayments.map((p: any) => {
+          const dateStr = p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-'
+          return [
+            removeTurkishChars(p.streamerName || '-'),
+            formatCurrency(p.amount),
+            removeTurkishChars(p.type || '-'),
+            removeTurkishChars(p.period || '-'),
+            removeTurkishChars(dateStr),
+            p.description ? removeTurkishChars(p.description.length > 20 ? p.description.substring(0, 20) + '...' : p.description) : '-',
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -389,12 +404,15 @@ export default function DashboardPDFExport() {
         doc.text('SESLENDIRMEN ODEMELERI (DETAYLI - TUMU)', margin + 2, yPos + 5)
         yPos += 12
 
-        const voiceActorPaymentData = voiceActorPayments.map((v: any) => [
-          removeTurkishChars(v.voiceActorName || '-'),
-          formatCurrency(v.price || 0),
-          v.title ? removeTurkishChars(v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title) : '-',
-          v.paidAt ? format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
-        ])
+        const voiceActorPaymentData = voiceActorPayments.map((v: any) => {
+          const dateStr = v.paidAt ? format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-'
+          return [
+            removeTurkishChars(v.voiceActorName || '-'),
+            formatCurrency(v.price || 0),
+            v.title ? removeTurkishChars(v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title) : '-',
+            removeTurkishChars(dateStr),
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
