@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, CheckCircle2, Circle, Edit2, Save, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import Link from 'next/link'
 
 interface Todo {
   id: string
@@ -226,15 +227,19 @@ export default function TodosPage() {
                       </div>
                     ) : (
                       <>
-                        <p
-                          className={`flex-1 text-sm font-medium ${
+                        <Link
+                          href={`/todos/${todo.id}`}
+                          className={`flex-1 text-sm font-medium hover:text-blue-600 transition-colors ${
                             todo.completed
                               ? 'text-gray-500 line-through'
                               : 'text-gray-900'
                           }`}
                         >
                           {todo.text}
-                        </p>
+                          {todo.notes && (
+                            <span className="ml-2 text-xs text-gray-400">(Not var)</span>
+                          )}
+                        </Link>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleStartEdit(todo)}

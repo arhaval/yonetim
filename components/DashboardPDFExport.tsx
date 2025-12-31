@@ -97,16 +97,18 @@ export default function DashboardPDFExport() {
       doc.setFontSize(14)
       doc.setFont('helvetica', 'normal')
       const monthLabel = format(parse(selectedMonth + '-01', 'yyyy-MM-dd', new Date()), 'MMMM yyyy', { locale: tr })
-      doc.text(`Donem: ${monthLabel}`, pageWidth / 2, yPos, { align: 'center' })
+      doc.text(`Donem: ${removeTurkishChars(monthLabel)}`, pageWidth / 2, yPos, { align: 'center' })
       yPos += 15
 
       // ========== FİNANSAL ÖZET ==========
-      checkPageBreak(35)
+      checkPageBreak(40)
+      doc.setFillColor(240, 240, 240)
+      doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(30, 30, 30)
-      doc.text('FINANSAL OZET', 14, yPos)
-      yPos += 8
+      doc.text('FINANSAL OZET', margin + 2, yPos + 5)
+      yPos += 12
 
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
@@ -124,9 +126,10 @@ export default function DashboardPDFExport() {
         body: financialData,
         theme: 'striped',
         headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-        bodyStyles: { fontSize: 10 },
-        margin: { left: 14, right: 14 },
-        styles: { cellPadding: 5 },
+        bodyStyles: { fontSize: 10, textColor: [30, 30, 30] },
+        margin: { left: margin, right: margin },
+        styles: { cellPadding: 5, lineWidth: 0.1 },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
       })
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
@@ -135,10 +138,13 @@ export default function DashboardPDFExport() {
       const allIncomes = data.allIncomes || []
       if (allIncomes.length > 0) {
         checkPageBreak(50)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('GELIRLER (DETAYLI)', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('GELIRLER (DETAYLI)', margin + 2, yPos + 5)
+        yPos += 12
 
         const incomeData = allIncomes.map((income: any) => [
           format(new Date(income.date), 'dd.MM.yyyy', { locale: tr }),
@@ -154,9 +160,10 @@ export default function DashboardPDFExport() {
           body: incomeData,
           theme: 'striped',
           headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-          bodyStyles: { fontSize: 8 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 8, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 3, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 25 }, 
             1: { cellWidth: 30 }, 
@@ -173,10 +180,13 @@ export default function DashboardPDFExport() {
       const allExpenses = data.allExpenses || []
       if (allExpenses.length > 0) {
         checkPageBreak(50)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('GIDERLER (DETAYLI)', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('GIDERLER (DETAYLI)', margin + 2, yPos + 5)
+        yPos += 12
 
         const expenseData = allExpenses.map((expense: any) => [
           format(new Date(expense.date), 'dd.MM.yyyy', { locale: tr }),
@@ -192,9 +202,10 @@ export default function DashboardPDFExport() {
           body: expenseData,
           theme: 'striped',
           headStyles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-          bodyStyles: { fontSize: 8 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 8, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 3, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 25 }, 
             1: { cellWidth: 30 }, 
@@ -231,9 +242,10 @@ export default function DashboardPDFExport() {
         body: paymentSummary,
         theme: 'striped',
         headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-        bodyStyles: { fontSize: 10 },
-        margin: { left: 14, right: 14 },
-        styles: { cellPadding: 5 },
+        bodyStyles: { fontSize: 10, textColor: [30, 30, 30] },
+        margin: { left: margin, right: margin },
+        styles: { cellPadding: 5, lineWidth: 0.1 },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
       })
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
@@ -261,9 +273,10 @@ export default function DashboardPDFExport() {
           body: streamData,
           theme: 'striped',
           headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-          bodyStyles: { fontSize: 8 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 8, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 3, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 25 }, 
             1: { cellWidth: 40 }, 
@@ -280,10 +293,13 @@ export default function DashboardPDFExport() {
       const allContentsDetailed = data.allContentsDetailed || []
       if (allContentsDetailed.length > 0) {
         checkPageBreak(50)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('ICERIKLER (DETAYLI)', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('ICERIKLER (DETAYLI)', margin + 2, yPos + 5)
+        yPos += 12
 
         const contentData = allContentsDetailed.map((content: any) => [
           content.title ? removeTurkishChars(content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
@@ -301,9 +317,10 @@ export default function DashboardPDFExport() {
           body: contentData,
           theme: 'striped',
           headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 2, overflow: 'linebreak', fontSize: 7 },
+          bodyStyles: { fontSize: 7, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 2, overflow: 'linebreak', fontSize: 7, lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 35 }, 
             1: { cellWidth: 25 }, 
@@ -321,10 +338,13 @@ export default function DashboardPDFExport() {
       // ========== YAYINCI ÖDEMELERİ (DETAYLI - TÜMÜ) ==========
       if (streamerPayments.length > 0) {
         checkPageBreak(50)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('YAYINCI ODEMELERI (DETAYLI - TUMU)', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('YAYINCI ODEMELERI (DETAYLI - TUMU)', margin + 2, yPos + 5)
+        yPos += 12
 
         const streamerPaymentData = streamerPayments.map((p: any) => [
           removeTurkishChars(p.streamerName || '-'),
@@ -341,9 +361,10 @@ export default function DashboardPDFExport() {
           body: streamerPaymentData,
           theme: 'striped',
           headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 2, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 7, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 2, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 35 }, 
             1: { cellWidth: 30 }, 
@@ -360,10 +381,13 @@ export default function DashboardPDFExport() {
       // ========== SESLENDİRMEN ÖDEMELERİ (DETAYLI - TÜMÜ) ==========
       if (voiceActorPayments.length > 0) {
         checkPageBreak(50)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('SESLENDIRMEN ODEMELERI (DETAYLI - TUMU)', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('SESLENDIRMEN ODEMELERI (DETAYLI - TUMU)', margin + 2, yPos + 5)
+        yPos += 12
 
         const voiceActorPaymentData = voiceActorPayments.map((v: any) => [
           removeTurkishChars(v.voiceActorName || '-'),
@@ -378,9 +402,10 @@ export default function DashboardPDFExport() {
           body: voiceActorPaymentData,
           theme: 'striped',
           headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-          bodyStyles: { fontSize: 7 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 2, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 7, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 2, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 40 }, 
             1: { cellWidth: 30 }, 
@@ -396,19 +421,33 @@ export default function DashboardPDFExport() {
       const socialMediaGrowth = data.socialMediaGrowth || []
       if (socialMediaGrowth.length > 0) {
         checkPageBreak(40)
+        doc.setFillColor(240, 240, 240)
+        doc.rect(margin, yPos - 3, pageWidth - (margin * 2), 8, 'F')
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('SOSYAL MEDYA BUYUMESI', 14, yPos)
-        yPos += 8
+        doc.setTextColor(30, 30, 30)
+        doc.text('SOSYAL MEDYA BUYUMESI', margin + 2, yPos + 5)
+        yPos += 12
 
-        const socialMediaData = socialMediaGrowth.map((s: any) => [
-          removeTurkishChars(s.platform),
-          s.currentCount.toLocaleString('tr-TR'),
-          s.previousCount > 0 ? s.previousCount.toLocaleString('tr-TR') : '-',
-          s.growthCount > 0 ? `+${s.growthCount.toLocaleString('tr-TR')}` : s.growthCount.toLocaleString('tr-TR'),
-          s.growth !== 0 ? `${s.growth > 0 ? '+' : ''}${s.growth.toFixed(1)}%` : '-',
-          s.target ? s.target.toLocaleString('tr-TR') : '-',
-        ])
+        const socialMediaData = socialMediaGrowth.map((s: any) => {
+          // Büyüme yüzdesi hesapla
+          let growthPercent = '-'
+          if (s.previousCount > 0 && s.currentCount > 0) {
+            const growth = ((s.currentCount - s.previousCount) / s.previousCount) * 100
+            growthPercent = `${growth > 0 ? '+' : ''}${growth.toFixed(1)}%`
+          } else if (s.previousCount === 0 && s.currentCount > 0) {
+            growthPercent = '+100.0%' // İlk kez eklenmişse %100 artış
+          }
+          
+          return [
+            removeTurkishChars(s.platform),
+            s.currentCount.toLocaleString('tr-TR'),
+            s.previousCount > 0 ? s.previousCount.toLocaleString('tr-TR') : '-',
+            s.growthCount > 0 ? `+${s.growthCount.toLocaleString('tr-TR')}` : s.growthCount.toLocaleString('tr-TR'),
+            growthPercent,
+            s.target ? s.target.toLocaleString('tr-TR') : '-',
+          ]
+        })
 
         autoTable(doc, {
           startY: yPos,
@@ -416,9 +455,10 @@ export default function DashboardPDFExport() {
           body: socialMediaData,
           theme: 'striped',
           headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-          bodyStyles: { fontSize: 8 },
-          margin: { left: 14, right: 14 },
-          styles: { cellPadding: 3, overflow: 'linebreak' },
+          bodyStyles: { fontSize: 8, textColor: [30, 30, 30] },
+          margin: { left: margin, right: margin },
+          styles: { cellPadding: 3, overflow: 'linebreak', lineWidth: 0.1 },
+          alternateRowStyles: { fillColor: [250, 250, 250] },
           columnStyles: { 
             0: { cellWidth: 35 }, 
             1: { cellWidth: 30 }, 
@@ -432,10 +472,15 @@ export default function DashboardPDFExport() {
         yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
       }
 
-      // Sayfa numaraları
+      // Sayfa numaraları - Alt çizgi ile
       const totalPages = doc.internal.pages.length || 1
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i)
+        // Alt çizgi
+        doc.setDrawColor(200, 200, 200)
+        doc.setLineWidth(0.5)
+        doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15)
+        
         doc.setFontSize(9)
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(128, 128, 128)

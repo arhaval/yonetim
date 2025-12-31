@@ -418,6 +418,7 @@ model Todo {
   id        String   @id @default(cuid())
   text      String
   completed Boolean  @default(false)
+  notes     String?  // Notlar için alan
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

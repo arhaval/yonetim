@@ -4,6 +4,34 @@ import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
+// GET - Yapılacak detayını getir
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await Promise.resolve(params)
+    const todo = await prisma.todo.findUnique({
+      where: { id: resolvedParams.id },
+    })
+
+    if (!todo) {
+      return NextResponse.json(
+        { error: 'Yapılacak bulunamadı' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ todo })
+  } catch (error) {
+    console.error('Error fetching todo:', error)
+    return NextResponse.json(
+      { error: 'Yapılacak getirilemedi' },
+      { status: 500 }
+    )
+  }
+}
+
 // PATCH - Yapılacak güncelle
 export async function PATCH(
   request: NextRequest,
@@ -21,21 +49,34 @@ export async function PATCH(
     }
 
     const resolvedParams = await Promise.resolve(params)
-    const { text } = await request.json()
+    const body = await request.json()
+    const { text, notes, completed } = body
 
-    if (!text || !text.trim()) {
-      return NextResponse.json(
-        { error: 'Metin gereklidir' },
-        { status: 400 }
-      )
+    const updateData: any = {
+      updatedAt: new Date(),
+    }
+
+    if (text !== undefined) {
+      if (!text || !text.trim()) {
+        return NextResponse.json(
+          { error: 'Metin gereklidir' },
+          { status: 400 }
+        )
+      }
+      updateData.text = text.trim()
+    }
+
+    if (notes !== undefined) {
+      updateData.notes = notes || null
+    }
+
+    if (completed !== undefined) {
+      updateData.completed = completed
     }
 
     const todo = await prisma.todo.update({
       where: { id: resolvedParams.id },
-      data: {
-        text: text.trim(),
-        updatedAt: new Date(),
-      },
+      data: updateData,
     })
 
     return NextResponse.json({ todo })
