@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileText } from 'lucide-react'
 import { format, parse } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import { removeTurkishChars } from '@/lib/pdf-utils'
 
 export default function DashboardPDFExport() {
   const [exporting, setExporting] = useState(false)
@@ -141,10 +142,10 @@ export default function DashboardPDFExport() {
 
         const incomeData = allIncomes.map((income: any) => [
           format(new Date(income.date), 'dd.MM.yyyy', { locale: tr }),
-          income.category || '-',
-          income.description ? (income.description.length > 30 ? income.description.substring(0, 30) + '...' : income.description) : '-',
+          removeTurkishChars(income.category || '-'),
+          income.description ? removeTurkishChars(income.description.length > 30 ? income.description.substring(0, 30) + '...' : income.description) : '-',
           formatCurrency(income.amount),
-          income.streamerName || income.teamMemberName || income.contentCreatorName || income.voiceActorName || '-',
+          removeTurkishChars(income.streamerName || income.teamMemberName || income.contentCreatorName || income.voiceActorName || '-'),
         ])
 
         autoTable(doc, {
@@ -179,10 +180,10 @@ export default function DashboardPDFExport() {
 
         const expenseData = allExpenses.map((expense: any) => [
           format(new Date(expense.date), 'dd.MM.yyyy', { locale: tr }),
-          expense.category || '-',
-          expense.description ? (expense.description.length > 30 ? expense.description.substring(0, 30) + '...' : expense.description) : '-',
+          removeTurkishChars(expense.category || '-'),
+          expense.description ? removeTurkishChars(expense.description.length > 30 ? expense.description.substring(0, 30) + '...' : expense.description) : '-',
           formatCurrency(expense.amount),
-          expense.streamerName || expense.teamMemberName || expense.contentCreatorName || expense.voiceActorName || '-',
+          removeTurkishChars(expense.streamerName || expense.teamMemberName || expense.contentCreatorName || expense.voiceActorName || '-'),
         ])
 
         autoTable(doc, {
@@ -248,8 +249,8 @@ export default function DashboardPDFExport() {
 
         const streamData = allStreams.map((stream: any) => [
           format(new Date(stream.date), 'dd.MM.yyyy', { locale: tr }),
-          stream.streamerName || '-',
-          stream.matchInfo ? (stream.matchInfo.length > 25 ? stream.matchInfo.substring(0, 25) + '...' : stream.matchInfo) : '-',
+          removeTurkishChars(stream.streamerName || '-'),
+          stream.matchInfo ? removeTurkishChars(stream.matchInfo.length > 25 ? stream.matchInfo.substring(0, 25) + '...' : stream.matchInfo) : '-',
           formatCurrency(stream.cost),
           formatCurrency(stream.streamerEarning || 0),
         ])
@@ -285,9 +286,9 @@ export default function DashboardPDFExport() {
         yPos += 8
 
         const contentData = allContentsDetailed.map((content: any) => [
-          content.title ? (content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
-          content.platform || '-',
-          content.type || '-',
+          content.title ? removeTurkishChars(content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
+          removeTurkishChars(content.platform || '-'),
+          removeTurkishChars(content.type || '-'),
           content.views?.toLocaleString('tr-TR') || '0',
           content.likes?.toLocaleString('tr-TR') || '0',
           content.comments?.toLocaleString('tr-TR') || '0',
@@ -326,12 +327,12 @@ export default function DashboardPDFExport() {
         yPos += 8
 
         const streamerPaymentData = streamerPayments.map((p: any) => [
-          p.streamerName || '-',
+          removeTurkishChars(p.streamerName || '-'),
           formatCurrency(p.amount),
-          p.type || '-',
-          p.period || '-',
+          removeTurkishChars(p.type || '-'),
+          removeTurkishChars(p.period || '-'),
           p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
-          p.description ? (p.description.length > 20 ? p.description.substring(0, 20) + '...' : p.description) : '-',
+          p.description ? removeTurkishChars(p.description.length > 20 ? p.description.substring(0, 20) + '...' : p.description) : '-',
         ])
 
         autoTable(doc, {
@@ -365,9 +366,9 @@ export default function DashboardPDFExport() {
         yPos += 8
 
         const voiceActorPaymentData = voiceActorPayments.map((v: any) => [
-          v.voiceActorName || '-',
+          removeTurkishChars(v.voiceActorName || '-'),
           formatCurrency(v.price || 0),
-          v.title ? (v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title) : '-',
+          v.title ? removeTurkishChars(v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title) : '-',
           v.paidAt ? format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
         ])
 
@@ -401,7 +402,7 @@ export default function DashboardPDFExport() {
         yPos += 8
 
         const socialMediaData = socialMediaGrowth.map((s: any) => [
-          s.platform,
+          removeTurkishChars(s.platform),
           s.currentCount.toLocaleString('tr-TR'),
           s.previousCount > 0 ? s.previousCount.toLocaleString('tr-TR') : '-',
           s.growthCount > 0 ? `+${s.growthCount.toLocaleString('tr-TR')}` : s.growthCount.toLocaleString('tr-TR'),

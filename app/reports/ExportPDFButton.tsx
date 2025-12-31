@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { FileText } from 'lucide-react'
 import { format, parse } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
+import { removeTurkishChars } from '@/lib/pdf-utils'
 
 interface ExportPDFButtonProps {
   filter: 'monthly' | 'total'
@@ -251,9 +252,9 @@ export default function ExportPDFButton({
         yPos += 8
 
         const voiceActorPaymentData = voiceActorPayments.slice(0, 15).map((v) => [
-          v.voiceActorName.length > 20 ? v.voiceActorName.substring(0, 20) + '...' : v.voiceActorName,
+          removeTurkishChars(v.voiceActorName.length > 20 ? v.voiceActorName.substring(0, 20) + '...' : v.voiceActorName),
           formatCurrency(v.price || 0),
-          v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title,
+          removeTurkishChars(v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title),
         ])
 
         autoTable(doc, {
