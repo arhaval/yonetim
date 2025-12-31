@@ -11,6 +11,7 @@ interface Todo {
   id: string
   text: string
   completed: boolean
+  notes: string | null
   createdAt: Date
   updatedAt: Date
 }
