@@ -237,6 +237,160 @@ export default function DashboardPDFExport() {
 
       yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
 
+      // ========== YAYINLAR (DETAYLI) ==========
+      const allStreams = data.allStreams || []
+      if (allStreams.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(16)
+        doc.setFont('helvetica', 'bold')
+        doc.text('YAYINLAR (DETAYLI)', 14, yPos)
+        yPos += 8
+
+        const streamData = allStreams.map((stream: any) => [
+          format(new Date(stream.date), 'dd.MM.yyyy', { locale: tr }),
+          stream.streamerName || '-',
+          stream.matchInfo ? (stream.matchInfo.length > 25 ? stream.matchInfo.substring(0, 25) + '...' : stream.matchInfo) : '-',
+          formatCurrency(stream.cost),
+          formatCurrency(stream.streamerEarning || 0),
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Tarih', 'Yayinci', 'Mac Bilgisi', 'Maliyet', 'Kazanç']],
+          body: streamData,
+          theme: 'striped',
+          headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+          bodyStyles: { fontSize: 8 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 3, overflow: 'linebreak' },
+          columnStyles: { 
+            0: { cellWidth: 25 }, 
+            1: { cellWidth: 40 }, 
+            2: { cellWidth: 50 }, 
+            3: { cellWidth: 30 },
+            4: { cellWidth: 30 },
+          },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // ========== İÇERİKLER (DETAYLI) ==========
+      const allContentsDetailed = data.allContentsDetailed || []
+      if (allContentsDetailed.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(16)
+        doc.setFont('helvetica', 'bold')
+        doc.text('ICERIKLER (DETAYLI)', 14, yPos)
+        yPos += 8
+
+        const contentData = allContentsDetailed.map((content: any) => [
+          content.title ? (content.title.length > 20 ? content.title.substring(0, 20) + '...' : content.title) : '-',
+          content.platform || '-',
+          content.type || '-',
+          content.views?.toLocaleString('tr-TR') || '0',
+          content.likes?.toLocaleString('tr-TR') || '0',
+          content.comments?.toLocaleString('tr-TR') || '0',
+          format(new Date(content.publishDate), 'dd.MM.yyyy', { locale: tr }),
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Baslik', 'Platform', 'Tip', 'Goruntulenme', 'Begeni', 'Yorum', 'Tarih']],
+          body: contentData,
+          theme: 'striped',
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 2, overflow: 'linebreak', fontSize: 7 },
+          columnStyles: { 
+            0: { cellWidth: 35 }, 
+            1: { cellWidth: 25 }, 
+            2: { cellWidth: 20 }, 
+            3: { cellWidth: 25 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 20 },
+            6: { cellWidth: 25 },
+          },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // ========== YAYINCI ÖDEMELERİ (DETAYLI - TÜMÜ) ==========
+      if (streamerPayments.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(16)
+        doc.setFont('helvetica', 'bold')
+        doc.text('YAYINCI ODEMELERI (DETAYLI - TUMU)', 14, yPos)
+        yPos += 8
+
+        const streamerPaymentData = streamerPayments.map((p: any) => [
+          p.streamerName || '-',
+          formatCurrency(p.amount),
+          p.type || '-',
+          p.period || '-',
+          p.paidAt ? format(new Date(p.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
+          p.description ? (p.description.length > 20 ? p.description.substring(0, 20) + '...' : p.description) : '-',
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Yayinci', 'Tutar', 'Tip', 'Donem', 'Odeme Tarihi', 'Aciklama']],
+          body: streamerPaymentData,
+          theme: 'striped',
+          headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 2, overflow: 'linebreak' },
+          columnStyles: { 
+            0: { cellWidth: 35 }, 
+            1: { cellWidth: 30 }, 
+            2: { cellWidth: 25 }, 
+            3: { cellWidth: 25 },
+            4: { cellWidth: 30 },
+            5: { cellWidth: 35 },
+          },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
+      // ========== SESLENDİRMEN ÖDEMELERİ (DETAYLI - TÜMÜ) ==========
+      if (voiceActorPayments.length > 0) {
+        checkPageBreak(50)
+        doc.setFontSize(16)
+        doc.setFont('helvetica', 'bold')
+        doc.text('SESLENDIRMEN ODEMELERI (DETAYLI - TUMU)', 14, yPos)
+        yPos += 8
+
+        const voiceActorPaymentData = voiceActorPayments.map((v: any) => [
+          v.voiceActorName || '-',
+          formatCurrency(v.price || 0),
+          v.title ? (v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title) : '-',
+          v.paidAt ? format(new Date(v.paidAt), 'dd.MM.yyyy', { locale: tr }) : '-',
+        ])
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [['Seslendirmen', 'Tutar', 'Proje', 'Odeme Tarihi']],
+          body: voiceActorPaymentData,
+          theme: 'striped',
+          headStyles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
+          margin: { left: 14, right: 14 },
+          styles: { cellPadding: 2, overflow: 'linebreak' },
+          columnStyles: { 
+            0: { cellWidth: 40 }, 
+            1: { cellWidth: 30 }, 
+            2: { cellWidth: 60 }, 
+            3: { cellWidth: 30 },
+          },
+        })
+
+        yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 30
+      }
+
       // Sosyal medya büyümesi
       const socialMediaGrowth = data.socialMediaGrowth || []
       if (socialMediaGrowth.length > 0) {
