@@ -1,9 +1,9 @@
-# Todo Notes Sütunu Ekleme - Supabase SQL Editor
+# Todo Tablosu ve Notes Sütunu Oluşturma - Supabase SQL Editor
 
 ## 🎯 Sorun
 `npx prisma db push` çalışmıyor çünkü database bağlantı hatası var.
 
-## ✅ Çözüm: Supabase SQL Editor'den Manuel Ekleme
+## ✅ Çözüm: Supabase SQL Editor'den Manuel Oluşturma
 
 ### Adım 1: Supabase Dashboard'a Git
 1. https://supabase.com/dashboard adresine git
@@ -14,8 +14,36 @@
 Aşağıdaki SQL komutunu kopyalayıp SQL Editor'e yapıştırın ve **RUN** butonuna tıklayın:
 
 ```sql
--- Todo tablosuna notes sütunu ekle
-ALTER TABLE "Todo" ADD COLUMN IF NOT EXISTS "notes" TEXT;
+-- Todo tablosunu oluştur (eğer yoksa)
+CREATE TABLE IF NOT EXISTS "Todo" (
+  id TEXT PRIMARY KEY,
+  text TEXT NOT NULL,
+  completed BOOLEAN NOT NULL DEFAULT false,
+  notes TEXT,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Index'leri oluştur
+CREATE INDEX IF NOT EXISTS "Todo_completed_idx" ON "Todo"("completed");
+CREATE INDEX IF NOT EXISTS "Todo_createdAt_idx" ON "Todo"("createdAt");
+
+-- Eğer tablo zaten varsa, sadece notes sütununu ekle
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'Todo'
+    ) THEN
+        -- Tablo var, sadece notes sütununu ekle
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'Todo' AND column_name = 'notes'
+        ) THEN
+            ALTER TABLE "Todo" ADD COLUMN "notes" TEXT;
+        END IF;
+    END IF;
+END $$;
 ```
 
 ### Adım 3: Kontrol Et
