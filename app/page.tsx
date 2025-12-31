@@ -5,6 +5,7 @@ import { tr } from 'date-fns/locale/tr'
 import { Calendar, Users, Video, DollarSign, CheckCircle2, Instagram, Youtube, Twitter, Twitch, Music, Target, BarChart3, AlertCircle, CreditCard, FileText } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import DashboardPDFExport from '@/components/DashboardPDFExport'
 
 // Dashboard cache optimizasyonu - 120 saniye cache (agresif)
 export const revalidate = 120 // 120 saniye cache - maksimum performans için

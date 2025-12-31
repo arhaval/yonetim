@@ -14,7 +14,7 @@ const navigation = [
   { name: 'Ödeme Onay', href: '/payment-approval', icon: CheckCircle },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
   { name: 'Ekip', href: '/team', icon: UserCheck },
-  { name: 'Raporlar', href: '/reports', icon: BarChart3 },
+  { name: 'Yapılacaklar', href: '/todos', icon: FileText },
   { name: 'Sosyal Medya', href: '/social-media', icon: Share2 },
 ]
 

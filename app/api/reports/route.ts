@@ -74,6 +74,10 @@ export async function GET(request: NextRequest) {
       socialMediaStats,
       // Önceki ay sosyal medya istatistikleri
       previousSocialMediaStats,
+      // Tüm gelirler (detaylı)
+      allIncomes,
+      // Tüm giderler (detaylı)
+      allExpenses,
     ] = await Promise.all([
       prisma.stream.count({ where: whereClause }).catch(() => 0),
       prisma.externalStream.count({ where: whereClause }).catch(() => 0),
@@ -253,6 +257,82 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { platform: 'asc' },
       }).catch(() => []),
+      // Tüm gelirler (detaylı)
+      prisma.financialRecord.findMany({
+        where: {
+          type: 'income',
+          ...(filter === 'monthly' && monthStart && monthEnd ? {
+            date: { gte: monthStart, lte: monthEnd },
+          } : {}),
+        },
+        select: {
+          id: true,
+          type: true,
+          category: true,
+          amount: true,
+          description: true,
+          date: true,
+          streamer: {
+            select: {
+              name: true,
+            },
+          },
+          teamMember: {
+            select: {
+              name: true,
+            },
+          },
+          contentCreator: {
+            select: {
+              name: true,
+            },
+          },
+          voiceActor: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { date: 'asc' },
+      }).catch(() => []),
+      // Tüm giderler (detaylı)
+      prisma.financialRecord.findMany({
+        where: {
+          type: 'expense',
+          ...(filter === 'monthly' && monthStart && monthEnd ? {
+            date: { gte: monthStart, lte: monthEnd },
+          } : {}),
+        },
+        select: {
+          id: true,
+          type: true,
+          category: true,
+          amount: true,
+          description: true,
+          date: true,
+          streamer: {
+            select: {
+              name: true,
+            },
+          },
+          teamMember: {
+            select: {
+              name: true,
+            },
+          },
+          contentCreator: {
+            select: {
+              name: true,
+            },
+          },
+          voiceActor: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { date: 'asc' },
+      }).catch(() => []),
     ])
 
     // İçerik istatistikleri
@@ -381,6 +461,30 @@ export async function GET(request: NextRequest) {
         streamerEarning: s.streamerEarning || 0,
       })),
       socialMediaGrowth,
+      allIncomes: (allIncomes || []).map((income) => ({
+        id: income.id,
+        type: income.type,
+        category: income.category,
+        amount: income.amount,
+        description: income.description,
+        date: income.date,
+        streamerName: income.streamer?.name,
+        teamMemberName: income.teamMember?.name,
+        contentCreatorName: income.contentCreator?.name,
+        voiceActorName: income.voiceActor?.name,
+      })),
+      allExpenses: (allExpenses || []).map((expense) => ({
+        id: expense.id,
+        type: expense.type,
+        category: expense.category,
+        amount: expense.amount,
+        description: expense.description,
+        date: expense.date,
+        streamerName: expense.streamer?.name,
+        teamMemberName: expense.teamMember?.name,
+        contentCreatorName: expense.contentCreator?.name,
+        voiceActorName: expense.voiceActor?.name,
+      })),
     })
     // Cache için header ekle (2 dakika)
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=240')

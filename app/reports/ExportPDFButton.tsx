@@ -51,6 +51,8 @@ export default function ExportPDFButton({
   allContentsDetailed = [],
   allStreams = [],
   socialMediaGrowth = [],
+  allExpenses = [],
+  allIncomes = [],
 }: ExportPDFButtonProps) {
   const [exporting, setExporting] = useState(false)
 
@@ -112,11 +114,16 @@ export default function ExportPDFButton({
 
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
+      // Fiyat formatı düzeltildi - ₺ sembolü kullanılıyor
+      const formatCurrency = (amount: number) => {
+        return `₺${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      }
+
       const financialData = [
-        ['Gelir', stats.income.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Gider', stats.expense.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Net Kar', (stats.income - stats.expense).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Yayin Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Gelir', formatCurrency(stats.income)],
+        ['Gider', formatCurrency(stats.expense)],
+        ['Net Kar', formatCurrency(stats.income - stats.expense)],
+        ['Yayin Maliyeti', formatCurrency(stats.streamCost)],
       ]
 
       autoTable(doc, {
@@ -142,9 +149,9 @@ export default function ExportPDFButton({
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const paymentSummary = [
-        ['Yayincilara Odenen Toplam', (stats.totalStreamerPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Seslendirmene Odenen Toplam', (stats.totalVoiceActorPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Toplam Odeme', ((stats.totalStreamerPayments || 0) + (stats.totalVoiceActorPayments || 0)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Yayincilara Odenen Toplam', formatCurrency(stats.totalStreamerPayments || 0)],
+        ['Seslendirmene Odenen Toplam', formatCurrency(stats.totalVoiceActorPayments || 0)],
+        ['Toplam Odeme', formatCurrency((stats.totalStreamerPayments || 0) + (stats.totalVoiceActorPayments || 0))],
       ]
 
       autoTable(doc, {
@@ -238,7 +245,7 @@ export default function ExportPDFButton({
 
         const voiceActorPaymentData = voiceActorPayments.slice(0, 15).map((v) => [
           v.voiceActorName.length > 20 ? v.voiceActorName.substring(0, 20) + '...' : v.voiceActorName,
-          (v.price || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }),
+          formatCurrency(v.price || 0),
           v.title.length > 25 ? v.title.substring(0, 25) + '...' : v.title,
         ])
 
@@ -269,7 +276,7 @@ export default function ExportPDFButton({
       const streamData = [
         ['Toplam Yayin', stats.streamCount.toString()],
         ['Dis Yayin', stats.externalStreamCount.toString()],
-        ['Toplam Yayin Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Toplam Yayin Maliyeti', formatCurrency(stats.streamCost)],
       ]
 
       autoTable(doc, {
