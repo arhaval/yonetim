@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const userId = cookieStore.get('userId')?.value
+    const userId = cookieStore.get('user-id')?.value
 
     if (!userId) {
       return NextResponse.json(

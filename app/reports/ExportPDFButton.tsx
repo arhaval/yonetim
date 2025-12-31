@@ -59,9 +59,10 @@ export default function ExportPDFButton({
 }: ExportPDFButtonProps) {
   const [exporting, setExporting] = useState(false)
 
-  // Fiyat formatı - ₺ sembolü
+  // Fiyat formatı - TL formatı (PDF font sorunu için)
   const formatCurrency = (amount: number) => {
-    return `₺${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    const formatted = amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return `${formatted} TL`
   }
 
   const generatePDF = async () => {

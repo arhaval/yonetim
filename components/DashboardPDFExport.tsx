@@ -82,9 +82,10 @@ export default function DashboardPDFExport() {
         }
       }
 
-      // Fiyat formatı - ₺ sembolü
+      // Fiyat formatı - ₺ sembolü (PDF font sorunu için TL kullanıyoruz)
       const formatCurrency = (amount: number) => {
-        return `₺${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        const formatted = amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        return `${formatted} TL`
       }
 
       // Başlık

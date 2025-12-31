@@ -11,7 +11,7 @@ export async function PATCH(
 ) {
   try {
     const cookieStore = await cookies()
-    const userId = cookieStore.get('userId')?.value
+    const userId = cookieStore.get('user-id')?.value
 
     if (!userId) {
       return NextResponse.json(
