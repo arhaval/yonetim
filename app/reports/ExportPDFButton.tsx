@@ -116,7 +116,7 @@ export default function ExportPDFButton({
         ['Gelir', stats.income.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
         ['Gider', stats.expense.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
         ['Net Kar', (stats.income - stats.expense).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Yayın Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Yayin Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
       ]
 
       autoTable(doc, {
@@ -179,7 +179,7 @@ export default function ExportPDFButton({
 
         autoTable(doc, {
           startY: yPos,
-          head: [['Platform', 'Mevcut', 'Önceki', 'Artış', 'Büyüme %', 'Hedef']],
+          head: [['Platform', 'Mevcut', 'Onceki', 'Artis', 'Buyume %', 'Hedef']],
           body: socialMediaData,
           theme: 'striped',
           headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 9 },
@@ -215,7 +215,7 @@ export default function ExportPDFButton({
 
         autoTable(doc, {
           startY: yPos,
-          head: [['Yayıncı', 'Tutar', 'Tarih']],
+          head: [['Yayinci', 'Tutar', 'Tarih']],
           body: streamerPaymentData,
           theme: 'striped',
           headStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: 'bold', fontSize: 9 },
