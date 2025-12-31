@@ -29,7 +29,8 @@
     "cleanup-streamer-data": "tsx scripts/cleanup-streamer-data.ts",
     "cleanup-financial-records": "tsx scripts/cleanup-financial-records.ts",
     "backup:db": "tsx scripts/backup-database.ts",
-    "backup:db:compress": "tsx scripts/backup-database.ts --compress"
+    "backup:db:compress": "tsx scripts/backup-database.ts --compress",
+    "add-todo-notes": "tsx scripts/add-todo-notes.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
