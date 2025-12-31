@@ -72,6 +72,7 @@ export default function DashboardPDFExport() {
       
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
+      const margin = 15
       let yPos = 20
       
       const checkPageBreak = (requiredSpace: number = 30) => {
