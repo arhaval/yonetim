@@ -35,6 +35,8 @@ interface ExportPDFButtonProps {
   allContentsDetailed?: Array<{ id: string; title: string; type: string | null; platform: string | null; views: number; likes: number; comments: number; shares: number; saves: number; publishDate: Date }>
   allStreams?: Array<{ id: string; date: Date; matchInfo: string | null; streamerName: string; cost: number; streamerEarning: number }>
   socialMediaGrowth?: Array<{ platform: string; currentCount: number; previousCount: number; growth: number; growthCount: number; target: number | null }>
+  allExpenses?: Array<{ id: string; type: string; category: string; amount: number; description: string | null; date: Date; streamerName?: string; teamMemberName?: string; contentCreatorName?: string; voiceActorName?: string }>
+  allIncomes?: Array<{ id: string; type: string; category: string; amount: number; description: string | null; date: Date; streamerName?: string; teamMemberName?: string; contentCreatorName?: string; voiceActorName?: string }>
 }
 
 export default function ExportPDFButton({
