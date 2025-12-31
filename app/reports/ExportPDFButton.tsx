@@ -99,7 +99,7 @@ export default function ExportPDFButton({
       doc.setFontSize(14)
       doc.setFont('helvetica', 'normal')
       const monthLabel = format(parse(selectedMonth + '-01', 'yyyy-MM-dd', new Date()), 'MMMM yyyy', { locale: tr })
-      doc.text(`Dönem: ${monthLabel}`, pageWidth / 2, yPos, { align: 'center' })
+      doc.text(`Donem: ${monthLabel}`, pageWidth / 2, yPos, { align: 'center' })
       yPos += 15
 
       // ========== FİNANSAL ÖZET ==========
@@ -107,7 +107,7 @@ export default function ExportPDFButton({
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(30, 30, 30)
-      doc.text('FİNANSAL ÖZET', 14, yPos)
+      doc.text('FINANSAL OZET', 14, yPos)
       yPos += 8
 
       doc.setFontSize(11)
@@ -136,15 +136,15 @@ export default function ExportPDFButton({
       checkPageBreak(35)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('ÖDEMELER', 14, yPos)
+      doc.text('ODEMELER', 14, yPos)
       yPos += 8
 
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const paymentSummary = [
-        ['Yayıncılara Ödenen Toplam', (stats.totalStreamerPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Seslendirmene Ödenen Toplam', (stats.totalVoiceActorPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
-        ['Toplam Ödeme', ((stats.totalStreamerPayments || 0) + (stats.totalVoiceActorPayments || 0)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Yayincilara Odenen Toplam', (stats.totalStreamerPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Seslendirmene Odenen Toplam', (stats.totalVoiceActorPayments || 0).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Toplam Odeme', ((stats.totalStreamerPayments || 0) + (stats.totalVoiceActorPayments || 0)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
       ]
 
       autoTable(doc, {
@@ -165,7 +165,7 @@ export default function ExportPDFButton({
         checkPageBreak(40)
         doc.setFontSize(16)
         doc.setFont('helvetica', 'bold')
-        doc.text('SOSYAL MEDYA BÜYÜMESİ', 14, yPos)
+        doc.text('SOSYAL MEDYA BUYUMESI', 14, yPos)
         yPos += 8
 
         const socialMediaData = socialMediaGrowth.map((s) => [
@@ -204,7 +204,7 @@ export default function ExportPDFButton({
         checkPageBreak(40)
         doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text('Yayıncılara Ödenen Ücretler (Özet)', 14, yPos)
+        doc.text('Yayincilara Odenen Ucretler (Ozet)', 14, yPos)
         yPos += 8
 
         const streamerPaymentData = streamerPayments.slice(0, 15).map((p) => [
@@ -233,7 +233,7 @@ export default function ExportPDFButton({
         checkPageBreak(40)
         doc.setFontSize(14)
         doc.setFont('helvetica', 'bold')
-        doc.text('Seslendirmene Ödenen Ücretler (Özet)', 14, yPos)
+        doc.text('Seslendirmene Odenen Ucretler (Ozet)', 14, yPos)
         yPos += 8
 
         const voiceActorPaymentData = voiceActorPayments.slice(0, 15).map((v) => [
@@ -267,9 +267,9 @@ export default function ExportPDFButton({
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const streamData = [
-        ['Toplam Yayın', stats.streamCount.toString()],
-        ['Dış Yayın', stats.externalStreamCount.toString()],
-        ['Toplam Yayın Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
+        ['Toplam Yayin', stats.streamCount.toString()],
+        ['Dis Yayin', stats.externalStreamCount.toString()],
+        ['Toplam Yayin Maliyeti', stats.streamCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })],
       ]
 
       autoTable(doc, {
@@ -289,17 +289,17 @@ export default function ExportPDFButton({
       checkPageBreak(40)
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('İÇERİKLER', 14, yPos)
+      doc.text('ICERIKLER', 14, yPos)
       yPos += 8
 
       doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
       const contentData = [
-        ['İçerik Sayısı', stats.contentCount.toString()],
-        ['Toplam Görüntülenme', contentStats.totalViews.toLocaleString('tr-TR')],
-        ['Toplam Beğeni', contentStats.totalLikes.toLocaleString('tr-TR')],
+        ['Icerik Sayisi', stats.contentCount.toString()],
+        ['Toplam Goruntulenme', contentStats.totalViews.toLocaleString('tr-TR')],
+        ['Toplam Begeni', contentStats.totalLikes.toLocaleString('tr-TR')],
         ['Toplam Yorum', contentStats.totalComments.toLocaleString('tr-TR')],
-        ['Toplam Paylaşım', contentStats.totalShares.toLocaleString('tr-TR')],
+        ['Toplam Paylasim', contentStats.totalShares.toLocaleString('tr-TR')],
         ['Toplam Kaydetme', contentStats.totalSaves.toLocaleString('tr-TR')],
       ]
 
