@@ -274,7 +274,7 @@ export default function ExportPDFButton({
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Kategori', 'Değer']],
+          head: [['Kategori', 'Deger']],
         body: streamData,
         theme: 'striped',
         headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold', fontSize: 11 },
@@ -305,7 +305,7 @@ export default function ExportPDFButton({
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Kategori', 'Değer']],
+          head: [['Kategori', 'Deger']],
         body: contentData,
         theme: 'striped',
         headStyles: { fillColor: [168, 85, 247], textColor: 255, fontStyle: 'bold', fontSize: 11 },
