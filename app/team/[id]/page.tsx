@@ -64,7 +64,20 @@ export default async function TeamMemberDetailPage({
   }
 
   const isVoiceActor = !!voiceActor
-  const person = isVoiceActor ? voiceActor : member
+  
+  // Profil fotoğrafı alanı farklı modellerde farklı isimde
+  const getProfilePhoto = () => {
+    if (isVoiceActor && voiceActor) return voiceActor.profilePhoto
+    if (member) return member.avatar
+    return null
+  }
+  
+  const profilePhoto = getProfilePhoto()
+  const personName = isVoiceActor ? voiceActor?.name : member?.name
+  const personEmail = isVoiceActor ? voiceActor?.email : member?.email
+  const personPhone = isVoiceActor ? voiceActor?.phone : member?.phone
+  const personIban = isVoiceActor ? voiceActor?.iban : member?.iban
+  const personIsActive = isVoiceActor ? voiceActor?.isActive : true
 
   // İstatistikler
   let stats = {
@@ -172,10 +185,10 @@ export default async function TeamMemberDetailPage({
           <div className="px-8 pb-8">
             {/* Avatar & İsim */}
             <div className="flex flex-col md:flex-row md:items-end gap-6 -mt-16">
-              {person?.profilePhoto ? (
+              {profilePhoto ? (
                 <img
-                  src={person.profilePhoto}
-                  alt={person.name}
+                  src={profilePhoto}
+                  alt={personName || ''}
                   className="w-32 h-32 rounded-2xl object-cover ring-4 ring-white shadow-xl"
                 />
               ) : (
@@ -184,7 +197,7 @@ export default async function TeamMemberDetailPage({
                     <Mic className="w-12 h-12 text-white" />
                   ) : (
                     <span className="text-white font-bold text-4xl">
-                      {person?.name?.charAt(0).toUpperCase()}
+                      {personName?.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
@@ -193,13 +206,13 @@ export default async function TeamMemberDetailPage({
               <div className="flex-1 pb-2">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{person?.name}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">{personName}</h1>
                     <div className="flex items-center gap-2 mt-2">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold ${isVoiceActor ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
                         {isVoiceActor ? <Mic className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
                         {isVoiceActor ? 'Seslendirmen' : member?.role || 'Ekip Üyesi'}
                       </span>
-                      {person?.isActive !== false && (
+                      {personIsActive !== false && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-green-100 text-green-700">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                           Aktif
@@ -232,38 +245,38 @@ export default async function TeamMemberDetailPage({
 
             {/* İletişim Bilgileri */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-              {person?.email && (
+              {personEmail && (
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                   <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                     <Mail className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Email</p>
-                    <p className="text-sm font-semibold text-gray-900">{person.email}</p>
+                    <p className="text-sm font-semibold text-gray-900">{personEmail}</p>
                   </div>
                 </div>
               )}
               
-              {person?.phone && (
+              {personPhone && (
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                   <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                     <Phone className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Telefon</p>
-                    <p className="text-sm font-semibold text-gray-900">{person.phone}</p>
+                    <p className="text-sm font-semibold text-gray-900">{personPhone}</p>
                   </div>
                 </div>
               )}
               
-              {person?.iban && (
+              {personIban && (
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium">IBAN</p>
-                    <p className="text-sm font-mono font-semibold text-gray-900">{person.iban}</p>
+                    <p className="text-sm font-mono font-semibold text-gray-900">{personIban}</p>
                   </div>
                 </div>
               )}
