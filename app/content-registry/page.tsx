@@ -399,7 +399,7 @@ export default function ContentRegistryPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                📋 İçerik Üretim Takibi
+                📋 İçerik Merkezi
               </h1>
               <p className="text-gray-500 mt-1">
                 Metin → Ses → Kurgu → Onay → Ödeme

@@ -10,7 +10,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Yayınlar', href: '/streams', icon: Video },
   { name: 'İçerikler', href: '/content', icon: Video },
-  { name: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: FileText },
+  { name: 'İçerik Merkezi', href: '/content-registry', icon: FileText },
   { name: 'Ödeme Onay', href: '/payment-approval', icon: CheckCircle },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
   { name: 'Ekip', href: '/team', icon: UserCheck },
