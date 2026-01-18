@@ -95,9 +95,23 @@ export const prisma =
       },
     },
     errorFormat: "minimal",
-    // Connection pooling optimizasyonu
-    // Supabase connection pooler kullanıyorsanız bu ayarlar otomatik
   });
+
+// Prisma Accelerate veya connection pooling için
+// @ts-ignore - Prisma extension
+prisma.$extends?.({
+  query: {
+    $allOperations({ operation, model, args, query }: any) {
+      const start = performance.now();
+      return query(args).finally(() => {
+        const end = performance.now();
+        if (end - start > 1000) {
+          console.warn(`[SLOW QUERY] ${model}.${operation} took ${(end - start).toFixed(2)}ms`);
+        }
+      });
+    },
+  },
+});
 
 // Connection test ve error handling
 if (!globalForPrisma.prisma) {
