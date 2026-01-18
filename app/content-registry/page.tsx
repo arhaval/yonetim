@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 // Durum bilgileri
-const STATUS_INFO: Record<string, { label: string; color: string; bgColor: string; icon: string }> = {
-  DRAFT: { label: 'Taslak', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: '📝' },
-  SCRIPT_READY: { label: 'Metin Hazır', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: '📄' },
-  VOICE_READY: { label: 'Ses Hazır', color: 'text-purple-600', bgColor: 'bg-purple-100', icon: '🎙️' },
-  EDITING: { label: 'Kurgu', color: 'text-orange-600', bgColor: 'bg-orange-100', icon: '🎬' },
-  REVIEW: { label: 'İnceleme', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: '👀' },
-  PUBLISHED: { label: 'Yayınlandı', color: 'text-green-600', bgColor: 'bg-green-100', icon: '✅' },
-  ARCHIVED: { label: 'Arşiv', color: 'text-gray-500', bgColor: 'bg-gray-50', icon: '📦' },
+const STATUS_INFO: Record<string, { label: string; color: string; bgColor: string; icon: string; description: string }> = {
+  DRAFT: { label: 'Metin Yazılıyor', color: 'text-gray-600', bgColor: 'bg-gray-100', icon: '📝', description: 'Admin/Üretici metin yazıyor' },
+  SCRIPT_READY: { label: 'Ses Bekleniyor', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: '🎙️', description: 'Seslendirmen ses yükleyecek' },
+  VOICE_READY: { label: 'Kurgu Bekleniyor', color: 'text-purple-600', bgColor: 'bg-purple-100', icon: '🎬', description: 'Editör kurgu yapacak' },
+  EDITING: { label: 'Kurgu Yapılıyor', color: 'text-orange-600', bgColor: 'bg-orange-100', icon: '⏳', description: 'Editör çalışıyor' },
+  REVIEW: { label: 'Onay Bekliyor', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: '👀', description: 'Admin onayı bekleniyor' },
+  PUBLISHED: { label: 'Tamamlandı', color: 'text-green-600', bgColor: 'bg-green-100', icon: '✅', description: 'İş tamamlandı, ödeme bekliyor' },
+  ARCHIVED: { label: 'Ödendi', color: 'text-emerald-700', bgColor: 'bg-emerald-100', icon: '💰', description: 'Ödemeler yapıldı' },
 }
 
 const PLATFORMS = [
@@ -39,49 +39,46 @@ interface ContentRegistry {
   editLink?: string
   finalLink?: string
   notes?: string
+  editorNotes?: string
   createdAt: string
   creator?: { id: string; name: string }
   voiceActor?: { id: string; name: string }
   editor?: { id: string; name: string }
 }
 
-interface Creator {
-  id: string
-  name: string
-}
-
-interface VoiceActor {
-  id: string
-  name: string
-}
-
-interface TeamMember {
+interface Person {
   id: string
   name: string
 }
 
 export default function ContentRegistryPage() {
   const [registries, setRegistries] = useState<ContentRegistry[]>([])
-  const [creators, setCreators] = useState<Creator[]>([])
-  const [voiceActors, setVoiceActors] = useState<VoiceActor[]>([])
-  const [editors, setEditors] = useState<TeamMember[]>([])
+  const [creators, setCreators] = useState<Person[]>([])
+  const [voiceActors, setVoiceActors] = useState<Person[]>([])
+  const [editors, setEditors] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Form states
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
+    description: '', // Metin içeriği
     platform: '',
     contentType: '',
-    creatorId: '',
     voiceActorId: '',
     editorId: '',
-    scriptLink: '',
-    voiceLink: '',
-    editLink: '',
     notes: '',
   })
   const [submitting, setSubmitting] = useState(false)
+
+  // Detay modal
+  const [selectedRegistry, setSelectedRegistry] = useState<ContentRegistry | null>(null)
+  const [showDetail, setShowDetail] = useState(false)
+  
+  // Link ekleme
+  const [linkInput, setLinkInput] = useState('')
+  const [linkType, setLinkType] = useState<'voice' | 'edit'>('voice')
 
   // Verileri yükle
   useEffect(() => {
@@ -92,7 +89,6 @@ export default function ContentRegistryPage() {
     setLoading(true)
     setError(null)
     try {
-      // Paralel olarak tüm verileri çek
       const [registriesRes, creatorsRes, voiceActorsRes, teamRes] = await Promise.all([
         fetch('/api/content-registry'),
         fetch('/api/content-creators'),
@@ -127,10 +123,15 @@ export default function ContentRegistryPage() {
     }
   }
 
+  // Yeni içerik oluştur (Admin/Üretici)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) {
       alert('Başlık gereklidir')
+      return
+    }
+    if (!formData.description.trim()) {
+      alert('Metin içeriği gereklidir')
       return
     }
 
@@ -140,10 +141,14 @@ export default function ContentRegistryPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          creatorId: formData.creatorId || undefined,
+          title: formData.title,
+          description: formData.description,
+          platform: formData.platform || undefined,
+          contentType: formData.contentType || undefined,
           voiceActorId: formData.voiceActorId || undefined,
           editorId: formData.editorId || undefined,
+          notes: formData.notes || undefined,
+          status: formData.voiceActorId ? 'SCRIPT_READY' : 'DRAFT', // Seslendirmen atandıysa direkt ona git
         }),
       })
 
@@ -154,15 +159,12 @@ export default function ContentRegistryPage() {
           description: '',
           platform: '',
           contentType: '',
-          creatorId: '',
           voiceActorId: '',
           editorId: '',
-          scriptLink: '',
-          voiceLink: '',
-          editLink: '',
           notes: '',
         })
         fetchData()
+        alert('✅ İçerik oluşturuldu!')
       } else {
         const data = await res.json()
         alert(data.error || 'Kayıt oluşturulamadı')
@@ -175,6 +177,54 @@ export default function ContentRegistryPage() {
     }
   }
 
+  // Link ekle (Seslendirmen veya Editör)
+  const handleAddLink = async () => {
+    if (!selectedRegistry || !linkInput.trim()) {
+      alert('Link gereklidir')
+      return
+    }
+
+    try {
+      const updateData: any = {}
+      let newStatus = selectedRegistry.status
+
+      if (linkType === 'voice') {
+        updateData.voiceLink = linkInput
+        // Ses eklendi, editöre git
+        if (selectedRegistry.editor) {
+          newStatus = 'VOICE_READY'
+        }
+      } else {
+        updateData.editLink = linkInput
+        // Kurgu eklendi, onaya git
+        newStatus = 'REVIEW'
+      }
+
+      updateData.status = newStatus
+
+      const res = await fetch(`/api/content-registry/${selectedRegistry.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      })
+
+      if (res.ok) {
+        setLinkInput('')
+        setShowDetail(false)
+        setSelectedRegistry(null)
+        fetchData()
+        alert('✅ Link eklendi!')
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Link eklenemedi')
+      }
+    } catch (err) {
+      alert('Bir hata oluştu')
+      console.error(err)
+    }
+  }
+
+  // Durum güncelle
   const updateStatus = async (id: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/content-registry/${id}/status`, {
@@ -195,6 +245,7 @@ export default function ContentRegistryPage() {
     }
   }
 
+  // Sil
   const deleteRegistry = async (id: string) => {
     if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return
 
@@ -215,6 +266,13 @@ export default function ContentRegistryPage() {
     }
   }
 
+  // Detay aç
+  const openDetail = (registry: ContentRegistry) => {
+    setSelectedRegistry(registry)
+    setShowDetail(true)
+    setLinkInput('')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -226,6 +284,14 @@ export default function ContentRegistryPage() {
     )
   }
 
+  // Duruma göre grupla
+  const groupedRegistries = {
+    waiting: registries.filter(r => ['DRAFT', 'SCRIPT_READY', 'VOICE_READY', 'EDITING'].includes(r.status)),
+    review: registries.filter(r => r.status === 'REVIEW'),
+    completed: registries.filter(r => r.status === 'PUBLISHED'),
+    paid: registries.filter(r => r.status === 'ARCHIVED'),
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -234,10 +300,10 @@ export default function ContentRegistryPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                📋 İçerik Kayıt Sistemi
+                📋 İçerik Üretim Takibi
               </h1>
               <p className="text-gray-500 mt-1">
-                Editör, Ses ve Üretici bağlantısı - Test Sayfası
+                Metin → Ses → Kurgu → Onay → Ödeme
               </p>
             </div>
             <div className="flex gap-3">
@@ -251,7 +317,7 @@ export default function ContentRegistryPage() {
                 onClick={() => setShowForm(!showForm)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
-                {showForm ? 'İptal' : '+ Yeni Kayıt'}
+                {showForm ? 'İptal' : '+ Yeni Metin Oluştur'}
               </button>
             </div>
           </div>
@@ -265,41 +331,42 @@ export default function ContentRegistryPage() {
           </div>
         )}
 
-        {/* Yeni Kayıt Formu */}
+        {/* YENİ METİN FORMU */}
         {showForm && (
           <div className="mb-6 bg-white rounded-xl shadow-sm border p-6">
-            <h2 className="text-lg font-semibold mb-4">Yeni İçerik Kaydı</h2>
+            <h2 className="text-lg font-semibold mb-4">📝 Yeni Metin Oluştur</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Başlık */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Başlık *
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Video başlığı"
+                  required
+                />
+              </div>
+
+              {/* Metin İçeriği */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Metin İçeriği * (Seslendirmenin okuyacağı metin)
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={6}
+                  placeholder="Seslendirmenin okuyacağı metni buraya yazın..."
+                  required
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Başlık */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Başlık *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="İçerik başlığı"
-                    required
-                  />
-                </div>
-
-                {/* Açıklama */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Açıklama
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows={2}
-                    placeholder="İçerik açıklaması"
-                  />
-                </div>
-
                 {/* Platform */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -308,7 +375,7 @@ export default function ContentRegistryPage() {
                   <select
                     value={formData.platform}
                     onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg"
                   >
                     <option value="">Seçiniz</option>
                     {PLATFORMS.map((p) => (
@@ -325,7 +392,7 @@ export default function ContentRegistryPage() {
                   <select
                     value={formData.contentType}
                     onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg"
                   >
                     <option value="">Seçiniz</option>
                     {CONTENT_TYPES.map((t) => (
@@ -334,32 +401,15 @@ export default function ContentRegistryPage() {
                   </select>
                 </div>
 
-                {/* İçerik Üreticisi */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    📝 İçerik Üreticisi
-                  </label>
-                  <select
-                    value={formData.creatorId}
-                    onChange={(e) => setFormData({ ...formData, creatorId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Seçiniz</option>
-                    {creators.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Seslendirmen */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    🎙️ Seslendirmen
+                    🎙️ Seslendirmen Ata
                   </label>
                   <select
                     value={formData.voiceActorId}
                     onChange={(e) => setFormData({ ...formData, voiceActorId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg"
                   >
                     <option value="">Seçiniz</option>
                     {voiceActors.map((v) => (
@@ -371,12 +421,12 @@ export default function ContentRegistryPage() {
                 {/* Editör */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    🎬 Editör
+                    🎬 Editör Ata
                   </label>
                   <select
                     value={formData.editorId}
                     onChange={(e) => setFormData({ ...formData, editorId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border rounded-lg"
                   >
                     <option value="">Seçiniz</option>
                     {editors.map((e) => (
@@ -384,20 +434,20 @@ export default function ContentRegistryPage() {
                     ))}
                   </select>
                 </div>
+              </div>
 
-                {/* Notlar */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notlar
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ek notlar"
-                  />
-                </div>
+              {/* Notlar */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ek Notlar (Opsiyonel)
+                </label>
+                <input
+                  type="text"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                  placeholder="Ekip için notlar..."
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t">
@@ -411,112 +461,338 @@ export default function ContentRegistryPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                  {submitting ? 'Kaydediliyor...' : 'Oluştur ve Gönder'}
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {/* Kayıt Listesi */}
-        <div className="bg-white rounded-xl shadow-sm border">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">
-              İçerik Kayıtları ({registries.length})
-            </h2>
+        {/* İŞ AKIŞI TABLOLARI */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* DEVAM EDEN İŞLER */}
+          <div className="bg-white rounded-xl shadow-sm border">
+            <div className="p-4 border-b bg-blue-50">
+              <h2 className="font-semibold text-blue-800">
+                ⏳ Devam Eden İşler ({groupedRegistries.waiting.length})
+              </h2>
+            </div>
+            <div className="divide-y max-h-96 overflow-y-auto">
+              {groupedRegistries.waiting.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Devam eden iş yok
+                </div>
+              ) : (
+                groupedRegistries.waiting.map((r) => (
+                  <RegistryCard 
+                    key={r.id} 
+                    registry={r} 
+                    onOpen={() => openDetail(r)}
+                    onDelete={() => deleteRegistry(r.id)}
+                  />
+                ))
+              )}
+            </div>
           </div>
 
-          {registries.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <p className="text-4xl mb-4">📭</p>
-              <p>Henüz içerik kaydı yok</p>
-              <p className="text-sm mt-2">Yukarıdaki "Yeni Kayıt" butonuna tıklayarak başlayın</p>
+          {/* ONAY BEKLİYOR */}
+          <div className="bg-white rounded-xl shadow-sm border">
+            <div className="p-4 border-b bg-yellow-50">
+              <h2 className="font-semibold text-yellow-800">
+                👀 Onay Bekliyor ({groupedRegistries.review.length})
+              </h2>
             </div>
-          ) : (
-            <div className="divide-y">
-              {registries.map((registry) => {
-                const statusInfo = STATUS_INFO[registry.status] || STATUS_INFO.DRAFT
-                return (
-                  <div key={registry.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className={`px-3 py-1 rounded-full text-sm ${statusInfo.bgColor} ${statusInfo.color}`}>
-                            {statusInfo.icon} {statusInfo.label}
-                          </span>
-                          <h3 className="font-medium text-gray-900">{registry.title}</h3>
-                        </div>
-
-                        {registry.description && (
-                          <p className="text-gray-600 text-sm mb-2">{registry.description}</p>
-                        )}
-
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                          {registry.platform && (
-                            <span>📺 {registry.platform}</span>
-                          )}
-                          {registry.contentType && (
-                            <span>🎞️ {registry.contentType}</span>
-                          )}
-                          {registry.creator && (
-                            <span>📝 {registry.creator.name}</span>
-                          )}
-                          {registry.voiceActor && (
-                            <span>🎙️ {registry.voiceActor.name}</span>
-                          )}
-                          {registry.editor && (
-                            <span>🎬 {registry.editor.name}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 ml-4">
-                        {/* Durum Değiştirme */}
-                        <select
-                          value={registry.status}
-                          onChange={(e) => updateStatus(registry.id, e.target.value)}
-                          className="text-sm border rounded px-2 py-1"
-                        >
-                          {Object.entries(STATUS_INFO).map(([value, info]) => (
-                            <option key={value} value={value}>
-                              {info.icon} {info.label}
-                            </option>
-                          ))}
-                        </select>
-
-                        {/* Sil */}
-                        <button
-                          onClick={() => deleteRegistry(registry.id)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded"
-                          title="Sil"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="divide-y max-h-96 overflow-y-auto">
+              {groupedRegistries.review.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Onay bekleyen iş yok
+                </div>
+              ) : (
+                groupedRegistries.review.map((r) => (
+                  <RegistryCard 
+                    key={r.id} 
+                    registry={r} 
+                    onOpen={() => openDetail(r)}
+                    onDelete={() => deleteRegistry(r.id)}
+                    showApprove
+                    onApprove={() => updateStatus(r.id, 'PUBLISHED')}
+                  />
+                ))
+              )}
             </div>
-          )}
+          </div>
+
+          {/* TAMAMLANDI - ÖDEME BEKLİYOR */}
+          <div className="bg-white rounded-xl shadow-sm border">
+            <div className="p-4 border-b bg-green-50">
+              <h2 className="font-semibold text-green-800">
+                ✅ Tamamlandı - Ödeme Bekliyor ({groupedRegistries.completed.length})
+              </h2>
+            </div>
+            <div className="divide-y max-h-96 overflow-y-auto">
+              {groupedRegistries.completed.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Ödeme bekleyen iş yok
+                </div>
+              ) : (
+                groupedRegistries.completed.map((r) => (
+                  <RegistryCard 
+                    key={r.id} 
+                    registry={r} 
+                    onOpen={() => openDetail(r)}
+                    onDelete={() => deleteRegistry(r.id)}
+                    showPayment
+                    onMarkPaid={() => updateStatus(r.id, 'ARCHIVED')}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* ÖDENDİ */}
+          <div className="bg-white rounded-xl shadow-sm border">
+            <div className="p-4 border-b bg-emerald-50">
+              <h2 className="font-semibold text-emerald-800">
+                💰 Ödendi ({groupedRegistries.paid.length})
+              </h2>
+            </div>
+            <div className="divide-y max-h-96 overflow-y-auto">
+              {groupedRegistries.paid.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Ödenen iş yok
+                </div>
+              ) : (
+                groupedRegistries.paid.map((r) => (
+                  <RegistryCard 
+                    key={r.id} 
+                    registry={r} 
+                    onOpen={() => openDetail(r)}
+                    onDelete={() => deleteRegistry(r.id)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Bilgi Kutusu */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-medium text-blue-800 mb-2">ℹ️ Bu Sistem Nasıl Çalışır?</h3>
-          <div className="text-sm text-blue-700 space-y-1">
-            <p>1. <strong>Taslak</strong> → İçerik fikri oluşturulur, üretici atanır</p>
-            <p>2. <strong>Metin Hazır</strong> → Üretici metni yazar, seslendirmen atanır</p>
-            <p>3. <strong>Ses Hazır</strong> → Seslendirmen sesi kaydeder, editör atanır</p>
-            <p>4. <strong>Kurgu</strong> → Editör videoyu kurguya alır</p>
-            <p>5. <strong>İnceleme</strong> → Son kontrol yapılır</p>
-            <p>6. <strong>Yayınlandı</strong> → İçerik yayına alınır</p>
+        {/* AKIŞ AÇIKLAMASI */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+          <h3 className="font-medium text-blue-800 mb-3">📌 İş Akışı</h3>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="px-3 py-1 bg-gray-100 rounded-full">📝 Metin Yaz</span>
+            <span className="text-gray-400">→</span>
+            <span className="px-3 py-1 bg-blue-100 rounded-full">🎙️ Ses Yükle</span>
+            <span className="text-gray-400">→</span>
+            <span className="px-3 py-1 bg-purple-100 rounded-full">🎬 Kurgu Yap</span>
+            <span className="text-gray-400">→</span>
+            <span className="px-3 py-1 bg-yellow-100 rounded-full">👀 Onay</span>
+            <span className="text-gray-400">→</span>
+            <span className="px-3 py-1 bg-green-100 rounded-full">✅ Tamam</span>
+            <span className="text-gray-400">→</span>
+            <span className="px-3 py-1 bg-emerald-100 rounded-full">💰 Ödeme</span>
           </div>
+        </div>
+      </div>
+
+      {/* DETAY MODAL */}
+      {showDetail && selectedRegistry && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">{selectedRegistry.title}</h2>
+                <button
+                  onClick={() => setShowDetail(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="mt-2">
+                <span className={`px-3 py-1 rounded-full text-sm ${STATUS_INFO[selectedRegistry.status]?.bgColor} ${STATUS_INFO[selectedRegistry.status]?.color}`}>
+                  {STATUS_INFO[selectedRegistry.status]?.icon} {STATUS_INFO[selectedRegistry.status]?.label}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Metin */}
+              <div>
+                <h3 className="font-medium text-gray-700 mb-2">📄 Metin İçeriği</h3>
+                <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap text-sm">
+                  {selectedRegistry.description || 'Metin yok'}
+                </div>
+              </div>
+
+              {/* Atanan Kişiler */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">🎙️ Seslendirmen</h3>
+                  <p className="text-gray-600">
+                    {selectedRegistry.voiceActor?.name || <span className="text-gray-400">Atanmadı</span>}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">🎬 Editör</h3>
+                  <p className="text-gray-600">
+                    {selectedRegistry.editor?.name || <span className="text-gray-400">Atanmadı</span>}
+                  </p>
+                </div>
+              </div>
+
+              {/* Linkler */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">🔊 Ses Linki</h3>
+                  {selectedRegistry.voiceLink ? (
+                    <a href={selectedRegistry.voiceLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+                      {selectedRegistry.voiceLink}
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">Henüz yüklenmedi</span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">🎬 Kurgu Linki</h3>
+                  {selectedRegistry.editLink ? (
+                    <a href={selectedRegistry.editLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+                      {selectedRegistry.editLink}
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">Henüz yüklenmedi</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Link Ekleme */}
+              {['SCRIPT_READY', 'VOICE_READY', 'EDITING'].includes(selectedRegistry.status) && (
+                <div className="border-t pt-4">
+                  <h3 className="font-medium text-gray-700 mb-2">📎 Link Ekle</h3>
+                  <div className="flex gap-2">
+                    <select
+                      value={linkType}
+                      onChange={(e) => setLinkType(e.target.value as 'voice' | 'edit')}
+                      className="px-3 py-2 border rounded-lg"
+                    >
+                      <option value="voice">🎙️ Ses Linki</option>
+                      <option value="edit">🎬 Kurgu Linki</option>
+                    </select>
+                    <input
+                      type="url"
+                      value={linkInput}
+                      onChange={(e) => setLinkInput(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-lg"
+                      placeholder="https://drive.google.com/..."
+                    />
+                    <button
+                      onClick={handleAddLink}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Ekle
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Notlar */}
+              {selectedRegistry.notes && (
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">📝 Notlar</h3>
+                  <p className="text-gray-600">{selectedRegistry.notes}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowDetail(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Kayıt Kartı Komponenti
+function RegistryCard({ 
+  registry, 
+  onOpen, 
+  onDelete,
+  showApprove,
+  onApprove,
+  showPayment,
+  onMarkPaid,
+}: { 
+  registry: ContentRegistry
+  onOpen: () => void
+  onDelete: () => void
+  showApprove?: boolean
+  onApprove?: () => void
+  showPayment?: boolean
+  onMarkPaid?: () => void
+}) {
+  const statusInfo = STATUS_INFO[registry.status] || STATUS_INFO.DRAFT
+
+  return (
+    <div className="p-4 hover:bg-gray-50 cursor-pointer" onClick={onOpen}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`px-2 py-0.5 rounded text-xs ${statusInfo.bgColor} ${statusInfo.color}`}>
+              {statusInfo.icon} {statusInfo.label}
+            </span>
+          </div>
+          <h3 className="font-medium text-gray-900">{registry.title}</h3>
+          <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+            {registry.voiceActor && (
+              <span>🎙️ {registry.voiceActor.name}</span>
+            )}
+            {registry.editor && (
+              <span>🎬 {registry.editor.name}</span>
+            )}
+            {registry.voiceLink && (
+              <span className="text-green-600">✓ Ses</span>
+            )}
+            {registry.editLink && (
+              <span className="text-green-600">✓ Kurgu</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-2" onClick={(e) => e.stopPropagation()}>
+          {showApprove && onApprove && (
+            <button
+              onClick={onApprove}
+              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+            >
+              ✓ Onayla
+            </button>
+          )}
+          {showPayment && onMarkPaid && (
+            <button
+              onClick={onMarkPaid}
+              className="px-3 py-1 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700"
+            >
+              💰 Ödendi
+            </button>
+          )}
+          <button
+            onClick={onDelete}
+            className="p-1 text-red-500 hover:bg-red-50 rounded"
+            title="Sil"
+          >
+            🗑️
+          </button>
         </div>
       </div>
     </div>
   )
 }
-
