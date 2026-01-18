@@ -281,24 +281,20 @@ export default function ContentRegistryPage() {
     setShowPaymentModal(true)
   }
 
-  // Ödeme yap ve kaydet
+  // Onayla ve ödeme kaydet
   const handlePayment = async () => {
     if (!paymentRegistry) return
 
     const voicePrice = parseFloat(voiceActorPrice) || 0
     const editPrice = parseFloat(editorPrice) || 0
 
-    if (voicePrice === 0 && editPrice === 0) {
-      alert('En az bir fiyat girmelisiniz')
-      return
-    }
-
     setPaymentSubmitting(true)
 
     try {
       const today = new Date().toISOString().split('T')[0]
+      const payments: string[] = []
 
-      // Seslendirmen ödemesi
+      // Seslendirmen ödemesi (fiyat girildiyse)
       if (voicePrice > 0 && paymentRegistry.voiceActor) {
         const voicePayoutRes = await fetch('/api/payouts', {
           method: 'POST',
@@ -317,9 +313,10 @@ export default function ContentRegistryPage() {
           const err = await voicePayoutRes.json()
           throw new Error(err.error || 'Seslendirmen ödemesi kaydedilemedi')
         }
+        payments.push(`🎙️ ${paymentRegistry.voiceActor.name}: ${voicePrice}₺`)
       }
 
-      // Editör ödemesi
+      // Editör ödemesi (fiyat girildiyse)
       if (editPrice > 0 && paymentRegistry.editor) {
         const editorPayoutRes = await fetch('/api/payouts', {
           method: 'POST',
@@ -338,19 +335,28 @@ export default function ContentRegistryPage() {
           const err = await editorPayoutRes.json()
           throw new Error(err.error || 'Editör ödemesi kaydedilemedi')
         }
+        payments.push(`🎬 ${paymentRegistry.editor.name}: ${editPrice}₺`)
       }
 
-      // ContentRegistry durumunu ARCHIVED yap
+      // ContentRegistry durumunu PUBLISHED (Onaylandı) yap
       await fetch(`/api/content-registry/${paymentRegistry.id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'ARCHIVED' }),
+        body: JSON.stringify({ status: 'PUBLISHED' }),
       })
 
       setShowPaymentModal(false)
       setPaymentRegistry(null)
+      setVoiceActorPrice('')
+      setEditorPrice('')
       fetchData()
-      alert('✅ Ödemeler kaydedildi!')
+
+      // Sonuç mesajı
+      if (payments.length > 0) {
+        alert(`✅ Onaylandı!\n\nÖdeme kayıtları:\n${payments.join('\n')}`)
+      } else {
+        alert('✅ Onaylandı! (Ödeme kaydı girilmedi)')
+      }
     } catch (err: any) {
       alert(err.message || 'Bir hata oluştu')
       console.error(err)
@@ -611,24 +617,24 @@ export default function ContentRegistryPage() {
                     onOpen={() => openDetail(r)}
                     onDelete={() => deleteRegistry(r.id)}
                     showApprove
-                    onApprove={() => updateStatus(r.id, 'PUBLISHED')}
+                    onApprove={() => openPaymentModal(r)}
                   />
                 ))
               )}
             </div>
           </div>
 
-          {/* TAMAMLANDI - ÖDEME BEKLİYOR */}
+          {/* TAMAMLANDI */}
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-4 border-b bg-green-50">
               <h2 className="font-semibold text-green-800">
-                ✅ Tamamlandı - Ödeme Bekliyor ({groupedRegistries.completed.length})
+                ✅ Onaylandı ({groupedRegistries.completed.length})
               </h2>
             </div>
             <div className="divide-y max-h-96 overflow-y-auto">
               {groupedRegistries.completed.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  Ödeme bekleyen iş yok
+                  Onaylanan iş yok
                 </div>
               ) : (
                 groupedRegistries.completed.map((r) => (
@@ -637,8 +643,6 @@ export default function ContentRegistryPage() {
                     registry={r} 
                     onOpen={() => openDetail(r)}
                     onDelete={() => deleteRegistry(r.id)}
-                    showPayment
-                    onMarkPaid={() => openPaymentModal(r)}
                   />
                 ))
               )}
@@ -681,12 +685,13 @@ export default function ContentRegistryPage() {
             <span className="text-gray-400">→</span>
             <span className="px-3 py-1 bg-purple-100 rounded-full">🎬 Kurgu Yap</span>
             <span className="text-gray-400">→</span>
-            <span className="px-3 py-1 bg-yellow-100 rounded-full">👀 Onay</span>
+            <span className="px-3 py-1 bg-yellow-100 rounded-full font-medium">👀 Admin Onayı + 💰 Fiyat Gir</span>
             <span className="text-gray-400">→</span>
-            <span className="px-3 py-1 bg-green-100 rounded-full">✅ Tamam</span>
-            <span className="text-gray-400">→</span>
-            <span className="px-3 py-1 bg-emerald-100 rounded-full">💰 Ödeme</span>
+            <span className="px-3 py-1 bg-green-100 rounded-full">✅ Tamamlandı</span>
           </div>
+          <p className="text-xs text-gray-600 mt-2">
+            * Onay aşamasında fiyat girdiğinizde, ilgili kişilerin ödeme kayıtlarına otomatik düşer
+          </p>
         </div>
       </div>
 
@@ -811,13 +816,13 @@ export default function ContentRegistryPage() {
         </div>
       )}
 
-      {/* ÖDEME MODAL */}
+      {/* ONAY VE ÖDEME MODAL */}
       {showPaymentModal && paymentRegistry && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="p-6 border-b">
+            <div className="p-6 border-b bg-yellow-50">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">💰 Ödeme Yap</h2>
+                <h2 className="text-xl font-bold">✅ Onayla ve Öde</h2>
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -829,11 +834,16 @@ export default function ContentRegistryPage() {
             </div>
 
             <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                💡 Ödeme yapılacak kişileri seçin ve fiyatlarını girin. Boş bıraktığınız kişilere ödeme kaydı düşmez.
+              </p>
+
               {/* Seslendirmen Ücreti */}
               {paymentRegistry.voiceActor && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    🎙️ Seslendirmen: {paymentRegistry.voiceActor.name}
+                <div className="p-4 border rounded-lg">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <span className="text-lg">🎙️</span>
+                    <span>Seslendirmen: <strong>{paymentRegistry.voiceActor.name}</strong></span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -841,23 +851,21 @@ export default function ContentRegistryPage() {
                       value={voiceActorPrice}
                       onChange={(e) => setVoiceActorPrice(e.target.value)}
                       className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="0"
+                      placeholder="Fiyat girin (boş = ödeme yok)"
                       min="0"
                       step="0.01"
                     />
-                    <span className="text-gray-500">₺</span>
+                    <span className="text-gray-500 font-medium">₺</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Bu tutar {paymentRegistry.voiceActor.name} adına ödeme kaydı olarak düşecek
-                  </p>
                 </div>
               )}
 
               {/* Editör Ücreti */}
               {paymentRegistry.editor && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    🎬 Editör: {paymentRegistry.editor.name}
+                <div className="p-4 border rounded-lg">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <span className="text-lg">🎬</span>
+                    <span>Editör: <strong>{paymentRegistry.editor.name}</strong></span>
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -865,30 +873,27 @@ export default function ContentRegistryPage() {
                       value={editorPrice}
                       onChange={(e) => setEditorPrice(e.target.value)}
                       className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      placeholder="0"
+                      placeholder="Fiyat girin (boş = ödeme yok)"
                       min="0"
                       step="0.01"
                     />
-                    <span className="text-gray-500">₺</span>
+                    <span className="text-gray-500 font-medium">₺</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Bu tutar {paymentRegistry.editor.name} adına ödeme kaydı olarak düşecek
-                  </p>
                 </div>
               )}
 
               {/* Atanmamış uyarısı */}
               {!paymentRegistry.voiceActor && !paymentRegistry.editor && (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700">
-                  ⚠️ Bu içeriğe seslendirmen veya editör atanmamış
+                  ⚠️ Bu içeriğe seslendirmen veya editör atanmamış. Sadece onaylayabilirsiniz.
                 </div>
               )}
 
               {/* Toplam */}
-              {(paymentRegistry.voiceActor || paymentRegistry.editor) && (
+              {(paymentRegistry.voiceActor || paymentRegistry.editor) && (voiceActorPrice || editorPrice) && (
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center text-lg font-semibold">
-                    <span>Toplam:</span>
+                    <span>Toplam Ödeme:</span>
                     <span className="text-green-600">
                       {((parseFloat(voiceActorPrice) || 0) + (parseFloat(editorPrice) || 0)).toFixed(2)} ₺
                     </span>
@@ -906,10 +911,10 @@ export default function ContentRegistryPage() {
               </button>
               <button
                 onClick={handlePayment}
-                disabled={paymentSubmitting || (!voiceActorPrice && !editorPrice)}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                disabled={paymentSubmitting}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
               >
-                {paymentSubmitting ? 'Kaydediliyor...' : '💰 Ödemeleri Kaydet'}
+                {paymentSubmitting ? 'Kaydediliyor...' : '✅ Onayla ve Kaydet'}
               </button>
             </div>
           </div>
