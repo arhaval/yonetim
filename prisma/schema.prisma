@@ -118,9 +118,10 @@ model ContentCreator {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  contents         Content[]
-  scripts          VoiceoverScript[]
-  financialRecords FinancialRecord[]
+  contents          Content[]
+  scripts           VoiceoverScript[]
+  financialRecords  FinancialRecord[]
+  contentRegistries ContentRegistry[]
 }
 
 model Content {
@@ -143,6 +144,9 @@ model Content {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // İçerik Kayıt Sistemi bağlantısı
+  contentRegistry ContentRegistry?
 }
 
 model VoiceActor {
@@ -159,8 +163,9 @@ model VoiceActor {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  scripts          VoiceoverScript[]
-  financialRecords FinancialRecord[]
+  scripts           VoiceoverScript[]
+  financialRecords  FinancialRecord[]
+  contentRegistries ContentRegistry[]
 }
 
 enum VoiceoverScriptStatus {
@@ -202,6 +207,9 @@ model VoiceoverScript {
 
   // Relations
   editPack EditPack?
+  
+  // İçerik Kayıt Sistemi bağlantısı
+  contentRegistry ContentRegistry?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -281,9 +289,10 @@ model TeamMember {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  tasks            Task[]
-  payments         TeamPayment[]
-  financialRecords FinancialRecord[]
+  tasks             Task[]
+  payments          TeamPayment[]
+  financialRecords  FinancialRecord[]
+  contentRegistries ContentRegistry[] // Editör olarak atandığı içerikler
 }
 
 model Task {
@@ -423,5 +432,72 @@ model Todo {
   updatedAt DateTime @updatedAt
 
   @@index([completed])
+  @@index([createdAt])
+}
+
+// İçerik Kayıt Sistemi - Editör, Ses ve Üretici bağlantısı
+enum ContentRegistryStatus {
+  DRAFT           // Taslak - henüz başlanmadı
+  SCRIPT_READY    // Metin hazır - seslendirme bekliyor
+  VOICE_READY     // Ses hazır - kurgu bekliyor
+  EDITING         // Kurgu aşamasında
+  REVIEW          // İnceleme bekliyor
+  PUBLISHED       // Yayınlandı
+  ARCHIVED        // Arşivlendi
+}
+
+model ContentRegistry {
+  id          String                @id @default(cuid())
+  title       String                // İçerik başlığı
+  description String?               // Açıklama
+  status      ContentRegistryStatus @default(DRAFT)
+  
+  // İçerik Üreticisi (Producer) bağlantısı
+  creatorId   String?
+  creator     ContentCreator?       @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  
+  // Seslendirmen (Voice Actor) bağlantısı
+  voiceActorId String?
+  voiceActor   VoiceActor?          @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
+  
+  // Editör (Team Member) bağlantısı
+  editorId    String?
+  editor      TeamMember?           @relation(fields: [editorId], references: [id], onDelete: SetNull)
+  
+  // İlişkili kayıtlar
+  voiceoverScriptId String?         @unique // Seslendirme metni
+  voiceoverScript   VoiceoverScript? @relation(fields: [voiceoverScriptId], references: [id], onDelete: SetNull)
+  
+  contentId   String?               @unique // Yayınlanan içerik
+  content     Content?              @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  
+  // İçerik detayları
+  platform    String?               // YouTube, Instagram, TikTok, etc.
+  contentType String?               // uzun, kısa, reels, shorts, etc.
+  
+  // Linkler
+  scriptLink  String?               // Metin linki (Google Docs vb.)
+  voiceLink   String?               // Ses linki (Google Drive vb.)
+  editLink    String?               // Kurgu linki (Google Drive vb.)
+  finalLink   String?               // Final video linki
+  
+  // Tarihler
+  scriptDeadline DateTime?          // Metin teslim tarihi
+  voiceDeadline  DateTime?          // Ses teslim tarihi
+  editDeadline   DateTime?          // Kurgu teslim tarihi
+  publishDate    DateTime?          // Yayın tarihi
+  
+  // Notlar
+  notes       String?               // Genel notlar
+  editorNotes String?               // Editör notları
+  
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([voiceActorId])
+  @@index([editorId])
+  @@index([platform])
   @@index([createdAt])
 }
