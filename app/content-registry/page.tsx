@@ -693,6 +693,16 @@ export default function ContentRegistryPage() {
             * Onay aşamasında fiyat girdiğinizde, ilgili kişilerin ödeme kayıtlarına otomatik düşer
           </p>
         </div>
+
+        {/* UYARI */}
+        <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <h3 className="font-medium text-amber-800 mb-2">⚠️ Önemli Not</h3>
+          <p className="text-sm text-amber-700">
+            Bu sistem mevcut <strong>Seslendirme Metinleri</strong> sisteminden bağımsızdır. 
+            Burada girdiğiniz ödemeler ayrı kayıt olarak düşer. Aynı iş için hem buradan hem 
+            eski sistemden ödeme girmeyin!
+          </p>
+        </div>
       </div>
 
       {/* DETAY MODAL */}

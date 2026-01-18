@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
         // Payment kaydı oluştur
         const month = new Date().toISOString().slice(0, 7) // YYYY-MM
-        await prisma.payment.create({
+        const payment = await prisma.payment.create({
           data: {
             streamerId: personId,
             amount: totalStreamAmount,
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
           },
         })
 
-        // Finansal kayıt oluştur
+        // Finansal kayıt oluştur - relatedPaymentId ile bağla
         await prisma.financialRecord.create({
           data: {
             type: 'expense',
@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
             entryType: 'payout',
             direction: 'OUT',
             streamerId: personId,
+            relatedPaymentId: payment.id,
           },
         })
       }

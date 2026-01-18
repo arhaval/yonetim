@@ -489,79 +489,8 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      // Eğer ekip üyesine ödeme yapıldıysa (expense + salary), TeamPayment kaydı da oluştur
-      // Kontrol: teamMemberId var mı, type expense mi, category salary mi?
-      const categoryLowerForPayment = (data.category || '').toLowerCase()
-      const isSalaryCategoryForPayment = categoryLowerForPayment === 'salary' || categoryLowerForPayment === 'maaş' || categoryLowerForPayment.includes('maaş')
-      
-      const shouldCreateTeamPayment = !!(
-        data.teamMemberId && 
-        data.type === 'expense' && 
-        isSalaryCategoryForPayment
-      )
-      
-      console.log(`[Financial API] TeamPayment creation check:`, {
-        teamMemberId: data.teamMemberId,
-        type: data.type,
-        category: data.category,
-        shouldCreate: shouldCreateTeamPayment,
-        conditions: {
-          hasTeamMemberId: !!data.teamMemberId,
-          isExpense: data.type === 'expense',
-          isSalary: isSalaryCategoryForPayment,
-        },
-      })
-      
-      if (shouldCreateTeamPayment) {
-        const paymentDate = new Date(data.date)
-        const month = format(paymentDate, 'yyyy-MM')
-        
-        console.log(`[Financial API] Attempting to create TeamPayment:`, {
-          teamMemberId: data.teamMemberId,
-          type: data.type,
-          category: data.category,
-          amount: parseFloat(data.amount),
-          date: paymentDate,
-          month: month,
-        })
-        
-        try {
-          const teamPayment = await prisma.teamPayment.create({
-            data: {
-              teamMemberId: data.teamMemberId,
-              amount: parseFloat(data.amount),
-              type: 'salary',
-              period: month,
-              description: data.description || `${month} ayı ekip üyesi ödemesi`,
-              paidAt: paymentDate,
-            },
-          })
-          console.log(`[Financial API] ✅ Created TeamPayment for team member ${data.teamMemberId}:`, {
-            id: teamPayment.id,
-            amount: teamPayment.amount,
-            period: teamPayment.period,
-            paidAt: teamPayment.paidAt,
-          })
-        } catch (teamPaymentError: any) {
-          // TeamPayment oluşturma hatası finansal kaydı etkilemesin
-          console.error('❌ Error creating TeamPayment:', {
-            error: teamPaymentError.message,
-            code: teamPaymentError.code,
-            meta: teamPaymentError.meta,
-            teamMemberId: data.teamMemberId,
-          })
-        }
-      } else {
-        const categoryLowerForSkip = (data.category || '').toLowerCase()
-        const isSalaryCategoryForSkip = categoryLowerForSkip === 'salary' || categoryLowerForSkip === 'maaş' || categoryLowerForSkip.includes('maaş')
-        
-        console.log(`[Financial API] Skipping TeamPayment creation:`, {
-          teamMemberId: data.teamMemberId,
-          type: data.type,
-          category: data.category,
-          condition: !(data.teamMemberId && data.type === 'expense' && isSalaryCategoryForSkip),
-        })
-      }
+      // NOT: TeamPayment otomatik oluşturma kaldırıldı - mükerrer kayıtlara yol açıyordu
+      // TeamPayment kayıtları artık sadece /api/payments/make veya /api/payouts üzerinden oluşturulmalı
       
       return NextResponse.json(record)
     } catch (prismaError: any) {

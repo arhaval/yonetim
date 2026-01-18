@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Finansal kayıt oluştur (gider olarak)
+      // Finansal kayıt oluştur (gider olarak) - relatedPaymentId ile bağla
       const financialRecord = await prisma.financialRecord.create({
         data: {
           type: 'expense',
@@ -102,7 +102,11 @@ export async function POST(request: NextRequest) {
           amount: amount,
           description: note || `${month} ayı yayıncı ödemesi`,
           date: paidAt ? new Date(paidAt) : new Date(),
+          occurredAt: paidAt ? new Date(paidAt) : new Date(),
+          entryType: 'payout',
+          direction: 'OUT',
           streamerId: streamerId,
+          relatedPaymentId: payment.id, // Mükerrer kayıt kontrolü için
         },
       })
 
@@ -171,7 +175,7 @@ export async function POST(request: NextRequest) {
         select: { name: true },
       })
 
-      // Finansal kayıt oluştur (gider olarak)
+      // Finansal kayıt oluştur (gider olarak) - relatedPaymentId ile bağla
       const financialRecord = await prisma.financialRecord.create({
         data: {
           type: 'expense',
@@ -179,7 +183,11 @@ export async function POST(request: NextRequest) {
           amount: amount,
           description: note || `${teamPayment.period} ayı ekip üyesi ödemesi`,
           date: paymentDate,
+          occurredAt: paymentDate,
+          entryType: 'payout',
+          direction: 'OUT',
           teamMemberId: teamPayment.teamMemberId,
+          relatedPaymentId: teamPaymentId, // Mükerrer kayıt kontrolü için
         },
       })
       
@@ -268,6 +276,9 @@ export async function POST(request: NextRequest) {
           amount: amount,
           description: note || `${month} ayı seslendirme ödemesi`,
           date: paidAt ? new Date(paidAt) : new Date(),
+          occurredAt: paidAt ? new Date(paidAt) : new Date(),
+          entryType: 'payout',
+          direction: 'OUT',
           voiceActorId: voiceActorId,
         },
       })
