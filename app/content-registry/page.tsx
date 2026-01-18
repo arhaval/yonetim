@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 // Durum bilgileri
 const STATUS_INFO: Record<string, { label: string; color: string; bgColor: string; icon: string; description: string }> = {
@@ -134,11 +135,11 @@ export default function ContentRegistryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) {
-      alert('Başlık gereklidir')
+      toast.error('Başlık gereklidir')
       return
     }
     if (!formData.description.trim()) {
-      alert('Metin içeriği gereklidir')
+      toast.error('Metin içeriği gereklidir')
       return
     }
 
@@ -171,13 +172,13 @@ export default function ContentRegistryPage() {
           notes: '',
         })
         fetchData()
-        alert('✅ İçerik oluşturuldu!')
+        toast.success('İçerik başarıyla oluşturuldu!')
       } else {
         const data = await res.json()
-        alert(data.error || 'Kayıt oluşturulamadı')
+        toast.error(data.error || 'Kayıt oluşturulamadı')
       }
     } catch (err) {
-      alert('Bir hata oluştu')
+      toast.error('Bir hata oluştu')
       console.error(err)
     } finally {
       setSubmitting(false)
@@ -187,7 +188,7 @@ export default function ContentRegistryPage() {
   // Link ekle (Seslendirmen veya Editör)
   const handleAddLink = async () => {
     if (!selectedRegistry || !linkInput.trim()) {
-      alert('Link gereklidir')
+      toast.error('Link gereklidir')
       return
     }
 
@@ -220,13 +221,13 @@ export default function ContentRegistryPage() {
         setShowDetail(false)
         setSelectedRegistry(null)
         fetchData()
-        alert('✅ Link eklendi!')
+        toast.success('Link başarıyla eklendi!')
       } else {
         const data = await res.json()
-        alert(data.error || 'Link eklenemedi')
+        toast.error(data.error || 'Link eklenemedi')
       }
     } catch (err) {
-      alert('Bir hata oluştu')
+      toast.error('Bir hata oluştu')
       console.error(err)
     }
   }
@@ -242,12 +243,13 @@ export default function ContentRegistryPage() {
 
       if (res.ok) {
         fetchData()
+        toast.success('Durum güncellendi')
       } else {
         const data = await res.json()
-        alert(data.error || 'Durum güncellenemedi')
+        toast.error(data.error || 'Durum güncellenemedi')
       }
     } catch (err) {
-      alert('Bir hata oluştu')
+      toast.error('Bir hata oluştu')
       console.error(err)
     }
   }
@@ -263,12 +265,13 @@ export default function ContentRegistryPage() {
 
       if (res.ok) {
         fetchData()
+        toast.success('Kayıt silindi')
       } else {
         const data = await res.json()
-        alert(data.error || 'Kayıt silinemedi')
+        toast.error(data.error || 'Kayıt silinemedi')
       }
     } catch (err) {
-      alert('Bir hata oluştu')
+      toast.error('Bir hata oluştu')
       console.error(err)
     }
   }
@@ -353,12 +356,12 @@ export default function ContentRegistryPage() {
 
       // Sonuç mesajı
       if (payments.length > 0) {
-        alert(`✅ Onaylandı!\n\nÖdeme kayıtları:\n${payments.join('\n')}`)
+        toast.success(`Onaylandı! Ödemeler: ${payments.join(', ')}`)
       } else {
-        alert('✅ Onaylandı! (Ödeme kaydı girilmedi)')
+        toast.success('Onaylandı! (Ödeme kaydı girilmedi)')
       }
     } catch (err: any) {
-      alert(err.message || 'Bir hata oluştu')
+      toast.error(err.message || 'Bir hata oluştu')
       console.error(err)
     } finally {
       setPaymentSubmitting(false)
