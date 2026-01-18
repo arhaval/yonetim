@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       // Önce metinleri kontrol et ve tutarları hesapla
       const whereClause: any = {
         id: { in: scriptIds },
-        status: 'approved',
+        status: 'APPROVED',
       }
 
       if (personType === 'voiceActor') {
