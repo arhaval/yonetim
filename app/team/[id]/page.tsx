@@ -6,18 +6,39 @@ import {
   ArrowLeft, Plus, CreditCard, Mic, Download, CheckCircle, Clock, 
   Mail, Phone, Edit, Shield, Wallet, Receipt, Briefcase, FileText
 } from 'lucide-react'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale/tr'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
+// Tarih formatlama fonksiyonu
+function formatDate(date: Date | string): string {
+  try {
+    const d = new Date(date)
+    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+    return `${d.getDate()} ${months[d.getMonth()]}`
+  } catch {
+    return '-'
+  }
+}
 
 export default async function TeamMemberDetailPage({
   params,
 }: {
   params: Promise<{ id: string }> | { id: string }
 }) {
-  const { id } = await Promise.resolve(params)
+  let resolvedParams: { id: string }
+  
+  try {
+    resolvedParams = await Promise.resolve(params)
+  } catch {
+    notFound()
+  }
+  
+  const { id } = resolvedParams
+  
+  if (!id) {
+    notFound()
+  }
   
   let member: any = null
   let voiceActor: any = null
@@ -35,7 +56,7 @@ export default async function TeamMemberDetailPage({
           take: 10,
         },
       },
-    })
+    }).catch(() => null)
 
     // Bulunamadıysa VoiceActor olarak ara
     if (!member) {
@@ -47,7 +68,7 @@ export default async function TeamMemberDetailPage({
             take: 10,
           },
         },
-      })
+      }).catch(() => null)
     }
 
     if (!member && !voiceActor) {
@@ -60,14 +81,14 @@ export default async function TeamMemberDetailPage({
         where: { voiceActorId: voiceActor.id },
         orderBy: { date: 'desc' },
         take: 20,
-      })
+      }).catch(() => [])
       scripts = voiceActor.scripts || []
     } else if (member) {
       financialRecords = await prisma.financialRecord.findMany({
         where: { teamMemberId: member.id },
         orderBy: { date: 'desc' },
         take: 20,
-      })
+      }).catch(() => [])
       tasks = member.tasks || []
     }
   } catch (error) {
@@ -110,7 +131,7 @@ export default async function TeamMemberDetailPage({
         </Link>
 
         {/* Profil Kartı */}
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white rounded-xl border overflow-hidden shadow-sm">
           <div className={`h-24 bg-gradient-to-r ${isVoiceActor ? 'from-amber-500 to-orange-600' : 'from-blue-500 to-indigo-600'}`} />
           
           <div className="px-6 pb-6">
@@ -200,7 +221,7 @@ export default async function TeamMemberDetailPage({
 
         {/* İstatistik Kartları */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl p-4 border">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-lg ${isVoiceActor ? 'bg-amber-100' : 'bg-blue-100'} flex items-center justify-center`}>
                 {isVoiceActor ? <FileText className="w-5 h-5 text-amber-600" /> : <Briefcase className="w-5 h-5 text-blue-600" />}
@@ -212,7 +233,7 @@ export default async function TeamMemberDetailPage({
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -224,7 +245,7 @@ export default async function TeamMemberDetailPage({
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-amber-600" />
@@ -236,7 +257,7 @@ export default async function TeamMemberDetailPage({
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border">
+          <div className="bg-white rounded-xl p-4 border shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-emerald-600" />
@@ -254,7 +275,7 @@ export default async function TeamMemberDetailPage({
         {/* İçerik Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Görevler / Metinler */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-white rounded-xl border overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b bg-gray-50">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 {isVoiceActor ? <FileText className="w-4 h-4 text-amber-600" /> : <Briefcase className="w-4 h-4 text-blue-600" />}
@@ -328,46 +349,30 @@ export default async function TeamMemberDetailPage({
           </div>
 
           {/* Finansal Kayıtlar */}
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-white rounded-xl border overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b bg-gray-50">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-emerald-600" />
-                Finansal Kayıtlar
+                Ödeme Geçmişi
               </h3>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {financialRecords.length === 0 ? (
-                <div className="p-6 text-center text-gray-500 text-sm">Henüz kayıt yok</div>
+                <div className="p-6 text-center text-gray-500 text-sm">Henüz ödeme yok</div>
               ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-50 sticky top-0">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Tarih</th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Kategori</th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">Tutar</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {financialRecords.map((record: any) => (
-                      <tr key={record.id} className="hover:bg-gray-50">
-                        <td className="px-3 py-2 text-sm text-gray-900">
-                          {format(new Date(record.date), 'dd MMM', { locale: tr })}
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
-                            {record.category || '-'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <span className={`font-medium ${record.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                            {record.type === 'income' ? '+' : '-'}
-                            {record.amount.toLocaleString('tr-TR')}₺
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="divide-y">
+                  {financialRecords.map((record: any) => (
+                    <div key={record.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{record.category || 'Ödeme'}</p>
+                        <p className="text-xs text-gray-500">{formatDate(record.date)}</p>
+                      </div>
+                      <span className={`font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-emerald-600'}`}>
+                        {record.amount.toLocaleString('tr-TR')}₺
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
