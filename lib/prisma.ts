@@ -6,24 +6,6 @@ const globalForPrisma = globalThis as unknown as {
 
 const DATABASE_URL = process.env.DATABASE_URL?.trim();
 
-// Supabase Pro için optimize edilmiş ayarlar
-const PRISMA_CONFIG = {
-  // Production'da sadece error logla
-  log: process.env.NODE_ENV === "development" 
-    ? ["error", "warn"] as const
-    : ["error"] as const,
-  
-  // Minimal error format - daha hızlı
-  errorFormat: "minimal" as const,
-  
-  // Datasource
-  datasources: {
-    db: {
-      url: DATABASE_URL,
-    },
-  },
-};
-
 function validateDatabaseUrl() {
   if (!DATABASE_URL) {
     console.error("❌ DATABASE_URL environment variable is missing!");
@@ -52,7 +34,17 @@ function validateDatabaseUrl() {
 if (!globalForPrisma.prisma) {
   validateDatabaseUrl();
   
-  globalForPrisma.prisma = new PrismaClient(PRISMA_CONFIG);
+  globalForPrisma.prisma = new PrismaClient({
+    log: process.env.NODE_ENV === "development" 
+      ? ["error", "warn"]
+      : ["error"],
+    errorFormat: "minimal",
+    datasources: {
+      db: {
+        url: DATABASE_URL,
+      },
+    },
+  });
   
   // Graceful shutdown için
   if (process.env.NODE_ENV === "production") {
