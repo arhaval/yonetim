@@ -7,6 +7,7 @@ import { Plus, X, Trash2, Check, FileText, Mic, Video, Clock, CheckCircle, Dolla
 
 // Durum bilgileri
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  WAITING_SCRIPT: { label: 'Metin Bekliyor', color: 'text-pink-600', bg: 'bg-pink-100' },
   DRAFT: { label: 'Taslak', color: 'text-gray-600', bg: 'bg-gray-100' },
   SCRIPT_READY: { label: 'Ses Bekliyor', color: 'text-blue-600', bg: 'bg-blue-100' },
   VOICE_READY: { label: 'Kurgu Bekliyor', color: 'text-purple-600', bg: 'bg-purple-100' },
@@ -20,11 +21,14 @@ interface ContentRegistry {
   id: string
   title: string
   description?: string
+  scriptText?: string
   status: string
   voiceLink?: string
   editLink?: string
+  scriptDeadline?: string
   voiceDeadline?: string
   editDeadline?: string
+  creator?: { id: string; name: string }
   voiceActor?: { id: string; name: string }
   editor?: { id: string; name: string }
   createdAt: string
@@ -57,6 +61,7 @@ function getDeadlineStatus(deadline?: string): { isOverdue: boolean; daysLeft: n
 
 export default function ContentRegistryPage() {
   const [registries, setRegistries] = useState<ContentRegistry[]>([])
+  const [creators, setCreators] = useState<Person[]>([])
   const [voiceActors, setVoiceActors] = useState<Person[]>([])
   const [editors, setEditors] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,10 +76,13 @@ export default function ContentRegistryPage() {
   const [formData, setFormData] = useState({ 
     title: '', 
     description: '', 
+    creatorId: '',
     voiceActorId: '', 
     editorId: '',
+    scriptDeadline: '',
     voiceDeadline: '',
     editDeadline: '',
+    assignToCreator: false, // İçerik üreticisine metin yazdır
   })
   const [linkInput, setLinkInput] = useState('')
   const [linkType, setLinkType] = useState<'voice' | 'edit'>('voice')
@@ -88,8 +96,9 @@ export default function ContentRegistryPage() {
 
   const fetchData = async () => {
     try {
-      const [regRes, voiceRes, teamRes] = await Promise.all([
+      const [regRes, creatorsRes, voiceRes, teamRes] = await Promise.all([
         fetch('/api/content-registry'),
+        fetch('/api/content-creators'),
         fetch('/api/voice-actors'),
         fetch('/api/team'),
       ])
@@ -97,6 +106,10 @@ export default function ContentRegistryPage() {
       if (regRes.ok) {
         const data = await regRes.json()
         setRegistries(data.registries || [])
+      }
+      if (creatorsRes.ok) {
+        const data = await creatorsRes.json()
+        setCreators(Array.isArray(data) ? data : [])
       }
       if (voiceRes.ok) {
         const data = await voiceRes.json()
@@ -115,28 +128,56 @@ export default function ContentRegistryPage() {
 
   // Yeni içerik oluştur
   const handleCreate = async () => {
-    if (!formData.title.trim() || !formData.description.trim()) {
-      toast.error('Başlık ve metin gerekli')
-      return
+    // İçerik üreticisine atanacaksa sadece başlık gerekli
+    if (formData.assignToCreator) {
+      if (!formData.title.trim()) {
+        toast.error('Başlık gerekli')
+        return
+      }
+      if (!formData.creatorId) {
+        toast.error('İçerik üreticisi seçmelisiniz')
+        return
+      }
+    } else {
+      if (!formData.title.trim() || !formData.description.trim()) {
+        toast.error('Başlık ve metin gerekli')
+        return
+      }
     }
 
     setSubmitting(true)
     try {
+      // Durumu belirle
+      let status = 'DRAFT'
+      if (formData.assignToCreator && formData.creatorId) {
+        status = 'WAITING_SCRIPT' // İçerik üreticisi metin yazacak
+      } else if (formData.voiceActorId) {
+        status = 'SCRIPT_READY' // Direkt seslendirmene gidecek
+      }
+
       const res = await fetch('/api/content-registry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
+          title: formData.title,
+          description: formData.assignToCreator ? '' : formData.description,
+          creatorId: formData.creatorId || undefined,
+          voiceActorId: formData.voiceActorId || undefined,
+          editorId: formData.editorId || undefined,
+          scriptDeadline: formData.scriptDeadline || undefined,
           voiceDeadline: formData.voiceDeadline || undefined,
           editDeadline: formData.editDeadline || undefined,
-          status: formData.voiceActorId ? 'SCRIPT_READY' : 'DRAFT',
+          status,
         }),
       })
 
       if (res.ok) {
         toast.success('İçerik oluşturuldu')
         setShowNewModal(false)
-        setFormData({ title: '', description: '', voiceActorId: '', editorId: '', voiceDeadline: '', editDeadline: '' })
+        setFormData({ 
+          title: '', description: '', creatorId: '', voiceActorId: '', editorId: '', 
+          scriptDeadline: '', voiceDeadline: '', editDeadline: '', assignToCreator: false 
+        })
         fetchData()
       } else {
         toast.error('Oluşturulamadı')
@@ -253,7 +294,7 @@ export default function ContentRegistryPage() {
 
   // Gruplama
   const groups = {
-    active: registries.filter(r => ['DRAFT', 'SCRIPT_READY', 'VOICE_READY', 'EDITING'].includes(r.status)),
+    active: registries.filter(r => ['WAITING_SCRIPT', 'DRAFT', 'SCRIPT_READY', 'VOICE_READY', 'EDITING'].includes(r.status)),
     review: registries.filter(r => r.status === 'REVIEW'),
     done: registries.filter(r => ['PUBLISHED', 'ARCHIVED'].includes(r.status)),
   }
@@ -419,16 +460,63 @@ export default function ContentRegistryPage() {
                   placeholder="Video başlığı"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Metin *</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  rows={5}
-                  placeholder="Seslendirmenin okuyacağı metin..."
-                />
+
+              {/* İçerik Üreticisine Ata Toggle */}
+              <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.assignToCreator}
+                    onChange={e => setFormData({ ...formData, assignToCreator: e.target.checked })}
+                    className="w-5 h-5 text-pink-600 rounded"
+                  />
+                  <div>
+                    <span className="font-medium text-pink-800">İçerik üreticisi metin yazsın</span>
+                    <p className="text-xs text-pink-600">İçerik üreticisi metni yazıp gönderecek, sonra seslendirmene düşecek</p>
+                  </div>
+                </label>
               </div>
+
+              {/* İçerik Üreticisi Seçimi */}
+              {formData.assignToCreator && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">İçerik Üreticisi *</label>
+                    <select
+                      value={formData.creatorId}
+                      onChange={e => setFormData({ ...formData, creatorId: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg border-pink-300 focus:ring-pink-500"
+                    >
+                      <option value="">Seçiniz</option>
+                      {creators.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Metin Teslim Tarihi</label>
+                    <input
+                      type="date"
+                      value={formData.scriptDeadline}
+                      onChange={e => setFormData({ ...formData, scriptDeadline: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Metin Alanı - Sadece içerik üreticisine atanmıyorsa */}
+              {!formData.assignToCreator && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Metin *</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={5}
+                    placeholder="Seslendirmenin okuyacağı metin..."
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Seslendirmen</label>
@@ -702,7 +790,8 @@ function ItemCard({
             {status.label}
           </span>
           <h4 className="font-medium text-gray-900 truncate">{item.title}</h4>
-          <div className="flex gap-2 mt-1 text-xs text-gray-500">
+          <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
+            {item.creator && <span>✍️ {item.creator.name}</span>}
             {item.voiceActor && <span>🎙️ {item.voiceActor.name}</span>}
             {item.editor && <span>🎬 {item.editor.name}</span>}
           </div>

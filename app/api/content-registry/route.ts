@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         description: true,
+        scriptText: true,
         status: true,
         platform: true,
         contentType: true,
@@ -198,8 +199,10 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
+      scriptText,
       platform,
       contentType,
+      creatorId: bodyCreatorId,
       voiceActorId,
       editorId,
       voiceoverScriptId,
@@ -211,6 +214,7 @@ export async function POST(request: NextRequest) {
       editDeadline,
       publishDate,
       notes,
+      status: bodyStatus,
     } = body
 
     if (!title) {
@@ -233,13 +237,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Durumu belirle
+    let finalStatus = bodyStatus || 'DRAFT'
+    
     const registry = await prisma.contentRegistry.create({
       data: {
         title,
         description: description || null,
+        scriptText: scriptText || null,
         platform: platform || null,
         contentType: contentType || null,
-        creatorId: creatorId || null,
+        creatorId: bodyCreatorId || creatorId || null,
         voiceActorId: voiceActorId || null,
         editorId: editorId || null,
         voiceoverScriptId: voiceoverScriptId || null,
@@ -251,7 +259,7 @@ export async function POST(request: NextRequest) {
         editDeadline: editDeadline ? new Date(editDeadline) : null,
         publishDate: publishDate ? new Date(publishDate) : null,
         notes: notes || null,
-        status: 'DRAFT',
+        status: finalStatus,
       },
       include: {
         creator: {

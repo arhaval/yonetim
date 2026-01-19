@@ -12,8 +12,12 @@ export default function CreatorDashboardPage() {
   const router = useRouter()
   const [creator, setCreator] = useState<any>(null)
   const [contents, setContents] = useState<any[]>([])
+  const [pendingTasks, setPendingTasks] = useState<any[]>([]) // Metin bekleyen işler
   const [loading, setLoading] = useState(true)
   const [showScriptForm, setShowScriptForm] = useState(false)
+  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [taskScriptText, setTaskScriptText] = useState('')
   const [scriptFormData, setScriptFormData] = useState({
     title: '',
     text: '',
@@ -43,15 +47,63 @@ export default function CreatorDashboardPage() {
 
   const loadContents = async (creatorId: string) => {
     try {
+      // İçerikleri yükle
       const res = await fetch('/api/creator/content')
       const data = await res.json()
       if (res.ok) {
         setContents(data)
       }
+
+      // Metin bekleyen işleri yükle
+      const tasksRes = await fetch('/api/content-registry?status=WAITING_SCRIPT')
+      const tasksData = await tasksRes.json()
+      if (tasksRes.ok) {
+        // Sadece bu içerik üreticisine atanan işleri filtrele
+        const myTasks = (tasksData.registries || []).filter(
+          (task: any) => task.creator?.id === creatorId
+        )
+        setPendingTasks(myTasks)
+      }
     } catch (error) {
       console.error('Error loading contents:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Metin gönder
+  const handleSubmitScript = async () => {
+    if (!selectedTask || !taskScriptText.trim()) {
+      alert('Metin boş olamaz')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/content-registry/${selectedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scriptText: taskScriptText,
+          description: taskScriptText, // Aynı zamanda description'a da kaydet
+          status: selectedTask.voiceActor ? 'SCRIPT_READY' : 'DRAFT', // Seslendirmen atanmışsa direkt ona düşsün
+        }),
+      })
+
+      if (res.ok) {
+        alert('Metin başarıyla gönderildi!')
+        setShowTaskModal(false)
+        setSelectedTask(null)
+        setTaskScriptText('')
+        loadContents(creator.id)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -176,6 +228,54 @@ export default function CreatorDashboardPage() {
           </div>
         </div>
 
+        {/* Bekleyen İşler - Metin Yazılacak */}
+        {pendingTasks.length > 0 && (
+          <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl shadow-xl p-6 mb-6 border border-pink-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-pink-100 rounded-xl flex items-center justify-center">
+                <FileText className="w-5 h-5 text-pink-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-pink-800">Metin Bekleyen İşler</h2>
+                <p className="text-sm text-pink-600">{pendingTasks.length} adet iş sizden metin bekliyor</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {pendingTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="bg-white rounded-xl p-4 border border-pink-200 hover:border-pink-400 transition cursor-pointer"
+                  onClick={() => {
+                    setSelectedTask(task)
+                    setTaskScriptText('')
+                    setShowTaskModal(true)
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                        {task.scriptDeadline && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Teslim: {format(new Date(task.scriptDeadline), 'dd MMM', { locale: tr })}
+                          </span>
+                        )}
+                        {task.voiceActor && (
+                          <span>🎙️ {task.voiceActor.name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition text-sm font-medium">
+                      Metin Yaz
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         {!showScriptForm && (
           <div className="mb-6">
@@ -265,6 +365,68 @@ export default function CreatorDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Metin Yazma Modal */}
+        {showTaskModal && selectedTask && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b">
+                <h3 className="text-xl font-bold text-gray-900">{selectedTask.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">Bu içerik için seslendirme metni yazın</p>
+              </div>
+              <div className="p-6 space-y-4">
+                {selectedTask.notes && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-sm font-medium text-blue-800 mb-1">Admin Notları:</p>
+                    <p className="text-sm text-blue-700">{selectedTask.notes}</p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Seslendirme Metni *
+                  </label>
+                  <RichTextEditor
+                    value={taskScriptText}
+                    onChange={setTaskScriptText}
+                    placeholder="Seslendirmenin okuyacağı metni buraya yazın..."
+                    className="w-full"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Bu metin seslendirmen tarafından okunacak. Yazı stili, boyutu ve kalın/ince ayarlarını kullanabilirsiniz.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    {selectedTask.voiceActor && (
+                      <span>🎙️ Seslendirmen: <strong>{selectedTask.voiceActor.name}</strong></span>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowTaskModal(false)
+                        setSelectedTask(null)
+                        setTaskScriptText('')
+                      }}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      onClick={handleSubmitScript}
+                      disabled={submitting || !taskScriptText.trim()}
+                      className="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? 'Gönderiliyor...' : 'Metni Gönder'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contents List - Tablo Formatı */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

@@ -159,6 +159,7 @@ export async function PATCH(
     const {
       title,
       description,
+      scriptText,
       status,
       platform,
       contentType,
@@ -210,6 +211,7 @@ export async function PATCH(
 
     if (title !== undefined) updateData.title = title
     if (description !== undefined) updateData.description = description
+    if (scriptText !== undefined) updateData.scriptText = scriptText
     if (status !== undefined) updateData.status = status
     if (platform !== undefined) updateData.platform = platform
     if (contentType !== undefined) updateData.contentType = contentType

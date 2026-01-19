@@ -437,6 +437,7 @@ model Todo {
 
 // İçerik Kayıt Sistemi - Editör, Ses ve Üretici bağlantısı
 enum ContentRegistryStatus {
+  WAITING_SCRIPT  // Metin bekleniyor - içerik üreticisi metin yazacak
   DRAFT           // Taslak - henüz başlanmadı
   SCRIPT_READY    // Metin hazır - seslendirme bekliyor
   VOICE_READY     // Ses hazır - kurgu bekliyor
@@ -474,6 +475,9 @@ model ContentRegistry {
   // İçerik detayları
   platform    String?               // YouTube, Instagram, TikTok, etc.
   contentType String?               // uzun, kısa, reels, shorts, etc.
+  
+  // Metin içeriği
+  scriptText  String?               // İçerik üreticisinin yazdığı metin
   
   // Linkler
   scriptLink  String?               // Metin linki (Google Docs vb.)
