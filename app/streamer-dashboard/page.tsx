@@ -152,11 +152,10 @@ export default function StreamerDashboardPage() {
         alert(data.error || 'Bir hata oluştu')
       }
     } catch (error) {
+      console.error('Error submitting voice:', error)
       alert('Bir hata oluştu')
     } finally {
       setSubmitting(false)
-    } catch (error) {
-      console.error('Error loading payment info:', error)
     }
   }
 
@@ -363,14 +362,14 @@ export default function StreamerDashboardPage() {
         </div>
       )}
 
-        {/* Add Stream Form */}
-        {showForm && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Yeni Yayın Ekle</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Add Stream Form */}
+      {showForm && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Yeni Yayın Ekle</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -437,233 +436,233 @@ export default function StreamerDashboardPage() {
                 </div>
               </div>
 
-                <div className="flex items-center justify-end space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowForm(false)
-                      setFormData({
-                        date: new Date().toISOString().split('T')[0],
-                        matchInfo: '',
-                        duration: '',
-                        teamName: '',
-                      })
-                    }}
-                  >
-                    İptal
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Kaydediliyor...' : 'Kaydet'}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment History */}
-        {paymentHistory.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <CreditCard className="w-5 h-5 mr-2" />
-                Ödeme Geçmişi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y divide-gray-200">
-                {paymentHistory.map((payment: any) => (
-                  <div key={payment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            {payment.status === 'paid' ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                            ) : payment.status === 'unpaid' ? (
-                              <AlertCircle className="w-5 h-5 text-red-600" />
-                            ) : (
-                              <Clock className="w-5 h-5 text-yellow-600" />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-lg font-semibold text-gray-900">
-                                {payment.title || payment.description || (payment.period ? `${payment.period} ayı ödemesi` : 'Ödeme')}
-                              </p>
-                              {payment.source && (
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                  payment.source === 'payout' 
-                                    ? 'bg-blue-100 text-blue-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {payment.source === 'payout' ? 'Manuel Ödeme' : 'İş Ödemesi'}
-                                </span>
-                              )}
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                payment.status === 'paid' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : payment.status === 'unpaid'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {payment.status === 'paid' ? 'Ödendi' : payment.status === 'unpaid' ? 'Ödenmedi' : 'Kısmen Ödendi'}
-                              </span>
-                            </div>
-                            <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                              <span className="flex items-center">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                {format(new Date(payment.date || payment.paidAt || payment.createdAt), 'dd MMMM yyyy', { locale: tr })}
-                              </span>
-                              {payment.period && (
-                                <>
-                                  <span>•</span>
-                                  <span>Dönem: {payment.period}</span>
-                                </>
-                              )}
-                              {payment.description && payment.source !== 'payout' && (
-                                <>
-                                  <span>•</span>
-                                  <span>{payment.description}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-bold ${
-                          payment.status === 'paid' 
-                            ? 'text-green-600' 
-                            : payment.status === 'unpaid'
-                            ? 'text-red-600'
-                            : 'text-yellow-600'
-                        }`}>
-                          {payment.amount.toLocaleString('tr-TR', {
-                            style: 'currency',
-                            currency: 'TRY',
-                            maximumFractionDigits: 0,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowForm(false)
+                    setFormData({
+                      date: new Date().toISOString().split('T')[0],
+                      matchInfo: '',
+                      duration: '',
+                      teamName: '',
+                    })
+                  }}
+                >
+                  İptal
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Streams List */}
-        <Card>
+      {/* Payment History */}
+      {paymentHistory.length > 0 && (
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Video className="w-6 h-6 mr-2" />
-              Yayınlarım ({streams.length})
+              <CreditCard className="w-5 h-5 mr-2" />
+              Ödeme Geçmişi
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {streams.length === 0 ? (
-              <div className="text-center py-12">
-                <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg mb-2">Henüz yayın eklenmemiş</p>
-                <p className="text-sm text-gray-400">Yukarıdaki "Yeni Yayın Ekle" butonuna tıklayarak ilk yayınınızı ekleyebilirsiniz</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tarih
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Maç Bilgisi
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Firma
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Süre
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Durum
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ödeme Tutarı
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {streams.map((stream) => (
-                      <tr key={stream.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={stream.matchInfo || ''}>
-                            {stream.matchInfo || 'Yayın'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {stream.teamName ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {stream.teamName}
-                            </span>
+            <div className="divide-y divide-gray-200">
+              {paymentHistory.map((payment: any) => (
+                <div key={payment.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          {payment.status === 'paid' ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          ) : payment.status === 'unpaid' ? (
+                            <AlertCircle className="w-5 h-5 text-red-600" />
                           ) : (
-                            <span className="text-sm text-gray-400">-</span>
+                            <Clock className="w-5 h-5 text-yellow-600" />
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 flex items-center">
-                            <Clock className="w-4 h-4 mr-1 text-gray-400" />
-                            {stream.duration} saat
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-lg font-semibold text-gray-900">
+                              {payment.title || payment.description || (payment.period ? `${payment.period} ayı ödemesi` : 'Ödeme')}
+                            </p>
+                            {payment.source && (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                payment.source === 'payout' 
+                                  ? 'bg-blue-100 text-blue-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {payment.source === 'payout' ? 'Manuel Ödeme' : 'İş Ödemesi'}
+                              </span>
+                            )}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              payment.status === 'paid' 
+                                ? 'bg-green-100 text-green-800' 
+                                : payment.status === 'unpaid'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                              {payment.status === 'paid' ? 'Ödendi' : payment.status === 'unpaid' ? 'Ödenmedi' : 'Kısmen Ödendi'}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {stream.status === 'approved' && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              ✅ Onaylandı
+                          <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                            <span className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {format(new Date(payment.date || payment.paidAt || payment.createdAt), 'dd MMMM yyyy', { locale: tr })}
                             </span>
-                          )}
-                          {(!stream.status || stream.status === null) && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              📋 İşleniyor
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {stream.status === 'approved' && stream.streamerEarning > 0 ? (
-                            <span className="text-sm font-bold text-green-600">
-                              {stream.streamerEarning.toLocaleString('tr-TR', {
-                                style: 'currency',
-                                currency: 'TRY',
-                                maximumFractionDigits: 0,
-                              })}
-                            </span>
-                          ) : stream.status === 'approved' ? (
-                            <span className="text-xs text-orange-600 flex items-center">
-                              <AlertCircle className="w-4 h-4 mr-1" />
-                              Maliyet girilmemiş
-                            </span>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                            {payment.period && (
+                              <>
+                                <span>•</span>
+                                <span>Dönem: {payment.period}</span>
+                              </>
+                            )}
+                            {payment.description && payment.source !== 'payout' && (
+                              <>
+                                <span>•</span>
+                                <span>{payment.description}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${
+                        payment.status === 'paid' 
+                          ? 'text-green-600' 
+                          : payment.status === 'unpaid'
+                            ? 'text-red-600'
+                            : 'text-yellow-600'
+                      }`}>
+                        {payment.amount.toLocaleString('tr-TR', {
+                          style: 'currency',
+                          currency: 'TRY',
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Streams List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Video className="w-6 h-6 mr-2" />
+            Yayınlarım ({streams.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {streams.length === 0 ? (
+            <div className="text-center py-12">
+              <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg mb-2">Henüz yayın eklenmemiş</p>
+              <p className="text-sm text-gray-400">Yukarıdaki "Yeni Yayın Ekle" butonuna tıklayarak ilk yayınınızı ekleyebilirsiniz</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tarih
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Maç Bilgisi
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Firma
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Süre
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Durum
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ödeme Tutarı
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {streams.map((stream) => (
+                    <tr key={stream.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 max-w-xs truncate" title={stream.matchInfo || ''}>
+                          {stream.matchInfo || 'Yayın'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stream.teamName ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {stream.teamName}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 flex items-center">
+                          <Clock className="w-4 h-4 mr-1 text-gray-400" />
+                          {stream.duration} saat
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stream.status === 'approved' && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✅ Onaylandı
+                          </span>
+                        )}
+                        {(!stream.status || stream.status === null) && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            📋 İşleniyor
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {stream.status === 'approved' && stream.streamerEarning > 0 ? (
+                          <span className="text-sm font-bold text-green-600">
+                            {stream.streamerEarning.toLocaleString('tr-TR', {
+                              style: 'currency',
+                              currency: 'TRY',
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
+                        ) : stream.status === 'approved' ? (
+                          <span className="text-xs text-orange-600 flex items-center">
+                            <AlertCircle className="w-4 h-4 mr-1" />
+                            Maliyet girilmemiş
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Ses Teslim Modal */}
       {showVoiceModal && selectedVoiceTask && (
@@ -761,4 +760,3 @@ export default function StreamerDashboardPage() {
     </AppShell>
   )
 }
-
