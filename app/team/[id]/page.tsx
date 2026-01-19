@@ -1,122 +1,225 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Layout from '@/components/Layout'
-import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { 
-  ArrowLeft, Plus, CreditCard, Mic, Download, CheckCircle, Clock, 
-  Mail, Phone, Edit, Shield, Wallet, Receipt, Briefcase, FileText
+  ArrowLeft, CreditCard, Mic, CheckCircle, Clock, 
+  Mail, Phone, Shield, Wallet, Briefcase, FileText, AlertCircle
 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-// Tarih formatlama fonksiyonu
-function formatDate(date: Date | string): string {
-  try {
-    const d = new Date(date)
-    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-    return `${d.getDate()} ${months[d.getMonth()]}`
-  } catch {
-    return '-'
-  }
+interface PersonData {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  iban?: string
+  role?: string
+  avatar?: string
+  profilePhoto?: string
+  isActive?: boolean
 }
 
-export default async function TeamMemberDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }> | { id: string }
-}) {
-  let resolvedParams: { id: string }
-  
-  try {
-    resolvedParams = await Promise.resolve(params)
-  } catch {
-    notFound()
-  }
-  
-  const { id } = resolvedParams
-  
-  if (!id) {
-    notFound()
-  }
-  
-  let member: any = null
-  let voiceActor: any = null
-  let financialRecords: any[] = []
-  let tasks: any[] = []
-  let scripts: any[] = []
-  
-  try {
-    // Önce TeamMember olarak ara
-    member = await prisma.teamMember.findUnique({
-      where: { id },
-      include: {
-        tasks: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-      },
-    }).catch(() => null)
+interface TaskData {
+  id: string
+  title: string
+  description?: string
+  status: string
+  createdAt: string
+}
 
-    // Bulunamadıysa VoiceActor olarak ara
-    if (!member) {
-      voiceActor = await prisma.voiceActor.findUnique({
-        where: { id },
-        include: {
-          scripts: {
-            orderBy: { createdAt: 'desc' },
-            take: 10,
-          },
-        },
-      }).catch(() => null)
+interface ScriptData {
+  id: string
+  title: string
+  status: string
+  price?: number
+  createdAt: string
+}
+
+interface FinancialData {
+  id: string
+  type: string
+  category?: string
+  amount: number
+  date: string
+  description?: string
+}
+
+export default function TeamMemberDetailPage() {
+  const params = useParams()
+  const id = params?.id as string
+  
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isVoiceActor, setIsVoiceActor] = useState(false)
+  const [person, setPerson] = useState<PersonData | null>(null)
+  const [tasks, setTasks] = useState<TaskData[]>([])
+  const [scripts, setScripts] = useState<ScriptData[]>([])
+  const [financials, setFinancials] = useState<FinancialData[]>([])
+  const [stats, setStats] = useState({
+    totalItems: 0,
+    completed: 0,
+    pending: 0,
+    totalEarnings: 0,
+    unpaidAmount: 0,
+  })
+
+  useEffect(() => {
+    if (id) {
+      fetchData()
     }
+  }, [id])
 
-    if (!member && !voiceActor) {
-      notFound()
+  const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Önce TeamMember olarak dene
+      let res = await fetch(`/api/team/${id}`)
+      
+      if (res.ok) {
+        const data = await res.json()
+        setPerson({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          iban: data.iban,
+          role: data.role || 'Ekip Üyesi',
+          avatar: data.avatar,
+        })
+        setIsVoiceActor(false)
+        
+        // Görevleri al
+        const tasksRes = await fetch(`/api/team/${id}/tasks`).catch(() => null)
+        if (tasksRes?.ok) {
+          const tasksData = await tasksRes.json()
+          setTasks(Array.isArray(tasksData) ? tasksData : [])
+        }
+        
+        // Finansal kayıtları al
+        const finRes = await fetch(`/api/financial?teamMemberId=${id}`).catch(() => null)
+        if (finRes?.ok) {
+          const finData = await finRes.json()
+          const records = Array.isArray(finData) ? finData : (finData.records || [])
+          setFinancials(records)
+          
+          // İstatistikleri hesapla
+          const earnings = records
+            .filter((r: any) => r.type === 'expense')
+            .reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+          
+          setStats(prev => ({
+            ...prev,
+            totalItems: tasks.length,
+            completed: tasks.filter(t => t.status === 'completed').length,
+            pending: tasks.filter(t => t.status === 'pending').length,
+            totalEarnings: earnings,
+          }))
+        }
+      } else {
+        // VoiceActor olarak dene
+        res = await fetch(`/api/voice-actors/${id}`)
+        
+        if (res.ok) {
+          const data = await res.json()
+          setPerson({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            iban: data.iban,
+            role: 'Seslendirmen',
+            profilePhoto: data.profilePhoto,
+            isActive: data.isActive,
+          })
+          setIsVoiceActor(true)
+          
+          // Scriptleri al
+          const scriptsRes = await fetch(`/api/voiceover-scripts?voiceActorId=${id}`).catch(() => null)
+          if (scriptsRes?.ok) {
+            const scriptsData = await scriptsRes.json()
+            const scriptsList = Array.isArray(scriptsData) ? scriptsData : (scriptsData.scripts || [])
+            setScripts(scriptsList)
+            
+            // İstatistikleri hesapla
+            const completed = scriptsList.filter((s: any) => s.status === 'APPROVED' || s.status === 'PAID').length
+            const pending = scriptsList.filter((s: any) => s.status === 'WAITING_VOICE' || s.status === 'VOICE_UPLOADED').length
+            const earnings = scriptsList
+              .filter((s: any) => s.status === 'PAID')
+              .reduce((sum: number, s: any) => sum + (s.price || 0), 0)
+            const unpaid = scriptsList
+              .filter((s: any) => s.status === 'APPROVED')
+              .reduce((sum: number, s: any) => sum + (s.price || 0), 0)
+            
+            setStats({
+              totalItems: scriptsList.length,
+              completed,
+              pending,
+              totalEarnings: earnings,
+              unpaidAmount: unpaid,
+            })
+          }
+          
+          // Finansal kayıtları al
+          const finRes = await fetch(`/api/financial?voiceActorId=${id}`).catch(() => null)
+          if (finRes?.ok) {
+            const finData = await finRes.json()
+            setFinancials(Array.isArray(finData) ? finData : (finData.records || []))
+          }
+        } else {
+          setError('Kişi bulunamadı')
+        }
+      }
+    } catch (err: any) {
+      console.error('Fetch error:', err)
+      setError(err.message || 'Veri yüklenirken hata oluştu')
+    } finally {
+      setLoading(false)
     }
-
-    // Finansal kayıtları al
-    if (voiceActor) {
-      financialRecords = await prisma.financialRecord.findMany({
-        where: { voiceActorId: voiceActor.id },
-        orderBy: { date: 'desc' },
-        take: 20,
-      }).catch(() => [])
-      scripts = voiceActor.scripts || []
-    } else if (member) {
-      financialRecords = await prisma.financialRecord.findMany({
-        where: { teamMemberId: member.id },
-        orderBy: { date: 'desc' },
-        take: 20,
-      }).catch(() => [])
-      tasks = member.tasks || []
-    }
-  } catch (error) {
-    console.error('Error fetching team member:', error)
-    notFound()
   }
 
-  const isVoiceActor = !!voiceActor
-  const person = isVoiceActor ? voiceActor : member
-  const profilePhoto = isVoiceActor ? voiceActor?.profilePhoto : member?.avatar
-  const personName = person?.name || 'İsimsiz'
-  const personEmail = person?.email
-  const personPhone = person?.phone
-  const personIban = person?.iban
-
-  // İstatistikler
-  const stats = {
-    totalItems: isVoiceActor ? scripts.length : tasks.length,
-    completed: isVoiceActor 
-      ? scripts.filter((s: any) => s.status === 'APPROVED' || s.status === 'PAID').length
-      : tasks.filter((t: any) => t.status === 'completed').length,
-    pending: isVoiceActor
-      ? scripts.filter((s: any) => s.status === 'WAITING_VOICE' || s.status === 'VOICE_UPLOADED').length
-      : tasks.filter((t: any) => t.status === 'pending').length,
-    totalEarnings: financialRecords
-      .filter((fr: any) => fr.type === 'expense')
-      .reduce((sum: number, fr: any) => sum + (fr.amount || 0), 0),
+  // Tarih formatlama
+  const formatDate = (date: string) => {
+    try {
+      const d = new Date(date)
+      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+      return `${d.getDate()} ${months[d.getMonth()]}`
+    } catch {
+      return '-'
+    }
   }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </Layout>
+    )
+  }
+
+  if (error || !person) {
+    return (
+      <Layout>
+        <div className="max-w-2xl mx-auto text-center py-12">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Hata</h1>
+          <p className="text-gray-500 mb-4">{error || 'Kişi bulunamadı'}</p>
+          <Link href="/team" className="text-blue-600 hover:underline">
+            ← Ekibe Dön
+          </Link>
+        </div>
+      </Layout>
+    )
+  }
+
+  const profilePhoto = isVoiceActor ? person.profilePhoto : person.avatar
 
   return (
     <Layout>
@@ -124,10 +227,10 @@ export default async function TeamMemberDetailPage({
         {/* Geri Butonu */}
         <Link
           href="/team"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Ekibe Dön</span>
+          Ekibe Dön
         </Link>
 
         {/* Profil Kartı */}
@@ -139,7 +242,7 @@ export default async function TeamMemberDetailPage({
               {profilePhoto ? (
                 <img
                   src={profilePhoto}
-                  alt={personName}
+                  alt={person.name}
                   className="w-24 h-24 rounded-xl object-cover ring-4 ring-white shadow-lg"
                 />
               ) : (
@@ -148,70 +251,51 @@ export default async function TeamMemberDetailPage({
                     <Mic className="w-10 h-10 text-white" />
                   ) : (
                     <span className="text-white font-bold text-3xl">
-                      {personName.charAt(0).toUpperCase()}
+                      {person.name.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
               )}
               
               <div className="flex-1 pb-1">
-                <h1 className="text-2xl font-bold text-gray-900">{personName}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{person.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${isVoiceActor ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
                     {isVoiceActor ? <Mic className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                    {isVoiceActor ? 'Seslendirmen' : member?.role || 'Ekip Üyesi'}
+                    {person.role}
                   </span>
                 </div>
               </div>
-
-              {!isVoiceActor && member && (
-                <div className="flex gap-2">
-                  <Link
-                    href={`/team/${member.id}/edit`}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition"
-                  >
-                    <Edit className="w-4 h-4" />
-                    Düzenle
-                  </Link>
-                  <Link
-                    href={`/team/${member.id}/task/new`}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Görev
-                  </Link>
-                </div>
-              )}
             </div>
 
             {/* İletişim Bilgileri */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-              {personEmail && (
+              {person.email && (
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                   <Mail className="w-4 h-4 text-blue-600" />
                   <div>
                     <p className="text-xs text-gray-500">Email</p>
-                    <p className="text-sm font-medium text-gray-900">{personEmail}</p>
+                    <p className="text-sm font-medium text-gray-900">{person.email}</p>
                   </div>
                 </div>
               )}
               
-              {personPhone && (
+              {person.phone && (
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                   <Phone className="w-4 h-4 text-green-600" />
                   <div>
                     <p className="text-xs text-gray-500">Telefon</p>
-                    <p className="text-sm font-medium text-gray-900">{personPhone}</p>
+                    <p className="text-sm font-medium text-gray-900">{person.phone}</p>
                   </div>
                 </div>
               )}
               
-              {personIban && (
+              {person.iban && (
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                   <CreditCard className="w-4 h-4 text-purple-600" />
                   <div>
                     <p className="text-xs text-gray-500">IBAN</p>
-                    <p className="text-sm font-mono font-medium text-gray-900">{personIban}</p>
+                    <p className="text-sm font-mono font-medium text-gray-900">{person.iban}</p>
                   </div>
                 </div>
               )}
@@ -272,6 +356,24 @@ export default async function TeamMemberDetailPage({
           </div>
         </div>
 
+        {/* Ödenmemiş Tutar Uyarısı */}
+        {stats.unpaidAmount > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-red-800">Ödenmemiş Tutar</p>
+                <p className="text-sm text-red-600">Onaylanmış ama ödenmemiş işler</p>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-red-600">
+              {stats.unpaidAmount.toLocaleString('tr-TR')}₺
+            </p>
+          </div>
+        )}
+
         {/* İçerik Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Görevler / Metinler */}
@@ -287,7 +389,7 @@ export default async function TeamMemberDetailPage({
                 scripts.length === 0 ? (
                   <div className="p-6 text-center text-gray-500 text-sm">Henüz metin yok</div>
                 ) : (
-                  scripts.map((script: any) => (
+                  scripts.map((script) => (
                     <div key={script.id} className="p-3 hover:bg-gray-50">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -301,22 +403,13 @@ export default async function TeamMemberDetailPage({
                               {script.status === 'PAID' ? 'Ödendi' : 
                                script.status === 'APPROVED' ? 'Onaylandı' : 'Bekliyor'}
                             </span>
-                            {script.price > 0 && (
+                            {script.price && script.price > 0 && (
                               <span className="text-xs text-emerald-600 font-medium">
                                 {script.price.toLocaleString('tr-TR')}₺
                               </span>
                             )}
                           </div>
                         </div>
-                        {script.audioFile && (
-                          <a
-                            href={script.audioFile}
-                            download
-                            className="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                        )}
                       </div>
                     </div>
                   ))
@@ -325,7 +418,7 @@ export default async function TeamMemberDetailPage({
                 tasks.length === 0 ? (
                   <div className="p-6 text-center text-gray-500 text-sm">Henüz görev yok</div>
                 ) : (
-                  tasks.map((task: any) => (
+                  tasks.map((task) => (
                     <div key={task.id} className="p-3 hover:bg-gray-50">
                       <p className="font-medium text-gray-900">{task.title}</p>
                       {task.description && (
@@ -348,31 +441,29 @@ export default async function TeamMemberDetailPage({
             </div>
           </div>
 
-          {/* Finansal Kayıtlar */}
+          {/* Ödeme Geçmişi */}
           <div className="bg-white rounded-xl border overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b bg-gray-50">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-emerald-600" />
+                <Wallet className="w-4 h-4 text-emerald-600" />
                 Ödeme Geçmişi
               </h3>
             </div>
-            <div className="max-h-80 overflow-y-auto">
-              {financialRecords.length === 0 ? (
+            <div className="divide-y max-h-80 overflow-y-auto">
+              {financials.length === 0 ? (
                 <div className="p-6 text-center text-gray-500 text-sm">Henüz ödeme yok</div>
               ) : (
-                <div className="divide-y">
-                  {financialRecords.map((record: any) => (
-                    <div key={record.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{record.category || 'Ödeme'}</p>
-                        <p className="text-xs text-gray-500">{formatDate(record.date)}</p>
-                      </div>
-                      <span className={`font-semibold ${record.type === 'income' ? 'text-green-600' : 'text-emerald-600'}`}>
-                        {record.amount.toLocaleString('tr-TR')}₺
-                      </span>
+                financials.map((record) => (
+                  <div key={record.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{record.category || record.description || 'Ödeme'}</p>
+                      <p className="text-xs text-gray-500">{formatDate(record.date)}</p>
                     </div>
-                  ))}
-                </div>
+                    <span className="font-semibold text-emerald-600">
+                      {record.amount.toLocaleString('tr-TR')}₺
+                    </span>
+                  </div>
+                ))
               )}
             </div>
           </div>
