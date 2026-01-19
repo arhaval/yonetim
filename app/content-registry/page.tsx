@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import { toast } from 'sonner'
-import { Plus, X, ExternalLink, Trash2, Check, FileText, Mic, Video, Clock, CheckCircle, DollarSign } from 'lucide-react'
+import { Plus, X, Trash2, Check, FileText, Mic, Video, Clock, CheckCircle, DollarSign, AlertTriangle, Calendar } from 'lucide-react'
 
-// Durum bilgileri - basitleştirilmiş
+// Durum bilgileri
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   DRAFT: { label: 'Taslak', color: 'text-gray-600', bg: 'bg-gray-100' },
   SCRIPT_READY: { label: 'Ses Bekliyor', color: 'text-blue-600', bg: 'bg-blue-100' },
@@ -23,6 +23,8 @@ interface ContentRegistry {
   status: string
   voiceLink?: string
   editLink?: string
+  voiceDeadline?: string
+  editDeadline?: string
   voiceActor?: { id: string; name: string }
   editor?: { id: string; name: string }
   createdAt: string
@@ -31,6 +33,26 @@ interface ContentRegistry {
 interface Person {
   id: string
   name: string
+}
+
+// Deadline kontrolü
+function getDeadlineStatus(deadline?: string): { isOverdue: boolean; daysLeft: number; label: string } {
+  if (!deadline) return { isOverdue: false, daysLeft: 999, label: '' }
+  
+  const now = new Date()
+  const deadlineDate = new Date(deadline)
+  const diffTime = deadlineDate.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays < 0) {
+    return { isOverdue: true, daysLeft: diffDays, label: `${Math.abs(diffDays)} gün gecikti!` }
+  } else if (diffDays === 0) {
+    return { isOverdue: false, daysLeft: 0, label: 'Bugün!' }
+  } else if (diffDays === 1) {
+    return { isOverdue: false, daysLeft: 1, label: 'Yarın' }
+  } else {
+    return { isOverdue: false, daysLeft: diffDays, label: `${diffDays} gün kaldı` }
+  }
 }
 
 export default function ContentRegistryPage() {
@@ -46,7 +68,14 @@ export default function ContentRegistryPage() {
   const [selectedItem, setSelectedItem] = useState<ContentRegistry | null>(null)
   
   // Form
-  const [formData, setFormData] = useState({ title: '', description: '', voiceActorId: '', editorId: '' })
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    description: '', 
+    voiceActorId: '', 
+    editorId: '',
+    voiceDeadline: '',
+    editDeadline: '',
+  })
   const [linkInput, setLinkInput] = useState('')
   const [linkType, setLinkType] = useState<'voice' | 'edit'>('voice')
   const [voicePrice, setVoicePrice] = useState('')
@@ -98,6 +127,8 @@ export default function ContentRegistryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          voiceDeadline: formData.voiceDeadline || undefined,
+          editDeadline: formData.editDeadline || undefined,
           status: formData.voiceActorId ? 'SCRIPT_READY' : 'DRAFT',
         }),
       })
@@ -105,7 +136,7 @@ export default function ContentRegistryPage() {
       if (res.ok) {
         toast.success('İçerik oluşturuldu')
         setShowNewModal(false)
-        setFormData({ title: '', description: '', voiceActorId: '', editorId: '' })
+        setFormData({ title: '', description: '', voiceActorId: '', editorId: '', voiceDeadline: '', editDeadline: '' })
         fetchData()
       } else {
         toast.error('Oluşturulamadı')
@@ -124,7 +155,6 @@ export default function ContentRegistryPage() {
     try {
       const updateData: any = { [linkType === 'voice' ? 'voiceLink' : 'editLink']: linkInput }
       
-      // Durumu güncelle
       if (linkType === 'voice' && selectedItem.editor) {
         updateData.status = 'VOICE_READY'
       } else if (linkType === 'edit') {
@@ -158,7 +188,6 @@ export default function ContentRegistryPage() {
       const vPrice = parseFloat(voicePrice) || 0
       const ePrice = parseFloat(editPrice) || 0
 
-      // Ödemeleri kaydet
       if (vPrice > 0 && selectedItem.voiceActor) {
         await fetch('/api/payouts', {
           method: 'POST',
@@ -189,7 +218,6 @@ export default function ContentRegistryPage() {
         })
       }
 
-      // Durumu güncelle
       await fetch(`/api/content-registry/${selectedItem.id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -230,6 +258,23 @@ export default function ContentRegistryPage() {
     done: registries.filter(r => ['PUBLISHED', 'ARCHIVED'].includes(r.status)),
   }
 
+  // İstatistikler
+  const stats = {
+    total: registries.length,
+    active: groups.active.length,
+    review: groups.review.length,
+    done: groups.done.length,
+    overdue: registries.filter(r => {
+      if (r.status === 'SCRIPT_READY' && r.voiceDeadline) {
+        return getDeadlineStatus(r.voiceDeadline).isOverdue
+      }
+      if (['VOICE_READY', 'EDITING'].includes(r.status) && r.editDeadline) {
+        return getDeadlineStatus(r.editDeadline).isOverdue
+      }
+      return false
+    }).length,
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -256,6 +301,32 @@ export default function ContentRegistryPage() {
             <Plus className="w-4 h-4" />
             Yeni İçerik
           </button>
+        </div>
+
+        {/* İstatistikler */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <p className="text-xs text-gray-500">Toplam</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold text-blue-600">{stats.active}</p>
+            <p className="text-xs text-gray-500">Devam Eden</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold text-amber-600">{stats.review}</p>
+            <p className="text-xs text-gray-500">Onay Bekliyor</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold text-green-600">{stats.done}</p>
+            <p className="text-xs text-gray-500">Tamamlanan</p>
+          </div>
+          {stats.overdue > 0 && (
+            <div className="bg-red-50 rounded-lg border border-red-200 p-4">
+              <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+              <p className="text-xs text-red-600">Geciken!</p>
+            </div>
+          )}
         </div>
 
         {/* Kanban Board */}
@@ -371,6 +442,15 @@ export default function ContentRegistryPage() {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ses Teslim Tarihi</label>
+                  <input
+                    type="date"
+                    value={formData.voiceDeadline}
+                    onChange={e => setFormData({ ...formData, voiceDeadline: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Editör</label>
                   <select
                     value={formData.editorId}
@@ -380,6 +460,15 @@ export default function ContentRegistryPage() {
                     <option value="">Seçiniz</option>
                     {editors.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kurgu Teslim Tarihi</label>
+                  <input
+                    type="date"
+                    value={formData.editDeadline}
+                    onChange={e => setFormData({ ...formData, editDeadline: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-4">
@@ -415,10 +504,16 @@ export default function ContentRegistryPage() {
                 <div>
                   <span className="text-gray-500">Seslendirmen:</span>
                   <p className="font-medium">{selectedItem.voiceActor?.name || '-'}</p>
+                  {selectedItem.voiceDeadline && (
+                    <DeadlineBadge deadline={selectedItem.voiceDeadline} status={selectedItem.status} type="voice" />
+                  )}
                 </div>
                 <div>
                   <span className="text-gray-500">Editör:</span>
                   <p className="font-medium">{selectedItem.editor?.name || '-'}</p>
+                  {selectedItem.editDeadline && (
+                    <DeadlineBadge deadline={selectedItem.editDeadline} status={selectedItem.status} type="edit" />
+                  )}
                 </div>
               </div>
 
@@ -541,7 +636,7 @@ export default function ContentRegistryPage() {
   )
 }
 
-// Basit Modal Komponenti
+// Modal Komponenti
 function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -558,6 +653,22 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
   )
 }
 
+// Deadline Badge
+function DeadlineBadge({ deadline, status, type }: { deadline: string; status: string; type: 'voice' | 'edit' }) {
+  // Sadece ilgili durumda göster
+  if (type === 'voice' && status !== 'SCRIPT_READY') return null
+  if (type === 'edit' && !['VOICE_READY', 'EDITING'].includes(status)) return null
+  
+  const { isOverdue, label } = getDeadlineStatus(deadline)
+  
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs mt-1 ${isOverdue ? 'text-red-600' : 'text-gray-500'}`}>
+      {isOverdue ? <AlertTriangle className="w-3 h-3" /> : <Calendar className="w-3 h-3" />}
+      {label}
+    </span>
+  )
+}
+
 // Kart Komponenti
 function ItemCard({ 
   item, 
@@ -571,10 +682,18 @@ function ItemCard({
   onApprove?: () => void
 }) {
   const status = STATUS_CONFIG[item.status] || STATUS_CONFIG.DRAFT
+  
+  // Deadline kontrolü
+  let deadlineInfo = null
+  if (item.status === 'SCRIPT_READY' && item.voiceDeadline) {
+    deadlineInfo = getDeadlineStatus(item.voiceDeadline)
+  } else if (['VOICE_READY', 'EDITING'].includes(item.status) && item.editDeadline) {
+    deadlineInfo = getDeadlineStatus(item.editDeadline)
+  }
 
   return (
     <div 
-      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition"
+      className={`p-3 rounded-lg cursor-pointer transition ${deadlineInfo?.isOverdue ? 'bg-red-50 hover:bg-red-100 border border-red-200' : 'bg-gray-50 hover:bg-gray-100'}`}
       onClick={onOpen}
     >
       <div className="flex items-start justify-between gap-2">
@@ -591,6 +710,12 @@ function ItemCard({
             {item.voiceLink && <span className="text-xs text-green-600">✓ Ses</span>}
             {item.editLink && <span className="text-xs text-green-600">✓ Kurgu</span>}
           </div>
+          {deadlineInfo && (
+            <div className={`flex items-center gap-1 mt-1 text-xs ${deadlineInfo.isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
+              {deadlineInfo.isOverdue ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+              {deadlineInfo.label}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
           {onApprove && (
