@@ -76,18 +76,17 @@ export default function TeamMemberDetailPage() {
     setError(null)
     
     try {
-      // Paralel olarak tüm API'leri dene
-      const [teamRes, voiceRes, streamerRes, creatorRes] = await Promise.all([
-        fetch(`/api/team/${id}`).catch(() => null),
-        fetch(`/api/voice-actors/${id}`).catch(() => null),
-        fetch(`/api/streamers/${id}`).catch(() => null),
-        fetch(`/api/content-creators/${id}`).catch(() => null),
-      ])
+      console.log('Fetching data for ID:', id)
       
-      // TeamMember olarak kontrol et
-      if (teamRes?.ok) {
-        const data = await teamRes.json()
-        if (data && data.id) {
+      // Sırayla API'leri dene - ilk bulunan kullanılacak
+      
+      // 1. TeamMember olarak dene
+      try {
+        const teamRes = await fetch(`/api/team/${id}`)
+        if (teamRes.ok) {
+          const data = await teamRes.json()
+          console.log('Team data:', data)
+          if (data && data.id && !data.error) {
           setPerson({
             id: data.id,
             name: data.name,
@@ -126,15 +125,21 @@ export default function TeamMemberDetailPage() {
               totalEarnings: earnings,
             }))
           }
-          setLoading(false)
-          return
+            setLoading(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Team fetch failed:', e)
       }
       
-      // VoiceActor olarak kontrol et
-      if (voiceRes?.ok) {
-        const data = await voiceRes.json()
-        if (data && data.id) {
+      // 2. VoiceActor olarak dene
+      try {
+        const voiceRes = await fetch(`/api/voice-actors/${id}`)
+        if (voiceRes.ok) {
+          const data = await voiceRes.json()
+          console.log('Voice data:', data)
+          if (data && data.id && !data.error) {
           setPerson({
             id: data.id,
             name: data.name,
@@ -179,15 +184,21 @@ export default function TeamMemberDetailPage() {
             const finData = await finRes.json()
             setFinancials(Array.isArray(finData) ? finData : (finData.records || []))
           }
-          setLoading(false)
-          return
+            setLoading(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Voice fetch failed:', e)
       }
       
-      // Streamer olarak kontrol et
-      if (streamerRes?.ok) {
-        const data = await streamerRes.json()
-        if (data && data.id) {
+      // 3. Streamer olarak dene
+      try {
+        const streamerRes = await fetch(`/api/streamers/${id}`)
+        if (streamerRes.ok) {
+          const data = await streamerRes.json()
+          console.log('Streamer data:', data)
+          if (data && data.id && !data.error) {
           setPerson({
             id: data.id,
             name: data.name,
@@ -216,15 +227,21 @@ export default function TeamMemberDetailPage() {
               totalEarnings: earnings,
             }))
           }
-          setLoading(false)
-          return
+            setLoading(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Streamer fetch failed:', e)
       }
       
-      // ContentCreator olarak kontrol et
-      if (creatorRes?.ok) {
-        const data = await creatorRes.json()
-        if (data && data.id) {
+      // 4. ContentCreator olarak dene
+      try {
+        const creatorRes = await fetch(`/api/content-creators/${id}`)
+        if (creatorRes.ok) {
+          const data = await creatorRes.json()
+          console.log('Creator data:', data)
+          if (data && data.id && !data.error) {
           setPerson({
             id: data.id,
             name: data.name,
@@ -253,13 +270,16 @@ export default function TeamMemberDetailPage() {
               totalEarnings: earnings,
             }))
           }
-          setLoading(false)
-          return
+            setLoading(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Creator fetch failed:', e)
       }
       
       // Hiçbiri bulunamadı
-      setError('Kişi bulunamadı')
+      setError('Kişi bulunamadı. Lütfen ekip sayfasından tekrar deneyin.')
     } catch (err: any) {
       console.error('Fetch error:', err)
       setError(err.message || 'Veri yüklenirken hata oluştu')
