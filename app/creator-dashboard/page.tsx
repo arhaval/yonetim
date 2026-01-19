@@ -13,6 +13,7 @@ export default function CreatorDashboardPage() {
   const [creator, setCreator] = useState<any>(null)
   const [contents, setContents] = useState<any[]>([])
   const [pendingTasks, setPendingTasks] = useState<any[]>([]) // Metin bekleyen işler
+  const [myScripts, setMyScripts] = useState<any[]>([]) // Benim oluşturduğum metinler
   const [loading, setLoading] = useState(true)
   const [showScriptForm, setShowScriptForm] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
@@ -64,6 +65,17 @@ export default function CreatorDashboardPage() {
         )
         setPendingTasks(myTasks)
       }
+
+      // Benim oluşturduğum tüm metinleri yükle
+      const allScriptsRes = await fetch('/api/content-registry')
+      const allScriptsData = await allScriptsRes.json()
+      if (allScriptsRes.ok) {
+        // Sadece bu içerik üreticisinin oluşturduğu metinleri filtrele
+        const scripts = (allScriptsData.registries || []).filter(
+          (script: any) => script.creator?.id === creatorId
+        )
+        setMyScripts(scripts)
+      }
     } catch (error) {
       console.error('Error loading contents:', error)
     } finally {
@@ -109,24 +121,37 @@ export default function CreatorDashboardPage() {
 
   const handleScriptSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!scriptFormData.title.trim() || !scriptFormData.text.trim()) {
+      alert('Başlık ve metin gerekli')
+      return
+    }
+    
     setSubmitting(true)
 
     try {
-      const res = await fetch('/api/voiceover-scripts', {
+      // ContentRegistry'ye kaydet - içerik üreticisi kendi metnini oluşturuyor
+      const res = await fetch('/api/content-registry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scriptFormData),
+        body: JSON.stringify({
+          title: scriptFormData.title,
+          description: scriptFormData.text,
+          scriptText: scriptFormData.text,
+          status: 'DRAFT', // Admin seslendirmen atayınca SCRIPT_READY olacak
+        }),
       })
 
       const data = await res.json()
 
       if (res.ok) {
-        alert('Metin başarıyla oluşturuldu!')
+        alert('Metin başarıyla oluşturuldu! Admin seslendirmen atadığında işlem başlayacak.')
         setShowScriptForm(false)
         setScriptFormData({
           title: '',
           text: '',
         })
+        loadContents(creator.id)
       } else {
         alert(data.error || 'Bir hata oluştu')
       }
@@ -347,24 +372,55 @@ export default function CreatorDashboardPage() {
           </div>
         )}
 
-        {/* Scripts Link */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Seslendirme Metinlerim</h2>
-                <p className="text-sm text-gray-600 mt-1">Tüm seslendirme metinlerinizi görüntüleyin ve yönetin</p>
-              </div>
-              <Link
-                href="/my-voiceovers"
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Tümünü Görüntüle
-              </Link>
+        {/* Metinlerim - İçerik Üreticisinin Oluşturduğu Metinler */}
+        {myScripts.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+              <h2 className="text-xl font-bold text-gray-900">Metinlerim ({myScripts.length})</h2>
+              <p className="text-sm text-gray-600 mt-1">Oluşturduğunuz metinlerin durumunu takip edin</p>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+              {myScripts.map((script) => {
+                const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+                  WAITING_SCRIPT: { label: 'Metin Bekliyor', color: 'text-pink-600', bg: 'bg-pink-100' },
+                  DRAFT: { label: 'Taslak', color: 'text-gray-600', bg: 'bg-gray-100' },
+                  SCRIPT_READY: { label: 'Ses Bekliyor', color: 'text-blue-600', bg: 'bg-blue-100' },
+                  VOICE_READY: { label: 'Kurgu Bekliyor', color: 'text-purple-600', bg: 'bg-purple-100' },
+                  EDITING: { label: 'Kurgu Yapılıyor', color: 'text-orange-600', bg: 'bg-orange-100' },
+                  REVIEW: { label: 'Onay Bekliyor', color: 'text-amber-600', bg: 'bg-amber-100' },
+                  PUBLISHED: { label: 'Tamamlandı', color: 'text-green-600', bg: 'bg-green-100' },
+                  ARCHIVED: { label: 'Arşiv', color: 'text-gray-500', bg: 'bg-gray-50' },
+                }
+                const status = statusConfig[script.status] || statusConfig.DRAFT
+                
+                return (
+                  <div key={script.id} className="px-6 py-4 hover:bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">{script.title}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${status.bg} ${status.color}`}>
+                            {status.label}
+                          </span>
+                          {script.voiceActor && (
+                            <span>🎙️ {script.voiceActor.name}</span>
+                          )}
+                          {script.editor && (
+                            <span>🎬 {script.editor.name}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {script.voiceLink && <span className="text-xs text-green-600">✓ Ses</span>}
+                        {script.editLink && <span className="text-xs text-green-600">✓ Kurgu</span>}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Metin Yazma Modal */}
         {showTaskModal && selectedTask && (
