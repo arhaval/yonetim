@@ -29,6 +29,14 @@ interface UserInfo {
   role: 'voice-actor' | 'team' | 'admin'
 }
 
+interface AdminStats {
+  totalContents: number
+  pendingContents: number
+  completedContents: number
+  totalTeamMembers: number
+  totalVoiceActors: number
+}
+
 // Deadline kontrolü
 function getDeadlineStatus(deadline?: string): { isOverdue: boolean; daysLeft: number; label: string } {
   if (!deadline) return { isOverdue: false, daysLeft: 999, label: '' }
@@ -66,6 +74,7 @@ export default function MyPanelPage() {
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null)
   const [linkInput, setLinkInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null)
 
   useEffect(() => {
     checkAuth()
@@ -94,11 +103,71 @@ export default function MyPanelPage() {
           setUser({ id: teamMemberId, name: data.name, email: data.email, role: 'team' })
           fetchMyContents(teamMemberId, 'team')
         }
+      } else if (teamMemberId && userRole === 'admin') {
+        // Admin olarak giriş yapmış
+        const res = await fetch('/api/auth/me')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user) {
+            setUser({ id: data.user.id, name: data.user.name, email: data.user.email, role: 'admin' })
+            fetchAdminStats()
+          } else {
+            setLoading(false)
+          }
+        } else {
+          setLoading(false)
+        }
       } else {
         setLoading(false)
       }
     } catch (err) {
       console.error('Auth check error:', err)
+      setLoading(false)
+    }
+  }
+
+  const fetchAdminStats = async () => {
+    try {
+      // İçerikleri al
+      const contentRes = await fetch('/api/content-registry')
+      let totalContents = 0, pendingContents = 0, completedContents = 0
+      if (contentRes.ok) {
+        const data = await contentRes.json()
+        const allContents = data.registries || []
+        totalContents = allContents.length
+        pendingContents = allContents.filter((c: ContentItem) => 
+          ['DRAFT', 'SCRIPT_READY', 'VOICE_READY', 'EDITING', 'REVIEW'].includes(c.status)
+        ).length
+        completedContents = allContents.filter((c: ContentItem) => c.status === 'PUBLISHED').length
+        setContents(allContents)
+      }
+
+      // Ekip üyelerini al
+      const teamRes = await fetch('/api/team')
+      let totalTeamMembers = 0
+      if (teamRes.ok) {
+        const data = await teamRes.json()
+        totalTeamMembers = Array.isArray(data) ? data.length : 0
+      }
+
+      // Seslendirmenleri al
+      const voiceRes = await fetch('/api/voice-actors')
+      let totalVoiceActors = 0
+      if (voiceRes.ok) {
+        const data = await voiceRes.json()
+        totalVoiceActors = Array.isArray(data) ? data.length : 0
+      }
+
+      setAdminStats({
+        totalContents,
+        pendingContents,
+        completedContents,
+        totalTeamMembers,
+        totalVoiceActors,
+      })
+    } catch (err) {
+      console.error('Admin stats error:', err)
+    } finally {
       setLoading(false)
     }
   }
@@ -204,6 +273,153 @@ export default function MyPanelPage() {
             >
               Ekip Üyesi Girişi
             </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Admin paneli
+  if (user.role === 'admin' && adminStats) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">{user.name}</h1>
+                  <p className="text-sm text-gray-500">Yönetici</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <LogOut className="w-4 h-4" />
+                Çıkış
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+          {/* Admin İstatistikleri */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white rounded-xl p-4 border">
+              <p className="text-2xl font-bold text-gray-900">{adminStats.totalContents}</p>
+              <p className="text-xs text-gray-500">Toplam İçerik</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border">
+              <p className="text-2xl font-bold text-amber-600">{adminStats.pendingContents}</p>
+              <p className="text-xs text-gray-500">Bekleyen</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border">
+              <p className="text-2xl font-bold text-green-600">{adminStats.completedContents}</p>
+              <p className="text-xs text-gray-500">Tamamlanan</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border">
+              <p className="text-2xl font-bold text-blue-600">{adminStats.totalTeamMembers}</p>
+              <p className="text-xs text-gray-500">Ekip Üyesi</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border">
+              <p className="text-2xl font-bold text-purple-600">{adminStats.totalVoiceActors}</p>
+              <p className="text-xs text-gray-500">Seslendirmen</p>
+            </div>
+          </div>
+
+          {/* Hızlı Erişim */}
+          <div className="bg-white rounded-xl border overflow-hidden">
+            <div className="px-4 py-3 border-b bg-indigo-50">
+              <h2 className="font-semibold text-indigo-800">Hızlı Erişim</h2>
+            </div>
+            <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Link
+                href="/content-registry"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 hover:bg-blue-50 transition"
+              >
+                <FileText className="w-6 h-6 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">İçerik Merkezi</span>
+              </Link>
+              <Link
+                href="/team"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 hover:bg-green-50 transition"
+              >
+                <User className="w-6 h-6 text-green-600" />
+                <span className="text-sm font-medium text-gray-700">Ekip</span>
+              </Link>
+              <Link
+                href="/financial"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 hover:bg-amber-50 transition"
+              >
+                <DollarSign className="w-6 h-6 text-amber-600" />
+                <span className="text-sm font-medium text-gray-700">Finansal</span>
+              </Link>
+              <Link
+                href="/payment-approval"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 hover:bg-purple-50 transition"
+              >
+                <CheckCircle className="w-6 h-6 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700">Ödeme Onay</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Son İçerikler */}
+          <div className="bg-white rounded-xl border overflow-hidden">
+            <div className="px-4 py-3 border-b bg-gray-50">
+              <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Son İçerikler
+              </h2>
+            </div>
+            <div className="divide-y max-h-80 overflow-y-auto">
+              {contents.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Henüz içerik yok
+                </div>
+              ) : (
+                contents.slice(0, 10).map(item => {
+                  const status = STATUS_CONFIG[item.status] || STATUS_CONFIG.DRAFT
+                  return (
+                    <div key={item.id} className="p-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{item.title}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`px-2 py-0.5 rounded text-xs ${status.bg} ${status.color}`}>
+                              {status.label}
+                            </span>
+                            {item.voiceActor && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Mic className="w-3 h-3" />
+                                {item.voiceActor.name}
+                              </span>
+                            )}
+                            {item.editor && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                {item.editor.name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Link
+                          href={`/content-registry`}
+                          className="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          Detay
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
           </div>
         </div>
       </div>

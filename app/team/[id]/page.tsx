@@ -76,55 +76,65 @@ export default function TeamMemberDetailPage() {
     setError(null)
     
     try {
-      // Önce TeamMember olarak dene
-      let res = await fetch(`/api/team/${id}`)
+      // Paralel olarak tüm API'leri dene
+      const [teamRes, voiceRes, streamerRes, creatorRes] = await Promise.all([
+        fetch(`/api/team/${id}`).catch(() => null),
+        fetch(`/api/voice-actors/${id}`).catch(() => null),
+        fetch(`/api/streamers/${id}`).catch(() => null),
+        fetch(`/api/content-creators/${id}`).catch(() => null),
+      ])
       
-      if (res.ok) {
-        const data = await res.json()
-        setPerson({
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          iban: data.iban,
-          role: data.role || 'Ekip Üyesi',
-          avatar: data.avatar,
-        })
-        setIsVoiceActor(false)
-        
-        // Görevleri al
-        const tasksRes = await fetch(`/api/team/${id}/tasks`).catch(() => null)
-        if (tasksRes?.ok) {
-          const tasksData = await tasksRes.json()
-          setTasks(Array.isArray(tasksData) ? tasksData : [])
-        }
-        
-        // Finansal kayıtları al
-        const finRes = await fetch(`/api/financial?teamMemberId=${id}`).catch(() => null)
-        if (finRes?.ok) {
-          const finData = await finRes.json()
-          const records = Array.isArray(finData) ? finData : (finData.records || [])
-          setFinancials(records)
+      // TeamMember olarak kontrol et
+      if (teamRes?.ok) {
+        const data = await teamRes.json()
+        if (data && data.id) {
+          setPerson({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            iban: data.iban,
+            role: data.role || 'Ekip Üyesi',
+            avatar: data.avatar,
+          })
+          setIsVoiceActor(false)
           
-          // İstatistikleri hesapla
-          const earnings = records
-            .filter((r: any) => r.type === 'expense')
-            .reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+          // Görevleri al
+          const tasksRes = await fetch(`/api/team/${id}/tasks`).catch(() => null)
+          if (tasksRes?.ok) {
+            const tasksData = await tasksRes.json()
+            setTasks(Array.isArray(tasksData) ? tasksData : [])
+          }
           
-          setStats(prev => ({
-            ...prev,
-            totalItems: tasks.length,
-            completed: tasks.filter(t => t.status === 'completed').length,
-            pending: tasks.filter(t => t.status === 'pending').length,
-            totalEarnings: earnings,
-          }))
+          // Finansal kayıtları al
+          const finRes = await fetch(`/api/financial?teamMemberId=${id}`).catch(() => null)
+          if (finRes?.ok) {
+            const finData = await finRes.json()
+            const records = Array.isArray(finData) ? finData : (finData.records || [])
+            setFinancials(records)
+            
+            // İstatistikleri hesapla
+            const earnings = records
+              .filter((r: any) => r.type === 'expense')
+              .reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+            
+            setStats(prev => ({
+              ...prev,
+              totalItems: tasks.length,
+              completed: tasks.filter(t => t.status === 'completed').length,
+              pending: tasks.filter(t => t.status === 'pending').length,
+              totalEarnings: earnings,
+            }))
+          }
+          setLoading(false)
+          return
         }
-      } else {
-        // VoiceActor olarak dene
-        res = await fetch(`/api/voice-actors/${id}`)
-        
-        if (res.ok) {
-          const data = await res.json()
+      }
+      
+      // VoiceActor olarak kontrol et
+      if (voiceRes?.ok) {
+        const data = await voiceRes.json()
+        if (data && data.id) {
           setPerson({
             id: data.id,
             name: data.name,
@@ -169,10 +179,87 @@ export default function TeamMemberDetailPage() {
             const finData = await finRes.json()
             setFinancials(Array.isArray(finData) ? finData : (finData.records || []))
           }
-        } else {
-          setError('Kişi bulunamadı')
+          setLoading(false)
+          return
         }
       }
+      
+      // Streamer olarak kontrol et
+      if (streamerRes?.ok) {
+        const data = await streamerRes.json()
+        if (data && data.id) {
+          setPerson({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            iban: data.iban,
+            role: 'Yayıncı',
+            profilePhoto: data.profilePhoto,
+            isActive: data.isActive,
+          })
+          setIsVoiceActor(false)
+          
+          // Finansal kayıtları al
+          const finRes = await fetch(`/api/financial?streamerId=${id}`).catch(() => null)
+          if (finRes?.ok) {
+            const finData = await finRes.json()
+            const records = Array.isArray(finData) ? finData : (finData.records || [])
+            setFinancials(records)
+            
+            const earnings = records
+              .filter((r: any) => r.type === 'expense')
+              .reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+            
+            setStats(prev => ({
+              ...prev,
+              totalEarnings: earnings,
+            }))
+          }
+          setLoading(false)
+          return
+        }
+      }
+      
+      // ContentCreator olarak kontrol et
+      if (creatorRes?.ok) {
+        const data = await creatorRes.json()
+        if (data && data.id) {
+          setPerson({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            iban: data.iban,
+            role: 'İçerik Üreticisi',
+            profilePhoto: data.profilePhoto,
+            isActive: data.isActive,
+          })
+          setIsVoiceActor(false)
+          
+          // Finansal kayıtları al
+          const finRes = await fetch(`/api/financial?contentCreatorId=${id}`).catch(() => null)
+          if (finRes?.ok) {
+            const finData = await finRes.json()
+            const records = Array.isArray(finData) ? finData : (finData.records || [])
+            setFinancials(records)
+            
+            const earnings = records
+              .filter((r: any) => r.type === 'expense')
+              .reduce((sum: number, r: any) => sum + (r.amount || 0), 0)
+            
+            setStats(prev => ({
+              ...prev,
+              totalEarnings: earnings,
+            }))
+          }
+          setLoading(false)
+          return
+        }
+      }
+      
+      // Hiçbiri bulunamadı
+      setError('Kişi bulunamadı')
     } catch (err: any) {
       console.error('Fetch error:', err)
       setError(err.message || 'Veri yüklenirken hata oluştu')

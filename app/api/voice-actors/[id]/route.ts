@@ -38,6 +38,50 @@ export async function GET(
   }
 }
 
+// Seslendirmen güncelle
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await Promise.resolve(params)
+    const data = await request.json()
+    
+    // Seslendirmeni bul
+    const voiceActor = await prisma.voiceActor.findUnique({
+      where: { id: resolvedParams.id },
+    })
+
+    if (!voiceActor) {
+      return NextResponse.json(
+        { error: 'Seslendirmen bulunamadı' },
+        { status: 404 }
+      )
+    }
+
+    // Güncelle
+    const updated = await prisma.voiceActor.update({
+      where: { id: resolvedParams.id },
+      data: {
+        name: data.name || voiceActor.name,
+        email: data.email || voiceActor.email,
+        phone: data.phone !== undefined ? data.phone : voiceActor.phone,
+        iban: data.iban !== undefined ? data.iban : voiceActor.iban,
+        profilePhoto: data.profilePhoto !== undefined ? data.profilePhoto : voiceActor.profilePhoto,
+        isActive: data.isActive !== undefined ? data.isActive : voiceActor.isActive,
+      },
+    })
+
+    return NextResponse.json(updated)
+  } catch (error: any) {
+    console.error('Error updating voice actor:', error)
+    return NextResponse.json(
+      { error: `Seslendirmen güncellenemedi: ${error.message}` },
+      { status: 500 }
+    )
+  }
+}
+
 // Seslendirmen sil
 export async function DELETE(
   request: NextRequest,
