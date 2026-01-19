@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, CheckCircle } from 'lucide-react'
+import { Home, Users, Video, DollarSign, UserCheck, BarChart3, LogOut, Share2, Menu, X, ChevronRight, Mic, FileText, CheckCircle, CreditCard, Wallet } from 'lucide-react'
 import { useEffect, useState, useTransition } from 'react'
 
 const navigation = [
@@ -12,6 +12,7 @@ const navigation = [
   { name: 'İçerikler', href: '/content', icon: Video },
   { name: 'İçerik Merkezi', href: '/content-registry', icon: FileText },
   { name: 'Ödeme Onay', href: '/payment-approval', icon: CheckCircle },
+  { name: 'Ödeme Bekleyenler', href: '/pending-payments', icon: Wallet },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
   { name: 'Ekip', href: '/team', icon: UserCheck },
   { name: 'Yapılacaklar', href: '/todos', icon: FileText },

@@ -63,6 +63,7 @@ export default function ContentRegistryPage() {
   const [registries, setRegistries] = useState<ContentRegistry[]>([])
   const [creators, setCreators] = useState<Person[]>([])
   const [voiceActors, setVoiceActors] = useState<Person[]>([])
+  const [streamers, setStreamers] = useState<Person[]>([]) // Yayıncılar da seslendirmen olabilir
   const [editors, setEditors] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
   
@@ -77,7 +78,7 @@ export default function ContentRegistryPage() {
     title: '', 
     description: '', 
     creatorId: '',
-    voiceActorId: '', 
+    voiceActorId: '', // format: "va:id" veya "st:id"
     editorId: '',
     scriptDeadline: '',
     voiceDeadline: '',
@@ -96,10 +97,11 @@ export default function ContentRegistryPage() {
 
   const fetchData = async () => {
     try {
-      const [regRes, creatorsRes, voiceRes, teamRes] = await Promise.all([
+      const [regRes, creatorsRes, voiceRes, streamersRes, teamRes] = await Promise.all([
         fetch('/api/content-registry'),
         fetch('/api/content-creators'),
         fetch('/api/voice-actors'),
+        fetch('/api/streamers'),
         fetch('/api/team'),
       ])
 
@@ -114,6 +116,10 @@ export default function ContentRegistryPage() {
       if (voiceRes.ok) {
         const data = await voiceRes.json()
         setVoiceActors(Array.isArray(data) ? data : [])
+      }
+      if (streamersRes.ok) {
+        const data = await streamersRes.json()
+        setStreamers(Array.isArray(data) ? data : [])
       }
       if (teamRes.ok) {
         const data = await teamRes.json()
@@ -147,11 +153,20 @@ export default function ContentRegistryPage() {
 
     setSubmitting(true)
     try {
+      // Seslendirmen tipini ve ID'sini ayır (va:id veya st:id formatında)
+      let voiceActorId = undefined
+      let voiceActorType = undefined
+      if (formData.voiceActorId) {
+        const [type, id] = formData.voiceActorId.split(':')
+        voiceActorId = id
+        voiceActorType = type === 'st' ? 'streamer' : 'voiceActor'
+      }
+
       // Durumu belirle
       let status = 'DRAFT'
       if (formData.assignToCreator && formData.creatorId) {
         status = 'WAITING_SCRIPT' // İçerik üreticisi metin yazacak
-      } else if (formData.voiceActorId) {
+      } else if (voiceActorId) {
         status = 'SCRIPT_READY' // Direkt seslendirmene gidecek
       }
 
@@ -162,7 +177,8 @@ export default function ContentRegistryPage() {
           title: formData.title,
           description: formData.assignToCreator ? '' : formData.description,
           creatorId: formData.creatorId || undefined,
-          voiceActorId: formData.voiceActorId || undefined,
+          voiceActorId: voiceActorType === 'voiceActor' ? voiceActorId : undefined,
+          streamerId: voiceActorType === 'streamer' ? voiceActorId : undefined,
           editorId: formData.editorId || undefined,
           scriptDeadline: formData.scriptDeadline || undefined,
           voiceDeadline: formData.voiceDeadline || undefined,
@@ -526,7 +542,12 @@ export default function ContentRegistryPage() {
                     className="w-full px-3 py-2 border rounded-lg"
                   >
                     <option value="">Seçiniz</option>
-                    {voiceActors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    <optgroup label="🎙️ Seslendirmenler">
+                      {voiceActors.map(v => <option key={`va-${v.id}`} value={`va:${v.id}`}>{v.name}</option>)}
+                    </optgroup>
+                    <optgroup label="📺 Yayıncılar">
+                      {streamers.map(s => <option key={`st-${s.id}`} value={`st:${s.id}`}>{s.name}</option>)}
+                    </optgroup>
                   </select>
                 </div>
                 <div>

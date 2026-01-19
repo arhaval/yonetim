@@ -11,6 +11,13 @@ export default function VoiceActorDashboardPage() {
   const router = useRouter()
   const [voiceActor, setVoiceActor] = useState<any>(null)
   const [contents, setContents] = useState<any[]>([])
+  const [pendingTasks, setPendingTasks] = useState<any[]>([]) // Ses bekleyen işler
+  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [voiceLink, setVoiceLink] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [editors, setEditors] = useState<any[]>([])
+  const [selectedEditorId, setSelectedEditorId] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,7 +37,7 @@ export default function VoiceActorDashboardPage() {
       }
 
       setVoiceActor(data.voiceActor)
-      loadContents()
+      loadContents(data.voiceActor.id)
     } catch (error) {
       router.push('/voice-actor-login')
     } finally {
@@ -38,7 +45,7 @@ export default function VoiceActorDashboardPage() {
     }
   }
 
-  const loadContents = async () => {
+  const loadContents = async (voiceActorId: string) => {
     try {
       const res = await fetch('/api/voice-actor/contents', {
         cache: 'default', // Browser cache kullan
@@ -47,8 +54,68 @@ export default function VoiceActorDashboardPage() {
       if (res.ok) {
         setContents(data)
       }
+
+      // Editörleri yükle
+      const editorsRes = await fetch('/api/team')
+      if (editorsRes.ok) {
+        const editorsData = await editorsRes.json()
+        setEditors(Array.isArray(editorsData) ? editorsData : [])
+      }
+
+      // Ses bekleyen işleri yükle (ContentRegistry'den)
+      const tasksRes = await fetch('/api/content-registry?status=SCRIPT_READY')
+      const tasksData = await tasksRes.json()
+      if (tasksRes.ok) {
+        // Sadece bu seslendirmene atanan işleri filtrele
+        const myTasks = (tasksData.registries || []).filter(
+          (task: any) => task.voiceActor?.id === voiceActorId
+        )
+        setPendingTasks(myTasks)
+      }
     } catch (error) {
       console.error('Error loading contents:', error)
+    }
+  }
+
+  // Ses linkini gönder ve editöre düşür
+  const handleSubmitVoice = async () => {
+    if (!selectedTask || !voiceLink.trim()) {
+      alert('Ses linki boş olamaz')
+      return
+    }
+
+    if (!selectedEditorId) {
+      alert('Lütfen bir editör seçin')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/content-registry/${selectedTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voiceLink: voiceLink,
+          editorId: selectedEditorId,
+          status: 'VOICE_READY', // Editöre düşsün
+        }),
+      })
+
+      if (res.ok) {
+        alert('Ses başarıyla gönderildi ve editöre iletildi!')
+        setShowTaskModal(false)
+        setSelectedTask(null)
+        setVoiceLink('')
+        setSelectedEditorId('')
+        loadContents(voiceActor.id)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -134,13 +201,62 @@ export default function VoiceActorDashboardPage() {
           </div>
         </div>
 
+        {/* Bekleyen İşler - Ses Teslim Edilecek */}
+        {pendingTasks.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-6 mb-6 border border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Mic className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-blue-800">Ses Bekleyen İşler</h2>
+                <p className="text-sm text-blue-600">{pendingTasks.length} adet iş sizden ses bekliyor</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {pendingTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="bg-white rounded-xl p-4 border border-blue-200 hover:border-blue-400 transition cursor-pointer"
+                  onClick={() => {
+                    setSelectedTask(task)
+                    setVoiceLink('')
+                    setSelectedEditorId(task.editor?.id || '')
+                    setShowTaskModal(true)
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                        {task.voiceDeadline && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Teslim: {format(new Date(task.voiceDeadline), 'dd MMM', { locale: tr })}
+                          </span>
+                        )}
+                        {task.creator && (
+                          <span>✍️ {task.creator.name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                      Ses Teslim Et
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Scripts Link */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Bekleyen Seslendirmelerim
+                  Tüm Seslendirmelerim
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">Size atanan seslendirme metinlerini görüntüleyin ve yönetin</p>
               </div>
@@ -296,6 +412,100 @@ export default function VoiceActorDashboardPage() {
         </div>
       </div>
 
+      {/* Ses Teslim Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900">{selectedTask.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">Seslendirmeyi tamamlayın ve editöre gönderin</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Metin Gösterimi */}
+              {selectedTask.scriptText && (
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Seslendirme Metni:</p>
+                  <div 
+                    className="text-sm text-gray-600 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: selectedTask.scriptText }}
+                  />
+                </div>
+              )}
+
+              {selectedTask.notes && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800 mb-1">Notlar:</p>
+                  <p className="text-sm text-blue-700">{selectedTask.notes}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ses Linki *
+                </label>
+                <input
+                  type="url"
+                  value={voiceLink}
+                  onChange={(e) => setVoiceLink(e.target.value)}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Ses dosyasını Google Drive, Dropbox vb. yükleyip linkini yapıştırın
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Editör *
+                </label>
+                <select
+                  value={selectedEditorId}
+                  onChange={(e) => setSelectedEditorId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Editör seçin</option>
+                  {editors.map((editor) => (
+                    <option key={editor.id} value={editor.id}>{editor.name}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Kurguyu yapacak editörü seçin. Ses teslim edildiğinde iş otomatik olarak editöre düşecek.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  {selectedTask.creator && (
+                    <span>✍️ Metin: <strong>{selectedTask.creator.name}</strong></span>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowTaskModal(false)
+                      setSelectedTask(null)
+                      setVoiceLink('')
+                      setSelectedEditorId('')
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={handleSubmitVoice}
+                    disabled={submitting || !voiceLink.trim() || !selectedEditorId}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Gönderiliyor...' : 'Sesi Teslim Et'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

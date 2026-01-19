@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Calendar, Clock, Building2, Trophy, DollarSign, CheckCircle2, AlertCircle, CreditCard, Video } from 'lucide-react'
+import { Plus, Calendar, Clock, Building2, Trophy, DollarSign, CheckCircle2, AlertCircle, CreditCard, Video, Mic, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import { AppShell } from '@/components/shared/AppShell'
@@ -17,11 +17,17 @@ export default function StreamerDashboardPage() {
   const router = useRouter()
   const [streamer, setStreamer] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
+  const [pendingVoiceTasks, setPendingVoiceTasks] = useState<any[]>([]) // Ses bekleyen işler
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paymentInfo, setPaymentInfo] = useState<any>(null)
   const [paymentHistory, setPaymentHistory] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [showVoiceModal, setShowVoiceModal] = useState(false)
+  const [selectedVoiceTask, setSelectedVoiceTask] = useState<any>(null)
+  const [voiceLink, setVoiceLink] = useState('')
+  const [editors, setEditors] = useState<any[]>([])
+  const [selectedEditorId, setSelectedEditorId] = useState('')
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     matchInfo: '',
@@ -47,6 +53,7 @@ export default function StreamerDashboardPage() {
       setStreamer(data.streamer)
       loadStreams(data.streamer.id)
       loadPaymentInfo(data.streamer.id)
+      loadVoiceTasks(data.streamer.id)
     } catch (error) {
       setError('Kullanıcı bilgileri yüklenemedi')
       setLoading(false)
@@ -78,6 +85,76 @@ export default function StreamerDashboardPage() {
         setPaymentInfo(data)
         setPaymentHistory(data.paymentHistory || [])
       }
+    }
+    catch (error) {
+      console.error('Error loading payment info:', error)
+    }
+  }
+
+  const loadVoiceTasks = async (streamerId: string) => {
+    try {
+      // Editörleri yükle
+      const editorsRes = await fetch('/api/team')
+      if (editorsRes.ok) {
+        const editorsData = await editorsRes.json()
+        setEditors(Array.isArray(editorsData) ? editorsData : [])
+      }
+
+      // Ses bekleyen işleri yükle (ContentRegistry'den - yayıncı olarak atananlar)
+      const tasksRes = await fetch('/api/content-registry?status=SCRIPT_READY')
+      const tasksData = await tasksRes.json()
+      if (tasksRes.ok) {
+        // Sadece bu yayıncıya atanan işleri filtrele
+        const myTasks = (tasksData.registries || []).filter(
+          (task: any) => task.streamer?.id === streamerId
+        )
+        setPendingVoiceTasks(myTasks)
+      }
+    }
+    catch (error) {
+      console.error('Error loading voice tasks:', error)
+    }
+  }
+
+  // Ses linkini gönder ve editöre düşür
+  const handleSubmitVoice = async () => {
+    if (!selectedVoiceTask || !voiceLink.trim()) {
+      alert('Ses linki boş olamaz')
+      return
+    }
+
+    if (!selectedEditorId) {
+      alert('Lütfen bir editör seçin')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/content-registry/${selectedVoiceTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voiceLink: voiceLink,
+          editorId: selectedEditorId,
+          status: 'VOICE_READY', // Editöre düşsün
+        }),
+      })
+
+      if (res.ok) {
+        alert('Ses başarıyla gönderildi ve editöre iletildi!')
+        setShowVoiceModal(false)
+        setSelectedVoiceTask(null)
+        setVoiceLink('')
+        setSelectedEditorId('')
+        loadVoiceTasks(streamer.id)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
     } catch (error) {
       console.error('Error loading payment info:', error)
     }
@@ -164,6 +241,54 @@ export default function StreamerDashboardPage() {
           ) : undefined
         }
       />
+
+      {/* Ses Bekleyen İşler */}
+      {pendingVoiceTasks.length > 0 && (
+        <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-800">
+              <Mic className="w-5 h-5 mr-2" />
+              Ses Bekleyen İşler ({pendingVoiceTasks.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingVoiceTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="bg-white rounded-xl p-4 border border-blue-200 hover:border-blue-400 transition cursor-pointer"
+                  onClick={() => {
+                    setSelectedVoiceTask(task)
+                    setVoiceLink('')
+                    setSelectedEditorId(task.editor?.id || '')
+                    setShowVoiceModal(true)
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{task.title}</h3>
+                      <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                        {task.voiceDeadline && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Teslim: {format(new Date(task.voiceDeadline), 'dd MMM', { locale: tr })}
+                          </span>
+                        )}
+                        {task.creator && (
+                          <span>✍️ {task.creator.name}</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button size="sm">
+                      Ses Teslim Et
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Ödeme Özeti */}
       {paymentInfo && (
@@ -539,6 +664,100 @@ export default function StreamerDashboardPage() {
             )}
           </CardContent>
         </Card>
+
+      {/* Ses Teslim Modal */}
+      {showVoiceModal && selectedVoiceTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900">{selectedVoiceTask.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">Seslendirmeyi tamamlayın ve editöre gönderin</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Metin Gösterimi */}
+              {selectedVoiceTask.scriptText && (
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Seslendirme Metni:</p>
+                  <div 
+                    className="text-sm text-gray-600 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: selectedVoiceTask.scriptText }}
+                  />
+                </div>
+              )}
+
+              {selectedVoiceTask.notes && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800 mb-1">Notlar:</p>
+                  <p className="text-sm text-blue-700">{selectedVoiceTask.notes}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ses Linki *
+                </label>
+                <input
+                  type="url"
+                  value={voiceLink}
+                  onChange={(e) => setVoiceLink(e.target.value)}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Ses dosyasını Google Drive, Dropbox vb. yükleyip linkini yapıştırın
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Editör *
+                </label>
+                <select
+                  value={selectedEditorId}
+                  onChange={(e) => setSelectedEditorId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Editör seçin</option>
+                  {editors.map((editor) => (
+                    <option key={editor.id} value={editor.id}>{editor.name}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Kurguyu yapacak editörü seçin. Ses teslim edildiğinde iş otomatik olarak editöre düşecek.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  {selectedVoiceTask.creator && (
+                    <span>✍️ Metin: <strong>{selectedVoiceTask.creator.name}</strong></span>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowVoiceModal(false)
+                      setSelectedVoiceTask(null)
+                      setVoiceLink('')
+                      setSelectedEditorId('')
+                    }}
+                  >
+                    İptal
+                  </Button>
+                  <Button
+                    onClick={handleSubmitVoice}
+                    disabled={submitting || !voiceLink.trim() || !selectedEditorId}
+                  >
+                    {submitting ? 'Gönderiliyor...' : 'Sesi Teslim Et'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   )
 }

@@ -22,7 +22,11 @@ export default function CreatorDashboardPage() {
   const [scriptFormData, setScriptFormData] = useState({
     title: '',
     text: '',
+    voiceActorId: '', // Seslendirmen seçimi
   })
+  const [voiceActors, setVoiceActors] = useState<any[]>([])
+  const [streamers, setStreamers] = useState<any[]>([])
+  const [editors, setEditors] = useState<any[]>([])
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -53,6 +57,25 @@ export default function CreatorDashboardPage() {
       const data = await res.json()
       if (res.ok) {
         setContents(data)
+      }
+
+      // Seslendirmen ve yayıncıları yükle
+      const [voiceRes, streamersRes, editorsRes] = await Promise.all([
+        fetch('/api/voice-actors'),
+        fetch('/api/streamers'),
+        fetch('/api/team'),
+      ])
+      if (voiceRes.ok) {
+        const voiceData = await voiceRes.json()
+        setVoiceActors(Array.isArray(voiceData) ? voiceData : [])
+      }
+      if (streamersRes.ok) {
+        const streamersData = await streamersRes.json()
+        setStreamers(Array.isArray(streamersData) ? streamersData : [])
+      }
+      if (editorsRes.ok) {
+        const editorsData = await editorsRes.json()
+        setEditors(Array.isArray(editorsData) ? editorsData : [])
       }
 
       // Metin bekleyen işleri yükle
@@ -126,11 +149,21 @@ export default function CreatorDashboardPage() {
       alert('Başlık ve metin gerekli')
       return
     }
+
+    if (!scriptFormData.voiceActorId) {
+      alert('Lütfen bir seslendirmen seçin')
+      return
+    }
     
     setSubmitting(true)
 
     try {
+      // Seslendirmen tipini ve ID'sini ayır (va:id veya st:id formatında)
+      const [type, id] = scriptFormData.voiceActorId.split(':')
+      const isStreamer = type === 'st'
+
       // ContentRegistry'ye kaydet - içerik üreticisi kendi metnini oluşturuyor
+      // Seslendirmen seçildiği için direkt SCRIPT_READY olarak başlıyor
       const res = await fetch('/api/content-registry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,18 +171,21 @@ export default function CreatorDashboardPage() {
           title: scriptFormData.title,
           description: scriptFormData.text,
           scriptText: scriptFormData.text,
-          status: 'DRAFT', // Admin seslendirmen atayınca SCRIPT_READY olacak
+          voiceActorId: isStreamer ? undefined : id,
+          streamerId: isStreamer ? id : undefined,
+          status: 'SCRIPT_READY', // Direkt seslendirmene düşsün
         }),
       })
 
       const data = await res.json()
 
       if (res.ok) {
-        alert('Metin başarıyla oluşturuldu! Admin seslendirmen atadığında işlem başlayacak.')
+        alert('Metin başarıyla oluşturuldu ve seslendirmene gönderildi!')
         setShowScriptForm(false)
         setScriptFormData({
           title: '',
           text: '',
+          voiceActorId: '',
         })
         loadContents(creator.id)
       } else {
@@ -346,6 +382,35 @@ export default function CreatorDashboardPage() {
                 <p className="mt-1 text-xs text-gray-500">Bu metin seslendirmen tarafından görülecektir. Yazı stili, boyutu ve kalın/ince ayarlarını kullanabilirsiniz.</p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seslendirmen *
+                </label>
+                <select
+                  value={scriptFormData.voiceActorId}
+                  onChange={(e) => setScriptFormData({ ...scriptFormData, voiceActorId: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                >
+                  <option value="">Seslendirmen seçin</option>
+                  {voiceActors.length > 0 && (
+                    <optgroup label="🎙️ Seslendirmenler">
+                      {voiceActors.map((v) => (
+                        <option key={`va-${v.id}`} value={`va:${v.id}`}>{v.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {streamers.length > 0 && (
+                    <optgroup label="📺 Yayıncılar">
+                      {streamers.map((s) => (
+                        <option key={`st-${s.id}`} value={`st:${s.id}`}>{s.name}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Metni okuyacak seslendirmeni seçin. Metin direkt olarak seçtiğiniz kişiye gönderilecek.</p>
+              </div>
+
               <div className="flex items-center justify-end space-x-4">
                 <button
                   type="button"
@@ -354,6 +419,7 @@ export default function CreatorDashboardPage() {
                     setScriptFormData({
                       title: '',
                       text: '',
+                      voiceActorId: '',
                     })
                   }}
                   className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"

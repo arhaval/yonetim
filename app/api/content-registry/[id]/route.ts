@@ -43,6 +43,14 @@ export async function GET(
             email: true,
           },
         },
+        streamer: {
+          select: {
+            id: true,
+            name: true,
+            profilePhoto: true,
+            email: true,
+          },
+        },
         editor: {
           select: {
             id: true,
@@ -165,6 +173,7 @@ export async function PATCH(
       contentType,
       creatorId: newCreatorId,
       voiceActorId: newVoiceActorId,
+      streamerId: newStreamerId,
       editorId,
       voiceoverScriptId,
       contentId,
@@ -178,6 +187,10 @@ export async function PATCH(
       publishDate,
       notes,
       editorNotes,
+      voicePrice,
+      editPrice,
+      voicePaid,
+      editPaid,
     } = body
 
     // voiceoverScriptId değiştiriliyorsa, başka bir registry'de kullanılıp kullanılmadığını kontrol et
@@ -226,9 +239,14 @@ export async function PATCH(
     if (userId) {
       if (newCreatorId !== undefined) updateData.creatorId = newCreatorId || null
       if (newVoiceActorId !== undefined) updateData.voiceActorId = newVoiceActorId || null
+      if (newStreamerId !== undefined) updateData.streamerId = newStreamerId || null
       if (editorId !== undefined) updateData.editorId = editorId || null
       if (voiceoverScriptId !== undefined) updateData.voiceoverScriptId = voiceoverScriptId || null
       if (contentId !== undefined) updateData.contentId = contentId || null
+      if (voicePrice !== undefined) updateData.voicePrice = voicePrice
+      if (editPrice !== undefined) updateData.editPrice = editPrice
+      if (voicePaid !== undefined) updateData.voicePaid = voicePaid
+      if (editPaid !== undefined) updateData.editPaid = editPaid
     }
 
     // Tarih alanları
@@ -256,6 +274,12 @@ export async function PATCH(
           },
         },
         voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        streamer: {
           select: {
             id: true,
             name: true,

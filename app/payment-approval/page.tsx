@@ -1,755 +1,297 @@
 'use client'
 
-import Layout from '@/components/Layout'
 import { useState, useEffect } from 'react'
+import Layout from '@/components/Layout'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { CheckCircle, Clock, Video, Mic, UserCircle, CheckSquare, Square, Loader2, Search, X, UserCheck } from 'lucide-react'
+import { CheckCircle, Clock, DollarSign, User, FileText, AlertCircle, CreditCard, Eye, X } from 'lucide-react'
+import toast from 'react-hot-toast'
 
-type PersonType = 'streamer' | 'voiceActor' | 'contentCreator' | 'teamMember' | null
-
-interface Person {
-  id: string
-  name: string
-  type: PersonType
-  profilePhoto?: string | null
-}
-
-interface Stream {
-  id: string
-  date: string
-  duration: number
-  teamName?: string | null
-  matchInfo?: string | null
-  streamerEarning: number
-  paymentStatus: string
-  notes?: string | null
-}
-
-interface Script {
+interface ContentRegistry {
   id: string
   title: string
-  price: number
   status: string
-  createdAt: string
-  notes?: string | null
-}
-
-interface TeamPayment {
-  id: string
-  amount: number
-  type: string
-  period: string
-  description?: string | null
+  voicePrice: number | null
+  editPrice: number | null
+  voicePaid: boolean
+  editPaid: boolean
+  voiceLink: string | null
+  editLink: string | null
+  scriptText: string | null
+  creator: { id: string; name: string } | null
+  voiceActor: { id: string; name: string } | null
+  streamer: { id: string; name: string } | null
+  editor: { id: string; name: string } | null
   createdAt: string
 }
 
 export default function PaymentApprovalPage() {
-  const [selectedPersonType, setSelectedPersonType] = useState<PersonType>(null)
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
-  const [persons, setPersons] = useState<Person[]>([])
-  const [filteredPersons, setFilteredPersons] = useState<Person[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [dataLoading, setDataLoading] = useState(false)
-  const [streams, setStreams] = useState<Stream[]>([])
-  const [scripts, setScripts] = useState<Script[]>([])
-  const [teamPayments, setTeamPayments] = useState<TeamPayment[]>([])
-  const [personInfo, setPersonInfo] = useState<any>(null)
-  const [selectedStreamIds, setSelectedStreamIds] = useState<Set<string>>(new Set())
-  const [selectedScriptIds, setSelectedScriptIds] = useState<Set<string>>(new Set())
-  const [selectedTeamPaymentIds, setSelectedTeamPaymentIds] = useState<Set<string>>(new Set())
-  const [approving, setApproving] = useState(false)
+  const [registries, setRegistries] = useState<ContentRegistry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedItem, setSelectedItem] = useState<ContentRegistry | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [voicePrice, setVoicePrice] = useState('')
+  const [editPrice, setEditPrice] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  // Kişileri yükle
   useEffect(() => {
-    fetchPersons()
+    fetchData()
   }, [])
 
-  // Arama filtresi
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredPersons(persons)
-    } else {
-      const query = searchQuery.toLowerCase()
-      setFilteredPersons(
-        persons.filter(p => p.name.toLowerCase().includes(query))
-      )
-    }
-  }, [searchQuery, persons])
-
-  const fetchPersons = async () => {
-    setLoading(true)
+  const fetchData = async () => {
     try {
-      // Cache ile API çağrıları - performans için
-      const [streamersRes, voiceActorsRes, creatorsRes, teamRes] = await Promise.all([
-        fetch('/api/streamers', { cache: 'force-cache', next: { revalidate: 30 } }),
-        fetch('/api/voice-actors', { cache: 'force-cache', next: { revalidate: 30 } }),
-        fetch('/api/content-creators', { cache: 'force-cache', next: { revalidate: 30 } }),
-        fetch('/api/team', { cache: 'force-cache', next: { revalidate: 30 } }),
-      ])
-
-      const allPersons: Person[] = []
-
-      if (streamersRes.ok) {
-        const streamers = await streamersRes.json()
-        allPersons.push(
-          ...streamers.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            type: 'streamer' as PersonType,
-            profilePhoto: s.profilePhoto,
-          }))
-        )
+      // REVIEW durumundaki içerikleri getir (admin onayı bekleyenler)
+      const res = await fetch('/api/content-registry?status=REVIEW')
+      if (res.ok) {
+        const data = await res.json()
+        setRegistries(data.registries || [])
       }
-
-      if (voiceActorsRes.ok) {
-        const voiceActors = await voiceActorsRes.json()
-        allPersons.push(
-          ...voiceActors.map((va: any) => ({
-            id: va.id,
-            name: va.name,
-            type: 'voiceActor' as PersonType,
-            profilePhoto: va.profilePhoto,
-          }))
-        )
-      }
-
-      if (creatorsRes.ok) {
-        const creators = await creatorsRes.json()
-        allPersons.push(
-          ...creators.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            type: 'contentCreator' as PersonType,
-            profilePhoto: c.profilePhoto,
-          }))
-        )
-      }
-
-      if (teamRes.ok) {
-        const teamMembers = await teamRes.json()
-        allPersons.push(
-          ...teamMembers.map((tm: any) => ({
-            id: tm.id,
-            name: tm.name,
-            type: 'teamMember' as PersonType,
-            profilePhoto: tm.avatar,
-          }))
-        )
-      }
-
-      setPersons(allPersons)
-      setFilteredPersons(allPersons)
-    } catch (error) {
-      console.error('Error fetching persons:', error)
+    } catch (err) {
+      toast.error('Veriler yüklenemedi')
     } finally {
       setLoading(false)
     }
   }
 
-  // Kişi seçildiğinde verileri yükle
-  useEffect(() => {
-    if (selectedPersonType && selectedPersonId) {
-      fetchPersonData()
-    } else {
-      setStreams([])
-      setScripts([])
-      setTeamPayments([])
-      setPersonInfo(null)
-      setSelectedStreamIds(new Set())
-      setSelectedScriptIds(new Set())
-      setSelectedTeamPaymentIds(new Set())
-    }
-  }, [selectedPersonType, selectedPersonId])
-
-  const fetchPersonData = async () => {
-    if (!selectedPersonType || !selectedPersonId) return
-
-    setDataLoading(true)
-    try {
-      const url = `/api/payment-approval/${selectedPersonType}/${selectedPersonId}`
-      
-      const res = await fetch(url, { cache: 'default' })
-      const data = await res.json()
-      
-      if (res.ok) {
-        console.log('Person data received:', data)
-        setStreams(data.streams || [])
-        setScripts(data.scripts || [])
-        setTeamPayments(data.teamPayments || [])
-        setPersonInfo(data.personInfo)
-      } else {
-        console.error('API error:', data)
-        alert(data.error || 'Veri getirilemedi')
-      }
-    } catch (error) {
-      console.error('Error fetching person data:', error)
-      alert(`Veri getirilemedi: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`)
-    } finally {
-      setDataLoading(false)
-    }
-  }
-
-  const handlePersonSelect = (person: Person) => {
-    console.log('Person selected:', person)
-    setSelectedPersonType(person.type)
-    setSelectedPersonId(person.id)
-    setSearchQuery('')
-  }
-
-  const handleStreamToggle = (streamId: string) => {
-    const newSet = new Set(selectedStreamIds)
-    if (newSet.has(streamId)) {
-      newSet.delete(streamId)
-    } else {
-      newSet.add(streamId)
-    }
-    setSelectedStreamIds(newSet)
-  }
-
-  const handleScriptToggle = (scriptId: string) => {
-    const newSet = new Set(selectedScriptIds)
-    if (newSet.has(scriptId)) {
-      newSet.delete(scriptId)
-    } else {
-      newSet.add(scriptId)
-    }
-    setSelectedScriptIds(newSet)
-  }
-
-  const handleSelectAllStreams = () => {
-    if (selectedStreamIds.size === streams.length) {
-      setSelectedStreamIds(new Set())
-    } else {
-      setSelectedStreamIds(new Set(streams.map(s => s.id)))
-    }
-  }
-
-  const handleSelectAllScripts = () => {
-    if (selectedScriptIds.size === scripts.length) {
-      setSelectedScriptIds(new Set())
-    } else {
-      setSelectedScriptIds(new Set(scripts.map(s => s.id)))
-    }
-  }
-
-  const handleTeamPaymentToggle = (paymentId: string) => {
-    const newSet = new Set(selectedTeamPaymentIds)
-    if (newSet.has(paymentId)) {
-      newSet.delete(paymentId)
-    } else {
-      newSet.add(paymentId)
-    }
-    setSelectedTeamPaymentIds(newSet)
-  }
-
-  const handleSelectAllTeamPayments = () => {
-    if (selectedTeamPaymentIds.size === teamPayments.length) {
-      setSelectedTeamPaymentIds(new Set())
-    } else {
-      setSelectedTeamPaymentIds(new Set(teamPayments.map(tp => tp.id)))
-    }
-  }
-
+  // Ücret gir ve onayla
   const handleApprove = async () => {
-    if (selectedStreamIds.size === 0 && selectedScriptIds.size === 0 && selectedTeamPaymentIds.size === 0) {
-      alert('Lütfen en az bir öğe seçin')
+    if (!selectedItem) return
+
+    const vPrice = parseFloat(voicePrice) || 0
+    const ePrice = parseFloat(editPrice) || 0
+
+    if (vPrice <= 0 && ePrice <= 0) {
+      toast.error('En az bir ücret girmelisiniz')
       return
     }
 
-    const parts = []
-    if (selectedStreamIds.size > 0) parts.push(`${selectedStreamIds.size} yayın`)
-    if (selectedScriptIds.size > 0) parts.push(`${selectedScriptIds.size} metin`)
-    if (selectedTeamPaymentIds.size > 0) parts.push(`${selectedTeamPaymentIds.size} ekip ödemesi`)
-
-    if (!confirm(`${parts.join(', ')} ödendi olarak işaretlenecek. Devam etmek istiyor musunuz?`)) {
-      return
-    }
-
-    setApproving(true)
+    setSubmitting(true)
     try {
-      const res = await fetch('/api/payment-approval/approve', {
-        method: 'POST',
+      const res = await fetch(`/api/content-registry/${selectedItem.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          personType: selectedPersonType,
-          personId: selectedPersonId,
-          streamIds: Array.from(selectedStreamIds),
-          scriptIds: Array.from(selectedScriptIds),
-          teamPaymentIds: Array.from(selectedTeamPaymentIds),
+          voicePrice: vPrice > 0 ? vPrice : null,
+          editPrice: ePrice > 0 ? ePrice : null,
+          status: 'PUBLISHED', // Onaylandı
         }),
       })
 
-      const data = await res.json()
-
       if (res.ok) {
-        alert(data.message || 'Ödemeler başarıyla onaylandı!')
-        // Verileri yeniden yükle
-        fetchPersonData()
-        setSelectedStreamIds(new Set())
-        setSelectedScriptIds(new Set())
-        setSelectedTeamPaymentIds(new Set())
+        toast.success('İçerik onaylandı! Ödemeler "Ödeme Bekleyenler" listesine eklendi.')
+        setShowModal(false)
+        setSelectedItem(null)
+        setVoicePrice('')
+        setEditPrice('')
+        fetchData()
       } else {
-        alert(data.error || 'Bir hata oluştu')
+        const data = await res.json()
+        toast.error(data.error || 'Bir hata oluştu')
       }
     } catch (error) {
-      console.error('Error approving payments:', error)
-      alert('Bir hata oluştu')
+      toast.error('Bir hata oluştu')
     } finally {
-      setApproving(false)
+      setSubmitting(false)
     }
   }
 
-  const getPersonTypeLabel = (type: PersonType) => {
-    switch (type) {
-      case 'streamer':
-        return 'Yayıncı'
-      case 'voiceActor':
-        return 'Seslendirmen'
-      case 'contentCreator':
-        return 'İçerik Üreticisi'
-      case 'teamMember':
-        return 'Ekip Üyesi'
-      default:
-        return ''
-    }
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+      </Layout>
+    )
   }
-
-  const getPersonTypeIcon = (type: PersonType) => {
-    switch (type) {
-      case 'streamer':
-        return <Video className="w-4 h-4" />
-      case 'voiceActor':
-        return <Mic className="w-4 h-4" />
-      case 'contentCreator':
-        return <UserCircle className="w-4 h-4" />
-      case 'teamMember':
-        return <UserCheck className="w-4 h-4" />
-      default:
-        return null
-    }
-  }
-
-  const selectedPerson = persons.find(p => p.id === selectedPersonId && p.type === selectedPersonType)
-
-  const totalSelectedAmount = 
-    streams.filter(s => selectedStreamIds.has(s.id)).reduce((sum, s) => sum + s.streamerEarning, 0) +
-    scripts.filter(s => selectedScriptIds.has(s.id)).reduce((sum, s) => sum + s.price, 0) +
-    teamPayments.filter(tp => selectedTeamPaymentIds.has(tp.id)).reduce((sum, tp) => sum + tp.amount, 0)
 
   return (
     <Layout>
-      <div className="px-4 py-6 sm:px-0">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Ödeme Onay Sistemi
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Kişiye özel yayınlar ve içerikleri seçerek ödendi olarak işaretleyin
-          </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Ödeme Onayı</h1>
+            <p className="text-gray-600 mt-1">Tamamlanan içerikleri onaylayın ve ücretleri belirleyin</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Clock className="w-4 h-4" />
+            <span>{registries.length} içerik onay bekliyor</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sol Panel - Kişi Seçimi */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Kişi Seçin</h2>
-              
-              {/* Arama */}
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Kişi ara..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                {searchQuery && (
+        {/* Onay Bekleyen İçerikler */}
+        {registries.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Tüm içerikler onaylandı!</h3>
+            <p className="text-gray-600">Şu anda onay bekleyen içerik bulunmuyor.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {registries.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:border-indigo-200 transition"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
+                    <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
+                      {item.creator && (
+                        <span className="flex items-center gap-1">
+                          <FileText className="w-4 h-4" />
+                          Metin: {item.creator.name}
+                        </span>
+                      )}
+                      {(item.voiceActor || item.streamer) && (
+                        <span className="flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          Ses: {item.voiceActor?.name || item.streamer?.name}
+                        </span>
+                      )}
+                      {item.editor && (
+                        <span className="flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          Kurgu: {item.editor.name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 mt-3">
+                      {item.voiceLink && (
+                        <a
+                          href={item.voiceLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Ses Dosyası
+                        </a>
+                      )}
+                      {item.editLink && (
+                        <a
+                          href={item.editLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-purple-600 hover:underline flex items-center gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Kurgu Dosyası
+                        </a>
+                      )}
+                    </div>
+                  </div>
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => {
+                      setSelectedItem(item)
+                      setVoicePrice(item.voicePrice?.toString() || '')
+                      setEditPrice(item.editPrice?.toString() || '')
+                      setShowModal(true)
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
                   >
-                    <X className="w-4 h-4" />
+                    Onayla & Ücret Gir
                   </button>
-                )}
-              </div>
-
-              {/* Kişi Listesi */}
-              {loading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600" />
-                  <p className="mt-2 text-sm text-gray-600">Yükleniyor...</p>
-                </div>
-              ) : filteredPersons.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-sm text-gray-500">Kişi bulunamadı</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                  {filteredPersons.map((person) => (
-                    <button
-                      key={`${person.type}-${person.id}`}
-                      onClick={() => handlePersonSelect(person)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${
-                        selectedPersonId === person.id && selectedPersonType === person.type
-                          ? 'border-indigo-500 bg-indigo-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {person.profilePhoto ? (
-                          <img
-                            src={person.profilePhoto}
-                            alt={person.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white">
-                            {getPersonTypeIcon(person.type)}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{person.name}</p>
-                          <p className="text-xs text-gray-500">{getPersonTypeLabel(person.type)}</p>
                         </div>
                       </div>
-                    </button>
                   ))}
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Sağ Panel - Öğe Listesi */}
-          <div className="lg:col-span-2">
-            {!selectedPersonType || !selectedPersonId ? (
-              <div className="bg-white rounded-lg shadow-lg p-12 border border-gray-200 text-center">
-                <CheckCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500">Lütfen bir kişi seçin</p>
-              </div>
-            ) : dataLoading ? (
-              <div className="bg-white rounded-lg shadow-lg p-12 border border-gray-200 text-center">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600 mb-4" />
-                <p className="text-gray-600">Yükleniyor...</p>
-              </div>
-            ) : streams.length === 0 && scripts.length === 0 && teamPayments.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-lg p-12 border border-gray-200 text-center">
-                <Clock className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-gray-500">Bu kişi için ödenmemiş öğe bulunamadı</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Kişi Bilgisi */}
-                {personInfo && (
-                  <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-                    <div className="flex items-center gap-4">
-                      {personInfo.profilePhoto ? (
-                        <img
-                          src={personInfo.profilePhoto}
-                          alt={personInfo.name}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white">
-                          {getPersonTypeIcon(selectedPersonType)}
-                        </div>
-                      )}
+        {/* Ödeme Onay Modal */}
+        {showModal && selectedItem && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full">
+              <div className="p-6 border-b flex items-center justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900">{personInfo.name}</h3>
-                        <p className="text-sm text-gray-500">{getPersonTypeLabel(selectedPersonType)}</p>
+                  <h3 className="text-xl font-bold text-gray-900">Ödeme Onayı</h3>
+                  <p className="text-sm text-gray-500 mt-1">{selectedItem.title}</p>
                       </div>
-                      <div className="ml-auto">
                         <button
                           onClick={() => {
-                            setSelectedPersonType(null)
-                            setSelectedPersonId(null)
+                    setShowModal(false)
+                    setSelectedItem(null)
                           }}
-                          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                  className="text-gray-400 hover:text-gray-600"
                         >
-                          <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                         </button>
                       </div>
+              <div className="p-6 space-y-4">
+                {/* Seslendirmen Ücreti */}
+                {(selectedItem.voiceActor || selectedItem.streamer) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Seslendirme Ücreti ({selectedItem.voiceActor?.name || selectedItem.streamer?.name})
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="number"
+                        value={voicePrice}
+                        onChange={(e) => setVoicePrice(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">TL</span>
                     </div>
                   </div>
                 )}
 
-                {/* Yayınlar */}
-                {streams.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                {/* Editör Ücreti */}
+                {selectedItem.editor && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Kurgu Ücreti ({selectedItem.editor.name})
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="number"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">TL</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-700">
+                      <p className="font-medium">Önemli:</p>
+                      <p>Ücretler onaylandıktan sonra "Ödeme Bekleyenler" listesine eklenecek. Ödeme yapıldığında finansal kayıtlara düşecektir.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
                         <button
-                          onClick={handleSelectAllStreams}
-                          className="text-indigo-600 hover:text-indigo-700"
-                        >
-                          {selectedStreamIds.size === streams.length ? (
-                            <CheckSquare className="w-5 h-5" />
-                          ) : (
-                            <Square className="w-5 h-5" />
-                          )}
+                    onClick={() => {
+                      setShowModal(false)
+                      setSelectedItem(null)
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                  >
+                    İptal
                         </button>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Yayınlar ({streams.length})
-                        </h3>
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {selectedStreamIds.size} seçili
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Süre</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Takım</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Maç</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tutar</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Durum</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {streams.map((stream) => (
-                            <tr
-                              key={stream.id}
-                              className={`hover:bg-gray-50 cursor-pointer ${
-                                selectedStreamIds.has(stream.id) ? 'bg-indigo-50' : ''
-                              }`}
-                              onClick={() => handleStreamToggle(stream.id)}
-                            >
-                              <td className="px-4 py-3">
-                                {selectedStreamIds.has(stream.id) ? (
-                                  <CheckSquare className="w-5 h-5 text-indigo-600" />
-                                ) : (
-                                  <Square className="w-5 h-5 text-gray-400" />
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{stream.duration} saat</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{stream.teamName || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{stream.matchInfo || '-'}</td>
-                              <td className="px-4 py-3 text-sm font-semibold text-right text-indigo-600">
-                                {stream.streamerEarning.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                })}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  Bekliyor
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Seslendirme Metinleri */}
-                {scripts.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={handleSelectAllScripts}
-                          className="text-indigo-600 hover:text-indigo-700"
-                        >
-                          {selectedScriptIds.size === scripts.length ? (
-                            <CheckSquare className="w-5 h-5" />
-                          ) : (
-                            <Square className="w-5 h-5" />
-                          )}
-                        </button>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Seslendirme Metinleri ({scripts.length})
-                        </h3>
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {selectedScriptIds.size} seçili
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Başlık</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Oluşturulma</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tutar</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Durum</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {scripts.map((script) => (
-                            <tr
-                              key={script.id}
-                              className={`hover:bg-gray-50 cursor-pointer ${
-                                selectedScriptIds.has(script.id) ? 'bg-indigo-50' : ''
-                              }`}
-                              onClick={() => handleScriptToggle(script.id)}
-                            >
-                              <td className="px-4 py-3">
-                                {selectedScriptIds.has(script.id) ? (
-                                  <CheckSquare className="w-5 h-5 text-indigo-600" />
-                                ) : (
-                                  <Square className="w-5 h-5 text-gray-400" />
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{script.title}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
-                                {format(new Date(script.createdAt), 'dd MMM yyyy', { locale: tr })}
-                              </td>
-                              <td className="px-4 py-3 text-sm font-semibold text-right text-indigo-600">
-                                {script.price.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                })}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  Bekliyor
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Ekip Ödemeleri */}
-                {teamPayments.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={handleSelectAllTeamPayments}
-                          className="text-indigo-600 hover:text-indigo-700"
-                        >
-                          {selectedTeamPaymentIds.size === teamPayments.length ? (
-                            <CheckSquare className="w-5 h-5" />
-                          ) : (
-                            <Square className="w-5 h-5" />
-                          )}
-                        </button>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Ekip Ödemeleri ({teamPayments.length})
-                        </h3>
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {selectedTeamPaymentIds.size} seçili
-                      </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dönem</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tip</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Açıklama</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tutar</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Durum</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {teamPayments.map((payment) => (
-                            <tr
-                              key={payment.id}
-                              className={`hover:bg-gray-50 cursor-pointer ${
-                                selectedTeamPaymentIds.has(payment.id) ? 'bg-indigo-50' : ''
-                              }`}
-                              onClick={() => handleTeamPaymentToggle(payment.id)}
-                            >
-                              <td className="px-4 py-3">
-                                {selectedTeamPaymentIds.has(payment.id) ? (
-                                  <CheckSquare className="w-5 h-5 text-indigo-600" />
-                                ) : (
-                                  <Square className="w-5 h-5 text-gray-400" />
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{payment.period}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {payment.type}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{payment.description || '-'}</td>
-                              <td className="px-4 py-3 text-sm font-semibold text-right text-indigo-600">
-                                {payment.amount.toLocaleString('tr-TR', {
-                                  style: 'currency',
-                                  currency: 'TRY',
-                                })}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  Bekliyor
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Onay Butonu */}
-                {(selectedStreamIds.size > 0 || selectedScriptIds.size > 0 || selectedTeamPaymentIds.size > 0) && (
-                  <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200 sticky bottom-0">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">
-                          {[
-                            selectedStreamIds.size > 0 && `${selectedStreamIds.size} yayın`,
-                            selectedScriptIds.size > 0 && `${selectedScriptIds.size} metin`,
-                            selectedTeamPaymentIds.size > 0 && `${selectedTeamPaymentIds.size} ekip ödemesi`,
-                          ].filter(Boolean).join(', ')} seçildi
-                        </p>
-                        <p className="text-lg font-semibold text-indigo-600 mt-1">
-                          Toplam: {totalSelectedAmount.toLocaleString('tr-TR', {
-                            style: 'currency',
-                            currency: 'TRY',
-                          })}
-                        </p>
-                      </div>
                       <button
                         onClick={handleApprove}
-                        disabled={approving}
-                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
-                      >
-                        {approving ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Onaylanıyor...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-5 h-5" />
-                            Seçilenleri Ödendi Olarak İşaretle
-                          </>
-                        )}
+                    disabled={submitting}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Onaylanıyor...' : 'Onayla'}
                       </button>
                     </div>
-                  </div>
-                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   )
 }
-

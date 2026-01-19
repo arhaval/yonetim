@@ -11,10 +11,15 @@ export default function TeamDashboardPage() {
   const router = useRouter()
   const [member, setMember] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
+  const [pendingEdits, setPendingEdits] = useState<any[]>([]) // Kurgu bekleyen işler
   const [payments, setPayments] = useState<any[]>([])
   const [financialRecords, setFinancialRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedEdit, setSelectedEdit] = useState<any>(null)
+  const [editLink, setEditLink] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [stats, setStats] = useState({
     pendingTasks: 0,
     completedTasks: 0,
@@ -109,14 +114,25 @@ export default function TeamDashboardPage() {
 
       if (financialRes.ok) {
         console.log(`[Team Dashboard] Financial records loaded:`, financialData.financialRecords?.length || 0)
-        console.log(`[Team Dashboard] Financial records data:`, financialData)
-        console.log(`[Team Dashboard] Member ID:`, memberId)
-        console.log(`[Team Dashboard] Sample records:`, financialData.financialRecords?.slice(0, 3))
         setFinancialRecords(financialData.financialRecords || [])
       } else {
         console.error(`[Team Dashboard] Financial records error:`, financialRes.status, financialData)
-        console.error(`[Team Dashboard] Member ID:`, memberId)
         setFinancialRecords([])
+      }
+
+      // Kurgu bekleyen işleri yükle (ContentRegistry'den)
+      try {
+        const editsRes = await fetch('/api/content-registry?status=VOICE_READY')
+        const editsData = await editsRes.json()
+        if (editsRes.ok) {
+          // Sadece bu editöre atanan işleri filtrele
+          const myEdits = (editsData.registries || []).filter(
+            (edit: any) => edit.editor?.id === memberId
+          )
+          setPendingEdits(myEdits)
+        }
+      } catch (e) {
+        console.error('Error loading pending edits:', e)
       }
     } catch (error: any) {
       console.error('Error loading data:', error)
@@ -132,6 +148,41 @@ export default function TeamDashboardPage() {
   const handleLogout = async () => {
     await fetch('/api/team-auth/logout', { method: 'POST' })
     router.push('/team-login')
+  }
+
+  // Kurgu linkini gönder
+  const handleSubmitEdit = async () => {
+    if (!selectedEdit || !editLink.trim()) {
+      alert('Kurgu linki boş olamaz')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/content-registry/${selectedEdit.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          editLink: editLink,
+          status: 'REVIEW', // Admin onayına düşsün
+        }),
+      })
+
+      if (res.ok) {
+        alert('Kurgu başarıyla gönderildi! Admin onayı bekliyor.')
+        setShowEditModal(false)
+        setSelectedEdit(null)
+        setEditLink('')
+        loadData(member.id)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (loading && !member) {
@@ -212,6 +263,57 @@ export default function TeamDashboardPage() {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
+          {/* Kurgu Bekleyen İşler */}
+          {pendingEdits.length > 0 && (
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-xl p-6 border border-purple-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-purple-800">Kurgu Bekleyen İşler</h2>
+                  <p className="text-sm text-purple-600">{pendingEdits.length} adet iş sizden kurgu bekliyor</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {pendingEdits.map((edit) => (
+                  <div
+                    key={edit.id}
+                    className="bg-white rounded-xl p-4 border border-purple-200 hover:border-purple-400 transition cursor-pointer"
+                    onClick={() => {
+                      setSelectedEdit(edit)
+                      setEditLink('')
+                      setShowEditModal(true)
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{edit.title}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                          {edit.editDeadline && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              Teslim: {format(new Date(edit.editDeadline), 'dd MMM', { locale: tr })}
+                            </span>
+                          )}
+                          {edit.voiceActor && (
+                            <span>🎙️ {edit.voiceActor.name}</span>
+                          )}
+                          {edit.creator && (
+                            <span>✍️ {edit.creator.name}</span>
+                          )}
+                        </div>
+                      </div>
+                      <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium">
+                        Kurgu Teslim Et
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
@@ -471,10 +573,98 @@ export default function TeamDashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Kurgu Teslim Modal */}
+      {showEditModal && selectedEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900">{selectedEdit.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">Kurguyu tamamlayın ve admin onayına gönderin</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Ses Linki */}
+              {selectedEdit.voiceLink && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800 mb-2">Ses Dosyası:</p>
+                  <a 
+                    href={selectedEdit.voiceLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
+                  >
+                    {selectedEdit.voiceLink}
+                  </a>
+                </div>
+              )}
+
+              {/* Metin */}
+              {selectedEdit.scriptText && (
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Metin:</p>
+                  <div 
+                    className="text-sm text-gray-600 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: selectedEdit.scriptText }}
+                  />
+                </div>
+              )}
+
+              {selectedEdit.notes && (
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <p className="text-sm font-medium text-yellow-800 mb-1">Notlar:</p>
+                  <p className="text-sm text-yellow-700">{selectedEdit.notes}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Kurgu Linki *
+                </label>
+                <input
+                  type="url"
+                  value={editLink}
+                  onChange={(e) => setEditLink(e.target.value)}
+                  placeholder="https://drive.google.com/..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Kurgu dosyasını Google Drive, Dropbox vb. yükleyip linkini yapıştırın
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-gray-500 space-y-1">
+                  {selectedEdit.voiceActor && (
+                    <p>🎙️ Seslendirmen: <strong>{selectedEdit.voiceActor.name}</strong></p>
+                  )}
+                  {selectedEdit.creator && (
+                    <p>✍️ Metin: <strong>{selectedEdit.creator.name}</strong></p>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setSelectedEdit(null)
+                      setEditLink('')
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={handleSubmitEdit}
+                    disabled={submitting || !editLink.trim()}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Gönderiliyor...' : 'Kurguyu Teslim Et'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
-
-
-

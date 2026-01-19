@@ -45,11 +45,12 @@ model Streamer {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  streams          Stream[]
-  externalStreams  ExternalStream[]
-  payments         Payment[]
-  financialRecords FinancialRecord[]
-  teamRates        StreamerTeamRate[] // Takım bazlı saatlik ücretler
+  streams           Stream[]
+  externalStreams   ExternalStream[]
+  payments          Payment[]
+  financialRecords  FinancialRecord[]
+  teamRates         StreamerTeamRate[] // Takım bazlı saatlik ücretler
+  contentRegistries ContentRegistry[] // Seslendirmen olarak atandığı içerikler
 }
 
 model StreamerTeamRate {
@@ -461,6 +462,16 @@ model ContentRegistry {
   voiceActorId String?
   voiceActor   VoiceActor?          @relation(fields: [voiceActorId], references: [id], onDelete: SetNull)
   
+  // Yayıncı seslendirmen olarak (Streamer as Voice Actor)
+  streamerId   String?
+  streamer     Streamer?            @relation(fields: [streamerId], references: [id], onDelete: SetNull)
+  
+  // Ödeme bilgileri
+  voicePrice   Float?               // Seslendirme ücreti
+  editPrice    Float?               // Kurgu ücreti
+  voicePaid    Boolean              @default(false) // Seslendirme ödemesi yapıldı mı
+  editPaid     Boolean              @default(false) // Kurgu ödemesi yapıldı mı
+  
   // Editör (Team Member) bağlantısı
   editorId    String?
   editor      TeamMember?           @relation(fields: [editorId], references: [id], onDelete: SetNull)
@@ -501,6 +512,7 @@ model ContentRegistry {
   @@index([status])
   @@index([creatorId])
   @@index([voiceActorId])
+  @@index([streamerId])
   @@index([editorId])
   @@index([platform])
   @@index([createdAt])

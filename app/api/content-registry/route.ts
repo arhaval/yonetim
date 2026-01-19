@@ -120,6 +120,10 @@ export async function GET(request: NextRequest) {
         publishDate: true,
         notes: true,
         editorNotes: true,
+        voicePrice: true,
+        editPrice: true,
+        voicePaid: true,
+        editPaid: true,
         createdAt: true,
         updatedAt: true,
         creator: {
@@ -130,6 +134,13 @@ export async function GET(request: NextRequest) {
           },
         },
         voiceActor: {
+          select: {
+            id: true,
+            name: true,
+            profilePhoto: true,
+          },
+        },
+        streamer: {
           select: {
             id: true,
             name: true,
@@ -204,6 +215,7 @@ export async function POST(request: NextRequest) {
       contentType,
       creatorId: bodyCreatorId,
       voiceActorId,
+      streamerId,
       editorId,
       voiceoverScriptId,
       scriptLink,
@@ -249,6 +261,7 @@ export async function POST(request: NextRequest) {
         contentType: contentType || null,
         creatorId: bodyCreatorId || creatorId || null,
         voiceActorId: voiceActorId || null,
+        streamerId: streamerId || null,
         editorId: editorId || null,
         voiceoverScriptId: voiceoverScriptId || null,
         scriptLink: scriptLink || null,
@@ -269,6 +282,12 @@ export async function POST(request: NextRequest) {
           },
         },
         voiceActor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        streamer: {
           select: {
             id: true,
             name: true,
