@@ -126,6 +126,7 @@ model ContentCreator {
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[]
   paymentRequests   PaymentRequest[]
+  extraWorkRequests ExtraWorkRequest[]
 }
 
 model Content {
