@@ -193,6 +193,13 @@ export default function VoiceActorDashboardPage() {
             </div>
             <div className="flex gap-2">
               <button
+                onClick={() => router.push('/submit-work')}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+              >
+                <Mic className="w-4 h-4 mr-2" />
+                İş Gönder
+              </button>
+              <button
                 onClick={() => router.push('/request-extra-work')}
                 className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
               >
