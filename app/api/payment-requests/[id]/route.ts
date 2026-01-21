@@ -109,7 +109,7 @@ export async function PATCH(
         financialData.teamMemberId = paymentRequest.teamMemberId
       }
 
-      await prisma.financial.create({
+      await prisma.financialRecord.create({
         data: financialData,
       })
     }
