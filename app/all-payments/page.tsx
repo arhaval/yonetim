@@ -169,7 +169,7 @@ export default function AllPaymentsPage() {
         })
 
         toast.success('Yayın ödemesi yapıldı!')
-      } else {
+      } else if (payment.type === 'voice' || payment.type === 'edit') {
         // ContentRegistry ödemesi
         const registryId = payment.id.replace('voice-', '').replace('edit-', '')
         const updateData: any = {}
