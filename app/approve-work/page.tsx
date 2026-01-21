@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
-import PageHeader from '@/components/PageHeader'
 import { CheckCircle, XCircle, Clock, Mic, Video } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -122,10 +121,10 @@ export default function ApproveWorkPage() {
 
   return (
     <Layout>
-      <PageHeader
-        title="Bekleyen İşler"
-        description="Gönderilen işleri inceleyin, maliyet girin ve onaylayın"
-      />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Bekleyen İşler</h1>
+        <p className="text-gray-600 mt-2">Gönderilen işleri inceleyin, maliyet girin ve onaylayın</p>
+      </div>
 
       {submissions.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
