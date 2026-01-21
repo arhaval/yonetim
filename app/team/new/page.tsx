@@ -99,7 +99,7 @@ export default function NewTeamMemberPage() {
     <Layout>
       <div className="px-4 py-6 sm:px-0">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Yeni Video Editör</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Yeni Ekip Üyesi</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
@@ -135,7 +135,7 @@ export default function NewTeamMemberPage() {
                     }
                     className="input w-full"
                   >
-                    <option value="editor">Editör</option>
+                    <option value="editor">Video Editör</option>
                     <option value="designer">Tasarımcı</option>
                     <option value="manager">Yönetici</option>
                     <option value="content">İçerik Üreticisi</option>
