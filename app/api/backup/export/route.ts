@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Dynamic route - force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // Manuel backup export API
 export async function GET(request: NextRequest) {
   try {
