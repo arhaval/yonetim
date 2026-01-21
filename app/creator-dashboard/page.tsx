@@ -281,11 +281,11 @@ export default function CreatorDashboardPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => router.push('/my-payment-requests')}
+                onClick={() => router.push('/request-extra-work')}
                 className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
               >
                 <DollarSign className="w-4 h-4 mr-2" />
-                Ödeme Taleplerim
+                Ekstra İş Talebi
               </button>
               <button
                 onClick={handleLogout}

@@ -9,7 +9,7 @@ import { tr } from 'date-fns/locale/tr'
 
 interface Payment {
   id: string
-  type: 'stream' | 'voice' | 'edit'
+  type: 'stream' | 'voice' | 'edit' | 'extra'
   title: string
   personName: string
   personId: string
@@ -88,6 +88,38 @@ export default function AllPaymentsPage() {
               amount: reg.editPrice,
               date: reg.createdAt,
               details: 'Kurgu',
+            })
+          }
+        })
+      }
+
+      // 3. Ekstra iş talepleri (onaylanmış olanlar)
+      const extraWorkRes = await fetch('/api/extra-work-requests?status=approved')
+      if (extraWorkRes.ok) {
+        const data = await extraWorkRes.json()
+        const requests = data.requests || []
+        
+        requests.forEach((req: any) => {
+          const person = req.contentCreator || req.voiceActor || req.streamer || req.teamMember
+          if (person) {
+            const workTypeLabels: any = {
+              VOICE: 'Seslendirme',
+              EDIT: 'Kurgu',
+              STREAM: 'Yayın',
+              CONTENT: 'İçerik',
+              OTHER: 'Diğer',
+            }
+            
+            allPayments.push({
+              id: `extra-${req.id}`,
+              type: 'extra',
+              title: workTypeLabels[req.workType] || 'Ekstra İş',
+              personName: person.name,
+              personId: person.id,
+              personType: req.contentCreatorId ? 'contentCreator' : req.voiceActorId ? 'voiceActor' : req.streamerId ? 'streamer' : 'teamMember',
+              amount: req.amount,
+              date: req.createdAt,
+              details: req.description,
             })
           }
         })
@@ -180,6 +212,43 @@ export default function AllPaymentsPage() {
         })
 
         toast.success('Ödeme yapıldı!')
+      } else if (payment.type === 'extra') {
+        // Ekstra iş talebi ödemesi
+        const requestId = payment.id.replace('extra-', '')
+        const res = await fetch(`/api/extra-work-requests/${requestId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'paid' }),
+        })
+
+        if (!res.ok) throw new Error('Ödeme güncellenemedi')
+
+        // Finansal kayıt oluştur
+        const financialData: any = {
+          type: 'expense',
+          category: 'Ekstra İş Ödemesi',
+          amount: payment.amount,
+          description: `${payment.title} - ${payment.personName} - ${payment.details}`,
+          date: new Date().toISOString(),
+        }
+
+        if (payment.personType === 'contentCreator') {
+          financialData.creatorId = payment.personId
+        } else if (payment.personType === 'voiceActor') {
+          financialData.voiceActorId = payment.personId
+        } else if (payment.personType === 'streamer') {
+          financialData.streamerId = payment.personId
+        } else if (payment.personType === 'teamMember') {
+          financialData.teamMemberId = payment.personId
+        }
+
+        await fetch('/api/financial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(financialData),
+        })
+
+        toast.success('Ekstra iş ödemesi yapıldı!')
       }
 
       fetchAllPayments()
@@ -193,13 +262,15 @@ export default function AllPaymentsPage() {
   const getIcon = (type: string) => {
     if (type === 'stream') return Video
     if (type === 'voice') return Mic
-    return Film
+    if (type === 'edit') return Film
+    return DollarSign
   }
 
   const getColor = (type: string) => {
     if (type === 'stream') return 'bg-blue-100 text-blue-800'
     if (type === 'voice') return 'bg-purple-100 text-purple-800'
-    return 'bg-green-100 text-green-800'
+    if (type === 'edit') return 'bg-green-100 text-green-800'
+    return 'bg-orange-100 text-orange-800'
   }
 
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)

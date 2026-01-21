@@ -13,7 +13,7 @@ const navigation = [
   { name: 'İçerik Merkezi', href: '/content-registry', icon: FileText },
   { name: '💰 TÜM ÖDEMELER', href: '/all-payments', icon: Wallet },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
-  { name: 'Ekip', href: '/team', icon: UserCheck },
+  { name: 'Video Editörler', href: '/team', icon: UserCheck },
   { name: 'Yapılacaklar', href: '/todos', icon: FileText },
   { name: 'Sosyal Medya', href: '/social-media', icon: Share2 },
 ]

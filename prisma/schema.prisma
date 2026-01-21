@@ -52,6 +52,7 @@ model Streamer {
   teamRates         StreamerTeamRate[] // Takım bazlı saatlik ücretler
   contentRegistries ContentRegistry[] // Seslendirmen olarak atandığı içerikler
   paymentRequests   PaymentRequest[]
+  extraWorkRequests ExtraWorkRequest[]
 }
 
 model StreamerTeamRate {
@@ -171,6 +172,7 @@ model VoiceActor {
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[]
   paymentRequests   PaymentRequest[]
+  extraWorkRequests ExtraWorkRequest[]
 }
 
 enum VoiceoverScriptStatus {
@@ -299,6 +301,7 @@ model TeamMember {
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[] // Editör olarak atandığı içerikler
   paymentRequests   PaymentRequest[]
+  extraWorkRequests ExtraWorkRequest[]
 }
 
 model Task {
@@ -591,5 +594,43 @@ model PaymentRequest {
   @@index([teamMemberId])
   @@index([status])
   @@index([type])
+  @@index([createdAt])
+}
+
+// Ekstra İş Talep Sistemi
+model ExtraWorkRequest {
+  id          String   @id @default(cuid())
+  
+  // Talep eden kişi (sadece biri dolu olacak)
+  contentCreatorId String?
+  contentCreator   ContentCreator?  @relation(fields: [contentCreatorId], references: [id], onDelete: Cascade)
+  
+  voiceActorId     String?
+  voiceActor       VoiceActor?      @relation(fields: [voiceActorId], references: [id], onDelete: Cascade)
+  
+  streamerId       String?
+  streamer         Streamer?        @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+  
+  teamMemberId     String?
+  teamMember       TeamMember?      @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  
+  // Talep bilgileri
+  workType         String   // VOICE, EDIT, STREAM, CONTENT, OTHER
+  amount           Float
+  description      String
+  status           String   @default("pending") // pending, approved, rejected, paid
+  
+  // Admin notları
+  adminNotes       String?
+  
+  // Tarihler
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([contentCreatorId])
+  @@index([voiceActorId])
+  @@index([streamerId])
+  @@index([teamMemberId])
+  @@index([status])
   @@index([createdAt])
 }

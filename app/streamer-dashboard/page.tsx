@@ -231,9 +231,9 @@ export default function StreamerDashboardPage() {
         rightActions={
           !showForm ? (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => router.push('/my-payment-requests')}>
+              <Button variant="outline" onClick={() => router.push('/request-extra-work')}>
                 <DollarSign className="w-4 h-4 mr-2" />
-                Ödeme Taleplerim
+                Ekstra İş Talebi
               </Button>
               <Button onClick={() => setShowForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
