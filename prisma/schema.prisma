@@ -51,6 +51,7 @@ model Streamer {
   financialRecords  FinancialRecord[]
   teamRates         StreamerTeamRate[] // Takım bazlı saatlik ücretler
   contentRegistries ContentRegistry[] // Seslendirmen olarak atandığı içerikler
+  paymentRequests   PaymentRequest[]
 }
 
 model StreamerTeamRate {
@@ -123,6 +124,7 @@ model ContentCreator {
   scripts           VoiceoverScript[]
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[]
+  paymentRequests   PaymentRequest[]
 }
 
 model Content {
@@ -148,6 +150,7 @@ model Content {
   
   // İçerik Kayıt Sistemi bağlantısı
   contentRegistry ContentRegistry?
+  paymentRequests PaymentRequest[]
 }
 
 model VoiceActor {
@@ -167,6 +170,7 @@ model VoiceActor {
   scripts           VoiceoverScript[]
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[]
+  paymentRequests   PaymentRequest[]
 }
 
 enum VoiceoverScriptStatus {
@@ -294,6 +298,7 @@ model TeamMember {
   payments          TeamPayment[]
   financialRecords  FinancialRecord[]
   contentRegistries ContentRegistry[] // Editör olarak atandığı içerikler
+  paymentRequests   PaymentRequest[]
 }
 
 model Task {
@@ -508,6 +513,8 @@ model ContentRegistry {
   
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
+  
+  paymentRequests PaymentRequest[]
 
   @@index([status])
   @@index([creatorId])
@@ -515,5 +522,74 @@ model ContentRegistry {
   @@index([streamerId])
   @@index([editorId])
   @@index([platform])
+  @@index([createdAt])
+}
+
+// Ödeme Talep Sistemi
+enum PaymentRequestStatus {
+  PENDING  // Beklemede
+  APPROVED // Onaylandı
+  REJECTED // Reddedildi
+  PAID     // Ödendi
+}
+
+enum PaymentRequestType {
+  CONTENT    // İçerik üretimi
+  VOICE      // Seslendirme
+  EDIT       // Kurgu/Montaj
+  STREAM     // Yayın
+  DESIGN     // Tasarım
+  MANAGEMENT // Yönetim
+  OTHER      // Diğer
+}
+
+model PaymentRequest {
+  id          String               @id @default(cuid())
+  
+  // Talep eden kişi (sadece biri dolu olacak)
+  contentCreatorId String?
+  contentCreator   ContentCreator?  @relation(fields: [contentCreatorId], references: [id], onDelete: Cascade)
+  
+  voiceActorId     String?
+  voiceActor       VoiceActor?      @relation(fields: [voiceActorId], references: [id], onDelete: Cascade)
+  
+  streamerId       String?
+  streamer         Streamer?        @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+  
+  teamMemberId     String?
+  teamMember       TeamMember?      @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  
+  // Talep bilgileri
+  type             PaymentRequestType   @default(OTHER)
+  amount           Float
+  description      String
+  status           PaymentRequestStatus @default(PENDING)
+  
+  // İlgili içerik (opsiyonel)
+  contentId        String?
+  content          Content?         @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  
+  contentRegistryId String?
+  contentRegistry   ContentRegistry? @relation(fields: [contentRegistryId], references: [id], onDelete: SetNull)
+  
+  // Dosya/kanıt (opsiyonel)
+  attachmentUrl    String?
+  
+  // Admin notları
+  adminNotes       String?
+  rejectionReason  String?
+  
+  // Tarihler
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  approvedAt       DateTime?
+  paidAt           DateTime?
+  
+  @@index([contentCreatorId])
+  @@index([voiceActorId])
+  @@index([streamerId])
+  @@index([teamMemberId])
+  @@index([status])
+  @@index([type])
   @@index([createdAt])
 }

@@ -117,8 +117,8 @@ export default function PaymentApprovalPage() {
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Clock className="w-4 h-4" />
             <span>{registries.length} içerik onay bekliyor</span>
-          </div>
         </div>
+              </div>
 
         {/* Onay Bekleyen İçerikler */}
         {registries.length === 0 ? (
@@ -126,8 +126,8 @@ export default function PaymentApprovalPage() {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Tüm içerikler onaylandı!</h3>
             <p className="text-gray-600">Şu anda onay bekleyen içerik bulunmuyor.</p>
-          </div>
-        ) : (
+                </div>
+              ) : (
           <div className="grid gap-4">
             {registries.map((item) => (
               <div
@@ -156,7 +156,7 @@ export default function PaymentApprovalPage() {
                           Kurgu: {item.editor.name}
                         </span>
                       )}
-                    </div>
+                          </div>
                     <div className="flex items-center gap-4 mt-3">
                       {item.voiceLink && (
                         <a
@@ -179,11 +179,11 @@ export default function PaymentApprovalPage() {
                           <Eye className="w-4 h-4" />
                           Kurgu Dosyası
                         </a>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
+              )}
+            </div>
+          </div>
+                        <button
+                          onClick={() => {
                       setSelectedItem(item)
                       setVoicePrice(item.voicePrice?.toString() || '')
                       setEditPrice(item.editPrice?.toString() || '')
@@ -192,12 +192,12 @@ export default function PaymentApprovalPage() {
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
                   >
                     Onayla & Ücret Gir
-                  </button>
-                        </div>
+                        </button>
                       </div>
+                    </div>
                   ))}
-                </div>
-              )}
+                  </div>
+                )}
 
         {/* Ödeme Onay Modal */}
         {showModal && selectedItem && (
@@ -266,8 +266,8 @@ export default function PaymentApprovalPage() {
                       <p className="font-medium">Önemli:</p>
                       <p>Ücretler onaylandıktan sonra "Ödeme Bekleyenler" listesine eklenecek. Ödeme yapıldığında finansal kayıtlara düşecektir.</p>
                     </div>
+                    </div>
                   </div>
-                </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t">
                         <button
@@ -287,10 +287,10 @@ export default function PaymentApprovalPage() {
                     {submitting ? 'Onaylanıyor...' : 'Onayla'}
                       </button>
                     </div>
-              </div>
+                  </div>
             </div>
-          </div>
-        )}
+              </div>
+            )}
       </div>
     </Layout>
   )

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, LogOut, Video, Image, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark, FileText, Download, CheckCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, LogOut, Video, Image, Calendar, Eye, Heart, MessageCircle, Share2, Bookmark, FileText, Download, CheckCircle, Clock, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import RichTextEditor from '@/components/RichTextEditor'
@@ -279,13 +279,22 @@ export default function CreatorDashboardPage() {
                 <p className="mt-1 text-gray-600">İçeriklerinizi buradan ekleyebilirsiniz</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Çıkış Yap
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push('/my-payment-requests')}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Ödeme Taleplerim
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Çıkış Yap
+              </button>
+            </div>
           </div>
         </div>
 
