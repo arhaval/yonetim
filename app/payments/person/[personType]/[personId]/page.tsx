@@ -111,48 +111,6 @@ export default function PersonPaymentPage() {
         })
       }
 
-      // 3. Ekstra iş talepleri
-      const extraWorkRes = await fetch('/api/extra-work-requests?status=approved')
-      if (extraWorkRes.ok) {
-        const data = await extraWorkRes.json()
-        const requests = data.requests || []
-
-        requests.forEach((req: any) => {
-          const reqPerson = req.contentCreator || req.voiceActor || req.streamer || req.teamMember
-          if (reqPerson && reqPerson.id === personId) {
-            allItems.push({
-              id: `extra-${req.id}`,
-              type: 'extra',
-              title: req.workType,
-              amount: req.amount,
-              date: req.createdAt,
-              details: req.description || '',
-            })
-          }
-        })
-      }
-
-      // 4. İş gönderimleri
-      const workSubmissionsRes = await fetch('/api/work-submissions?status=approved')
-      if (workSubmissionsRes.ok) {
-        const data = await workSubmissionsRes.json()
-        const submissions = data.submissions || []
-
-        submissions.forEach((sub: any) => {
-          const subPerson = sub.voiceActor || sub.teamMember
-          if (subPerson && subPerson.id === personId && sub.cost) {
-            allItems.push({
-              id: `work-${sub.id}`,
-              type: 'work',
-              title: sub.workName,
-              amount: sub.cost,
-              date: sub.createdAt,
-              details: sub.workType,
-            })
-          }
-        })
-      }
-
       // Tarihe göre sırala (eski → yeni)
       allItems.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
@@ -213,20 +171,6 @@ export default function PersonPaymentPage() {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ editPaid: true }),
-          })
-        } else if (item.type === 'extra') {
-          const requestId = item.id.replace('extra-', '')
-          await fetch(`/api/extra-work-requests/${requestId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'paid' }),
-          })
-        } else if (item.type === 'work') {
-          const submissionId = item.id.replace('work-', '')
-          await fetch(`/api/work-submissions/${submissionId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'paid' }),
           })
         }
 

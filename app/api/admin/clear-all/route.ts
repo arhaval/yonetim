@@ -4,9 +4,7 @@ import { prisma } from '@/lib/prisma'
 // Tüm verileri sil (Admin API)
 export async function POST() {
   try {
-    // Tüm tabloları temizle
-    await prisma.workSubmission.deleteMany({})
-    await prisma.extraWorkRequest.deleteMany({})
+    // Tüm tabloları temizle (sıralama önemli - foreign key constraints)
     await prisma.contentRegistry.deleteMany({})
     await prisma.stream.deleteMany({})
     await prisma.content.deleteMany({})
