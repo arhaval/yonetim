@@ -81,8 +81,8 @@ export async function GET(
 
     // occurredAt'e göre sırala (en yeni önce)
     allPayments.sort((a, b) => {
-      const dateA = new Date(a.occurredAt).getTime()
-      const dateB = new Date(b.occurredAt).getTime()
+      const dateA = a.occurredAt ? new Date(a.occurredAt).getTime() : 0
+      const dateB = b.occurredAt ? new Date(b.occurredAt).getTime() : 0
       return dateB - dateA
     })
 
