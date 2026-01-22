@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Cache GET requests for 60 seconds (daha uzun cache)
-export const revalidate = 60
-export const dynamic = 'force-dynamic' // Her zaman fresh data
+// Cache GET requests for 5 minutes
+export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {

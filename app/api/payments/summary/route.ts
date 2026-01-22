@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Tüm ekip üyelerinin ödeme özetini getir
+export const revalidate = 30 // 30 saniye cache
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
