@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
+import { handleApiError } from '@/lib/api-error-handler'
 
-// Cache for 60 seconds
-export const revalidate = 60
+// Cache'i kapat - her zaman fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 // Tüm içerik kayıtlarını getir
 export async function GET(request: NextRequest) {

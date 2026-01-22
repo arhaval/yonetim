@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handleApiError } from '@/lib/api-error-handler'
 
-// Cache GET requests for 5 minutes
-export const revalidate = 60 // 1 dakika cache
+// Cache'i kapat - her zaman fresh data
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
-    const startTime = Date.now()
-    console.log('[Streams API] Starting fetch...')
-    
-    // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
-    // Sadece gerekli alanları çek - performans için
     const streams = await prisma.stream.findMany({
       select: {
         id: true,
@@ -33,30 +29,13 @@ export async function GET() {
           },
         },
       },
-      orderBy: { date: 'desc' }, // Yeni → Eski sıralama (daha mantıklı)
-      take: 200, // Son 200 kayıt
+      orderBy: { date: 'desc' },
+      take: 200,
     })
-    
-    const duration = Date.now() - startTime
-    console.log(`[Streams API] Successfully fetched ${streams.length} streams in ${duration}ms`)
     
     return NextResponse.json(streams)
-  } catch (error: any) {
-    console.error('[Streams API] Error fetching streams:', error)
-    console.error('[Streams API] Error details:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-    })
-    
-    return NextResponse.json(
-      { 
-        error: 'Yayınlar getirilemedi', 
-        details: error.message,
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, 'GET /api/streams')
   }
 }
 
@@ -64,35 +43,26 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    // Stream oluştur - status: "approved" olarak başlar (yayıncılar yayınları girince direkt onaylanır, admin sonra ücret belirler)
     const stream = await prisma.stream.create({
       data: {
         streamerId: data.streamerId,
         date: new Date(data.date),
-        duration: data.duration, // Tam saat (Int)
+        duration: data.duration,
         matchInfo: data.matchInfo || null,
         teamName: data.teamName || null,
         totalRevenue: data.totalRevenue || 0,
-        streamerEarning: data.streamerEarning || 0, // 0 olabilir - admin sonra girecek
+        streamerEarning: data.streamerEarning || 0,
         arhavalProfit: data.arhavalProfit || 0,
-        teams: data.teams || null, // Eski sistem için
-        cost: data.cost || 0, // Eski sistem için
+        teams: data.teams || null,
+        cost: data.cost || 0,
         notes: data.notes || null,
-        status: 'approved', // Yayınlar direkt onaylanır, admin sonra ücret belirler
+        status: 'approved',
       },
     })
 
-    // NOT: Finansal kayıt yayın girildiğinde OLUŞTURULMAZ
-    // Finansal kayıt sadece "Tüm Ödemeler" sayfasından ödeme yapıldığında oluşur
-    // Bu sayede çift kayıt sorunu önlenir
-
     return NextResponse.json(stream)
   } catch (error) {
-    console.error('Error creating stream:', error)
-    return NextResponse.json(
-      { error: 'Yayın oluşturulamadı' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'POST /api/streams')
   }
 }
 

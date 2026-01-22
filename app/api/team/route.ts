@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { handleApiError } from '@/lib/api-error-handler'
 
-// Cache GET requests for 30 seconds
-export const revalidate = 30
+// Cache'i kapat - her zaman fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    const startTime = Date.now()
     const searchParams = request.nextUrl.searchParams
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
     
-    // Sadece gereken alanları çek (ilişkileri çekme - N+1 önleme)
     const members = await prisma.teamMember.findMany({
       select: {
         id: true,
@@ -26,12 +26,11 @@ export async function GET(request: NextRequest) {
         notes: true,
         createdAt: true,
         updatedAt: true,
-        // _count kaldırıldı - performans için
       },
       where: {
-        isActive: true, // Sadece aktif üyeleri göster
+        isActive: true,
       },
-      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
+      orderBy: { createdAt: 'asc' },
       take: limit,
       skip: offset,
     })
@@ -40,9 +39,6 @@ export async function GET(request: NextRequest) {
       where: { isActive: true },
     })
     
-    const duration = Date.now() - startTime
-    console.log(`[Team API] Fetched ${members.length} members in ${duration}ms (limit: ${limit}, offset: ${offset})`)
-    
     return NextResponse.json(members, {
       headers: {
         'X-Total-Count': total.toString(),
@@ -50,20 +46,8 @@ export async function GET(request: NextRequest) {
         'X-Offset': offset.toString(),
       },
     })
-  } catch (error: any) {
-    console.error('❌ Error fetching team members:', {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: error.stack,
-    })
-    // Hata durumunda boş array döndür ama detaylı log ekle
-    return NextResponse.json([], { 
-      status: 200,
-      headers: {
-        'X-Error': error.message || 'Unknown error'
-      }
-    })
+  } catch (error) {
+    return handleApiError(error, 'GET /api/team')
   }
 }
 
@@ -108,21 +92,8 @@ export async function POST(request: NextRequest) {
     // Şifreyi response'dan çıkar
     const { password, ...memberWithoutPassword } = member
     return NextResponse.json(memberWithoutPassword)
-  } catch (error: any) {
-    console.error('Error creating team member:', error)
-    
-    // Email unique constraint hatası
-    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
-      return NextResponse.json(
-        { error: 'Bu email adresi zaten kullanılıyor' },
-        { status: 400 }
-      )
-    }
-    
-    return NextResponse.json(
-      { error: 'Ekip üyesi oluşturulamadı' },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, 'POST /api/team')
   }
 }
 

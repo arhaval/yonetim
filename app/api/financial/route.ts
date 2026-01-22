@@ -4,9 +4,11 @@ import { startOfMonth, endOfMonth, parse, format } from 'date-fns'
 import { createAuditLog } from '@/lib/audit-log'
 import { cookies } from 'next/headers'
 import { getFinancialRecordLastActivityAt, getPaymentLastActivityAt, getTeamPaymentLastActivityAt, getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
+import { handleApiError } from '@/lib/api-error-handler'
 
-// Cache GET requests for 60 seconds - agresif cache
-export const revalidate = 60
+// Cache'i kapat - her zaman fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handleApiError } from '@/lib/api-error-handler'
 
-// Tüm ekip üyelerinin ödeme özetini getir
-export const revalidate = 60 // 1 dakika cache
+// Cache'i kapat - her zaman fresh data
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
@@ -162,16 +163,9 @@ export async function GET() {
     // Borcu en çok olan üstte olacak şekilde sırala
     result.sort((a, b) => b.totalAmount - a.totalAmount)
 
-    const duration = Date.now() - startTime
-    console.log(`[Payments Summary] Completed in ${duration}ms, returning ${result.length} people`)
-
     return NextResponse.json(result)
-  } catch (error: any) {
-    console.error('Error fetching payment summary:', error)
-    return NextResponse.json(
-      { error: 'Ödeme özeti getirilemedi', details: error.message },
-      { status: 500 }
-    )
+  } catch (error) {
+    return handleApiError(error, 'GET /api/payments/summary')
   }
 }
 
