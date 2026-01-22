@@ -9,24 +9,47 @@ const DATABASE_URL = process.env.DATABASE_URL?.trim();
 function validateDatabaseUrl() {
   if (!DATABASE_URL) {
     console.error("❌ DATABASE_URL environment variable is missing!");
-    return false;
+    throw new Error("DATABASE_URL is required!");
   }
 
   try {
     const u = new URL(DATABASE_URL);
     
-    // Supabase Pro Connection Pooler kontrolü
+    // ZORUNLU: Pooler kullanımı kontrolü
+    if (!u.hostname.includes('pooler.supabase.com')) {
+      console.error("❌ KRITIK HATA: DATABASE_URL pooler kullanmıyor!");
+      console.error("Mevcut hostname:", u.hostname);
+      console.error("Olması gereken: aws-1-eu-north-1.pooler.supabase.com");
+      throw new Error("DATABASE_URL must use pooler.supabase.com!");
+    }
+
+    // ZORUNLU: Port 5432 kontrolü
+    if (u.port !== '5432' && !DATABASE_URL.includes(':5432/')) {
+      console.error("❌ KRITIK HATA: DATABASE_URL yanlış port kullanıyor!");
+      console.error("Mevcut port:", u.port || 'default');
+      console.error("Olması gereken port: 5432");
+      throw new Error("DATABASE_URL must use port 5432!");
+    }
+
+    // Supabase Pro Connection Pooler format kontrolü
     if (u.hostname.includes('pooler.supabase.com')) {
       if (!u.username.includes('.')) {
         console.error("❌ Supabase Pooler URL format error - username should be 'postgres.PROJECT_REF'");
-        return false;
+        throw new Error("Invalid Supabase pooler username format!");
       }
     }
     
+    console.log("✅ Database URL validation passed");
+    console.log("   Hostname:", u.hostname);
+    console.log("   Port:", u.port || '5432 (default)');
     return true;
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("❌ DATABASE_URL validation failed:", error.message);
+      throw error;
+    }
     console.error("❌ DATABASE_URL is not a valid URL!");
-    return false;
+    throw new Error("Invalid DATABASE_URL format!");
   }
 }
 
