@@ -1,28 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
-import { DollarSign, Video, Mic, Film, CheckCircle, Clock, User } from 'lucide-react'
+import { DollarSign, Video, Mic, Film, CheckCircle, User, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale/tr'
 
-interface Payment {
-  id: string
-  type: 'stream' | 'voice' | 'edit' | 'extra' | 'work'
-  title: string
-  personName: string
+interface PersonPayment {
   personId: string
-  personType: string
-  amount: number
-  date: string
-  details: string
+  personName: string
+  personType: 'streamer' | 'voiceActor' | 'teamMember' | 'contentCreator'
+  totalAmount: number
+  itemCount: number
+  items: Array<{
+    id: string
+    type: string
+    title: string
+    amount: number
+    date: string
+  }>
 }
 
 export default function AllPaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([])
+  const router = useRouter()
+  const [personPayments, setPersonPayments] = useState<PersonPayment[]>([])
   const [loading, setLoading] = useState(true)
-  const [paying, setPaying] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAllPayments()
@@ -30,28 +32,41 @@ export default function AllPaymentsPage() {
 
   const fetchAllPayments = async () => {
     try {
-      const allPayments: Payment[] = []
+      const personMap = new Map<string, PersonPayment>()
 
       // 1. Stream ödemeleri (yayınlar)
       const streamsRes = await fetch('/api/streams?paymentStatus=pending')
       if (streamsRes.ok) {
         const streams = await streamsRes.json()
         streams.forEach((stream: any) => {
-          allPayments.push({
-            id: `stream-${stream.id}`,
+          if (!stream.streamer || !stream.streamerEarning) return
+          
+          const key = `streamer-${stream.streamerId}`
+          if (!personMap.has(key)) {
+            personMap.set(key, {
+              personId: stream.streamerId,
+              personName: stream.streamer.name,
+              personType: 'streamer',
+              totalAmount: 0,
+              itemCount: 0,
+              items: [],
+            })
+          }
+          
+          const person = personMap.get(key)!
+          person.totalAmount += stream.streamerEarning
+          person.itemCount += 1
+          person.items.push({
+            id: stream.id,
             type: 'stream',
             title: stream.matchInfo || 'Yayın',
-            personName: stream.streamer?.name || 'Bilinmeyen',
-            personId: stream.streamerId,
-            personType: 'streamer',
-            amount: stream.streamerEarning || 0,
+            amount: stream.streamerEarning,
             date: stream.date,
-            details: `${stream.duration} saat - ${stream.teamName || ''}`,
           })
         })
       }
 
-      // 2. ContentRegistry ödemeleri (ses)
+      // 2. ContentRegistry ödemeleri (ses + edit)
       const registryRes = await fetch('/api/content-registry?status=PUBLISHED')
       if (registryRes.ok) {
         const data = await registryRes.json()
@@ -62,38 +77,63 @@ export default function AllPaymentsPage() {
           if (reg.voicePrice && !reg.voicePaid) {
             const voicePerson = reg.voiceActor || reg.streamer
             if (voicePerson) {
-              allPayments.push({
-                id: `voice-${reg.id}`,
+              const personType = reg.voiceActor ? 'voiceActor' : 'streamer'
+              const key = `${personType}-${voicePerson.id}`
+              
+              if (!personMap.has(key)) {
+                personMap.set(key, {
+                  personId: voicePerson.id,
+                  personName: voicePerson.name,
+                  personType: personType as any,
+                  totalAmount: 0,
+                  itemCount: 0,
+                  items: [],
+                })
+              }
+              
+              const person = personMap.get(key)!
+              person.totalAmount += reg.voicePrice
+              person.itemCount += 1
+              person.items.push({
+                id: reg.id,
                 type: 'voice',
                 title: reg.title,
-                personName: voicePerson.name,
-                personId: voicePerson.id,
-                personType: reg.voiceActor ? 'voiceActor' : 'streamer',
                 amount: reg.voicePrice,
                 date: reg.createdAt,
-                details: 'Seslendirme',
               })
             }
           }
           
           // Kurgu ödemesi
           if (reg.editPrice && !reg.editPaid && reg.editor) {
-            allPayments.push({
-              id: `edit-${reg.id}`,
+            const key = `teamMember-${reg.editor.id}`
+            
+            if (!personMap.has(key)) {
+              personMap.set(key, {
+                personId: reg.editor.id,
+                personName: reg.editor.name,
+                personType: 'teamMember',
+                totalAmount: 0,
+                itemCount: 0,
+                items: [],
+              })
+            }
+            
+            const person = personMap.get(key)!
+            person.totalAmount += reg.editPrice
+            person.itemCount += 1
+            person.items.push({
+              id: reg.id,
               type: 'edit',
               title: reg.title,
-              personName: reg.editor.name,
-              personId: reg.editor.id,
-              personType: 'editor',
               amount: reg.editPrice,
               date: reg.createdAt,
-              details: 'Kurgu',
             })
           }
         })
       }
 
-      // 3. Ekstra iş talepleri (onaylanmış olanlar)
+      // 3. Ekstra iş talepleri
       const extraWorkRes = await fetch('/api/extra-work-requests?status=approved')
       if (extraWorkRes.ok) {
         const data = await extraWorkRes.json()
@@ -101,31 +141,38 @@ export default function AllPaymentsPage() {
         
         requests.forEach((req: any) => {
           const person = req.contentCreator || req.voiceActor || req.streamer || req.teamMember
-          if (person) {
-            const workTypeLabels: any = {
-              VOICE: 'Seslendirme',
-              EDIT: 'Kurgu',
-              STREAM: 'Yayın',
-              CONTENT: 'İçerik',
-              OTHER: 'Diğer',
-            }
-            
-            allPayments.push({
-              id: `extra-${req.id}`,
-              type: 'extra',
-              title: workTypeLabels[req.workType] || 'Ekstra İş',
-              personName: person.name,
+          if (!person) return
+          
+          const personType = req.contentCreatorId ? 'contentCreator' : 
+                           req.voiceActorId ? 'voiceActor' : 
+                           req.streamerId ? 'streamer' : 'teamMember'
+          const key = `${personType}-${person.id}`
+          
+          if (!personMap.has(key)) {
+            personMap.set(key, {
               personId: person.id,
-              personType: req.contentCreatorId ? 'contentCreator' : req.voiceActorId ? 'voiceActor' : req.streamerId ? 'streamer' : 'teamMember',
-              amount: req.amount,
-              date: req.createdAt,
-              details: req.description,
+              personName: person.name,
+              personType: personType as any,
+              totalAmount: 0,
+              itemCount: 0,
+              items: [],
             })
           }
+          
+          const personData = personMap.get(key)!
+          personData.totalAmount += req.amount
+          personData.itemCount += 1
+          personData.items.push({
+            id: req.id,
+            type: 'extra',
+            title: req.workType,
+            amount: req.amount,
+            date: req.createdAt,
+          })
         })
       }
 
-      // 4. İş gönderimleri (onaylanmış, ödenmemiş)
+      // 4. İş gönderimleri
       const workSubmissionsRes = await fetch('/api/work-submissions?status=approved')
       if (workSubmissionsRes.ok) {
         const data = await workSubmissionsRes.json()
@@ -133,33 +180,40 @@ export default function AllPaymentsPage() {
         
         submissions.forEach((sub: any) => {
           const person = sub.voiceActor || sub.teamMember
-          if (person && sub.cost) {
-            const workTypeLabels: any = {
-              SHORT_VOICE: '🎙️ Kısa Ses',
-              LONG_VOICE: '🎙️ Uzun Ses',
-              SHORT_VIDEO: '🎬 Kısa Video',
-              LONG_VIDEO: '🎬 Uzun Video',
-            }
-            
-            allPayments.push({
-              id: `work-${sub.id}`,
-              type: 'work',
-              title: sub.workName,
-              personName: person.name,
+          if (!person || !sub.cost) return
+          
+          const personType = sub.voiceActorId ? 'voiceActor' : 'teamMember'
+          const key = `${personType}-${person.id}`
+          
+          if (!personMap.has(key)) {
+            personMap.set(key, {
               personId: person.id,
-              personType: sub.voiceActorId ? 'voiceActor' : 'teamMember',
-              amount: sub.cost,
-              date: sub.createdAt,
-              details: `${workTypeLabels[sub.workType] || sub.workType}${sub.description ? ` - ${sub.description}` : ''}`,
+              personName: person.name,
+              personType: personType as any,
+              totalAmount: 0,
+              itemCount: 0,
+              items: [],
             })
           }
+          
+          const personData = personMap.get(key)!
+          personData.totalAmount += sub.cost
+          personData.itemCount += 1
+          personData.items.push({
+            id: sub.id,
+            type: 'work',
+            title: sub.workName,
+            amount: sub.cost,
+            date: sub.createdAt,
+          })
         })
       }
 
-      // Tarihe göre sırala (eski → yeni)
-      allPayments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      // Map'i array'e çevir ve sırala
+      const personsArray = Array.from(personMap.values())
+      personsArray.sort((a, b) => b.totalAmount - a.totalAmount) // En çok borcu olan üstte
       
-      setPayments(allPayments)
+      setPersonPayments(personsArray)
     } catch (error) {
       toast.error('Ödemeler yüklenemedi')
     } finally {
@@ -167,178 +221,23 @@ export default function AllPaymentsPage() {
     }
   }
 
-  const handlePay = async (payment: Payment) => {
-    if (!confirm(`${payment.personName} için ${payment.amount.toLocaleString('tr-TR')} TL ödeme yapılacak. Onaylıyor musunuz?`)) {
-      return
-    }
-
-    setPaying(payment.id)
-    try {
-      if (payment.type === 'stream') {
-        // Stream ödemesi
-        const streamId = payment.id.replace('stream-', '')
-        const res = await fetch(`/api/streams/${streamId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentStatus: 'paid' }),
-        })
-
-        if (!res.ok) throw new Error('Ödeme güncellenemedi')
-
-        // Finansal kayıt oluştur
-        await fetch('/api/financial', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'expense',
-            category: 'Yayın Ödemesi',
-            amount: payment.amount,
-            description: `${payment.title} - ${payment.personName}`,
-            date: new Date().toISOString(),
-            streamerId: payment.personId,
-          }),
-        })
-
-        toast.success('Yayın ödemesi yapıldı!')
-      } else if (payment.type === 'voice' || payment.type === 'edit') {
-        // ContentRegistry ödemesi
-        const registryId = payment.id.replace('voice-', '').replace('edit-', '')
-        const updateData: any = {}
-        
-        if (payment.type === 'voice') {
-          updateData.voicePaid = true
-        } else {
-          updateData.editPaid = true
-        }
-
-        const res = await fetch(`/api/content-registry/${registryId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updateData),
-        })
-
-        if (!res.ok) throw new Error('Ödeme güncellenemedi')
-
-        // Finansal kayıt oluştur
-        const financialData: any = {
-          type: 'expense',
-          category: payment.type === 'voice' ? 'Seslendirme Ödemesi' : 'Kurgu Ödemesi',
-          amount: payment.amount,
-          description: `${payment.title} - ${payment.personName}`,
-          date: new Date().toISOString(),
-        }
-
-        if (payment.personType === 'voiceActor') {
-          financialData.voiceActorId = payment.personId
-        } else if (payment.personType === 'streamer') {
-          financialData.streamerId = payment.personId
-        } else if (payment.personType === 'editor') {
-          financialData.teamMemberId = payment.personId
-        }
-
-        await fetch('/api/financial', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(financialData),
-        })
-
-        toast.success('Ödeme yapıldı!')
-      } else if (payment.type === 'extra') {
-        // Ekstra iş talebi ödemesi
-        const requestId = payment.id.replace('extra-', '')
-        const res = await fetch(`/api/extra-work-requests/${requestId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'paid' }),
-        })
-
-        if (!res.ok) throw new Error('Ödeme güncellenemedi')
-
-        // Finansal kayıt oluştur
-        const financialData: any = {
-          type: 'expense',
-          category: 'Ekstra İş Ödemesi',
-          amount: payment.amount,
-          description: `${payment.title} - ${payment.personName} - ${payment.details}`,
-          date: new Date().toISOString(),
-        }
-
-        if (payment.personType === 'contentCreator') {
-          financialData.creatorId = payment.personId
-        } else if (payment.personType === 'voiceActor') {
-          financialData.voiceActorId = payment.personId
-        } else if (payment.personType === 'streamer') {
-          financialData.streamerId = payment.personId
-        } else if (payment.personType === 'teamMember') {
-          financialData.teamMemberId = payment.personId
-        }
-
-        await fetch('/api/financial', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(financialData),
-        })
-
-        toast.success('Ekstra iş ödemesi yapıldı!')
-      } else if (payment.type === 'work') {
-        // İş gönderimi ödemesi
-        const submissionId = payment.id.replace('work-', '')
-        const res = await fetch(`/api/work-submissions/${submissionId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'paid' }),
-        })
-
-        if (!res.ok) throw new Error('Ödeme güncellenemedi')
-
-        // Finansal kayıt oluştur
-        const financialData: any = {
-          type: 'expense',
-          category: 'İş Ödemesi',
-          amount: payment.amount,
-          description: `${payment.title} - ${payment.personName} - ${payment.details}`,
-          date: new Date().toISOString(),
-        }
-
-        if (payment.personType === 'voiceActor') {
-          financialData.voiceActorId = payment.personId
-        } else if (payment.personType === 'teamMember') {
-          financialData.teamMemberId = payment.personId
-        }
-
-        await fetch('/api/financial', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(financialData),
-        })
-
-        toast.success('İş ödemesi yapıldı!')
-      }
-
-      fetchAllPayments()
-    } catch (error: any) {
-      toast.error(error.message || 'Bir hata oluştu')
-    } finally {
-      setPaying(null)
-    }
+  const getPersonTypeLabel = (type: string) => {
+    if (type === 'streamer') return 'Yayıncı'
+    if (type === 'voiceActor') return 'Seslendirmen'
+    if (type === 'teamMember') return 'Video Editör'
+    if (type === 'contentCreator') return 'İçerik Üreticisi'
+    return 'Ekip Üyesi'
   }
 
-  const getIcon = (type: string) => {
-    if (type === 'stream') return Video
-    if (type === 'voice') return Mic
-    if (type === 'edit') return Film
-    if (type === 'work') return CheckCircle
-    return DollarSign
+  const getPersonTypeColor = (type: string) => {
+    if (type === 'streamer') return 'bg-blue-100 text-blue-800'
+    if (type === 'voiceActor') return 'bg-purple-100 text-purple-800'
+    if (type === 'teamMember') return 'bg-green-100 text-green-800'
+    if (type === 'contentCreator') return 'bg-orange-100 text-orange-800'
+    return 'bg-gray-100 text-gray-800'
   }
 
-  const getColor = (type: string) => {
-    if (type === 'stream') return 'bg-blue-100 text-blue-800'
-    if (type === 'voice') return 'bg-purple-100 text-purple-800'
-    if (type === 'edit') return 'bg-green-100 text-green-800'
-    return 'bg-orange-100 text-orange-800'
-  }
-
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)
+  const totalAmount = personPayments.reduce((sum, p) => sum + p.totalAmount, 0)
 
   if (loading) {
     return (
@@ -357,7 +256,7 @@ export default function AllPaymentsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Tüm Bekleyen Ödemeler</h1>
-            <p className="text-gray-600 mt-1">Yayın, seslendirme ve kurgu ödemelerini tek yerden yönetin</p>
+            <p className="text-gray-600 mt-1">Ekip üyelerinin ödemelerini kişi bazlı yönetin</p>
           </div>
           <div className="bg-red-50 border border-red-200 rounded-xl px-6 py-4">
             <p className="text-sm text-red-600 font-medium">Toplam Bekleyen</p>
@@ -368,13 +267,27 @@ export default function AllPaymentsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Yayın Ödemeleri</p>
+                <p className="text-sm text-gray-600">Toplam Kişi</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {personPayments.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <User className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Yayıncılar</p>
                 <p className="text-2xl font-bold text-blue-600 mt-1">
-                  {payments.filter(p => p.type === 'stream').length}
+                  {personPayments.filter(p => p.personType === 'streamer').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -386,9 +299,9 @@ export default function AllPaymentsPage() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Seslendirme</p>
+                <p className="text-sm text-gray-600">Seslendirmenler</p>
                 <p className="text-2xl font-bold text-purple-600 mt-1">
-                  {payments.filter(p => p.type === 'voice').length}
+                  {personPayments.filter(p => p.personType === 'voiceActor').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -400,9 +313,9 @@ export default function AllPaymentsPage() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Kurgu</p>
+                <p className="text-sm text-gray-600">Video Editörler</p>
                 <p className="text-2xl font-bold text-green-600 mt-1">
-                  {payments.filter(p => p.type === 'edit').length}
+                  {personPayments.filter(p => p.personType === 'teamMember').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -412,8 +325,8 @@ export default function AllPaymentsPage() {
           </div>
         </div>
 
-        {/* Payments List */}
-        {payments.length === 0 ? (
+        {/* Persons List */}
+        {personPayments.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Tüm ödemeler yapıldı!</h3>
@@ -421,93 +334,48 @@ export default function AllPaymentsPage() {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tür
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    İçerik
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kişi
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Detay
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tarih
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tutar
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    İşlem
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {payments.map((payment) => {
-                  const Icon = getIcon(payment.type)
-                  return (
-                    <tr key={payment.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getColor(payment.type)}`}>
-                          <Icon className="w-4 h-4 mr-1" />
-                          {payment.type === 'stream' ? 'Yayın' : payment.type === 'voice' ? 'Ses' : 'Kurgu'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{payment.title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{payment.personName}</span>
+            <div className="divide-y divide-gray-200">
+              {personPayments.map((person) => (
+                <div
+                  key={`${person.personType}-${person.personId}`}
+                  onClick={() => router.push(`/payments/person/${person.personType}/${person.personId}`)}
+                  className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {person.personName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {person.personName}
+                          </h3>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPersonTypeColor(person.personType)}`}>
+                            {getPersonTypeLabel(person.personType)}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600">{payment.details}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600">
-                          {format(new Date(payment.date), 'dd MMM yyyy', { locale: tr })}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-lg font-semibold text-gray-900">
-                          {payment.amount.toLocaleString('tr-TR')} ₺
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <button
-                          onClick={() => handlePay(payment)}
-                          disabled={paying === payment.id}
-                          className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          {paying === payment.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              İşleniyor...
-                            </>
-                          ) : (
-                            <>
-                              <DollarSign className="w-4 h-4 mr-2" />
-                              Ödeme Yap
-                            </>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {person.itemCount} adet ödenmemiş iş
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">Toplam Borç</p>
+                        <p className="text-2xl font-bold text-red-600">
+                          {person.totalAmount.toLocaleString('tr-TR')} ₺
+                        </p>
+                      </div>
+                      <ChevronRight className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
     </Layout>
   )
 }
-
