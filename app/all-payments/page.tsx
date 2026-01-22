@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
-import { DollarSign, Video, Mic, Film, CheckCircle, User, ChevronRight, Users, TrendingUp, Wallet, CreditCard } from 'lucide-react'
+import { DollarSign, Video, Mic, Film, CheckCircle, User, ChevronRight, Users, TrendingUp, Wallet, CreditCard, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface PersonPayment {
@@ -19,6 +19,7 @@ export default function AllPaymentsPage() {
   const router = useRouter()
   const [personPayments, setPersonPayments] = useState<PersonPayment[]>([])
   const [loading, setLoading] = useState(true)
+  const [hideZeroDebt, setHideZeroDebt] = useState(true) // Ödediklerimi gizle (varsayılan: gizli)
 
   useEffect(() => {
     fetchAllPayments()
@@ -65,6 +66,11 @@ export default function AllPaymentsPage() {
     if (type === 'contentCreator') return 'from-orange-500 to-red-600'
     return 'from-gray-500 to-gray-600'
   }
+
+  // Filtreleme: Borcu 0 olanları gizle/göster
+  const filteredPayments = hideZeroDebt 
+    ? personPayments.filter(p => p.totalAmount > 0)
+    : personPayments
 
   const totalAmount = personPayments.reduce((sum, p) => sum + p.totalAmount, 0)
   const totalPeople = personPayments.filter(p => p.totalAmount > 0).length
@@ -169,22 +175,51 @@ export default function AllPaymentsPage() {
                 <h2 className="text-xl font-bold text-gray-900">Ekip Üyeleri</h2>
                 <p className="text-sm text-gray-500 mt-1">Ödeme yapmak için kişiye tıklayın</p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Wallet className="w-4 h-4" />
-                <span>En yüksek borç üstte</span>
+              <div className="flex items-center gap-4">
+                {/* Toggle Button: Ödediklerimi Gizle/Göster */}
+                <button
+                  onClick={() => setHideZeroDebt(!hideZeroDebt)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                    hideZeroDebt
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:shadow-lg'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {hideZeroDebt ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      <span>Ödediklerim Gizli</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      <span>Hepsini Göster</span>
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Wallet className="w-4 h-4" />
+                  <span>En yüksek borç üstte</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {personPayments.length === 0 ? (
+          {filteredPayments.length === 0 ? (
             <div className="p-16 text-center">
               <CheckCircle className="w-20 h-20 text-green-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Harika! 🎉</h3>
-              <p className="text-gray-500">Tüm ödemeler yapıldı, bekleyen ödeme yok.</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {hideZeroDebt ? 'Harika! 🎉' : 'Kayıt Yok'}
+              </h3>
+              <p className="text-gray-500">
+                {hideZeroDebt 
+                  ? 'Tüm ödemeler yapıldı, bekleyen ödeme yok.' 
+                  : 'Henüz ekip üyesi eklenmemiş.'}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {personPayments.map((person, index) => {
+              {filteredPayments.map((person, index) => {
                 const Icon = getPersonTypeIcon(person.personType)
                 const gradient = getPersonTypeGradient(person.personType)
                 
