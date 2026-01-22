@@ -103,7 +103,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
-        profilePhoto: true,
+        avatar: true,
       },
     })
 
@@ -131,7 +131,7 @@ export async function GET() {
         personId: member.id,
         personName: member.name,
         personType: 'teamMember',
-        profilePhoto: member.profilePhoto,
+        profilePhoto: member.avatar,
         totalAmount,
         itemCount: memberPayments.length,
       })
