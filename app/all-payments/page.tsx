@@ -26,149 +26,15 @@ export default function AllPaymentsPage() {
 
   const fetchAllPayments = async () => {
     try {
-      const personMap = new Map<string, PersonPayment>()
-
-      // 1. Tüm yayıncıları çek ve ödenmemiş yayınlarını hesapla
-      const streamersRes = await fetch('/api/streamers')
-      if (streamersRes.ok) {
-        const streamers = await streamersRes.json()
-        for (const streamer of streamers) {
-          personMap.set(`streamer-${streamer.id}`, {
-            personId: streamer.id,
-            personName: streamer.name,
-            personType: 'streamer',
-            profilePhoto: streamer.profilePhoto,
-            totalAmount: 0,
-            itemCount: 0,
-          })
-        }
+      // Tek bir API çağrısı ile tüm verileri al
+      const res = await fetch('/api/payments/summary')
+      if (res.ok) {
+        const data = await res.json()
+        setPersonPayments(data)
+      } else {
+        console.error('API error:', await res.text())
+        toast.error('Ödemeler yüklenemedi')
       }
-
-      // 2. Tüm seslendirmenleri çek
-      const voiceActorsRes = await fetch('/api/voice-actors')
-      if (voiceActorsRes.ok) {
-        const voiceActors = await voiceActorsRes.json()
-        for (const va of voiceActors) {
-          personMap.set(`voiceActor-${va.id}`, {
-            personId: va.id,
-            personName: va.name,
-            personType: 'voiceActor',
-            profilePhoto: va.profilePhoto,
-            totalAmount: 0,
-            itemCount: 0,
-          })
-        }
-      }
-
-      // 3. Tüm ekip üyelerini çek
-      const teamRes = await fetch('/api/team')
-      if (teamRes.ok) {
-        const team = await teamRes.json()
-        for (const member of team) {
-          personMap.set(`teamMember-${member.id}`, {
-            personId: member.id,
-            personName: member.name,
-            personType: 'teamMember',
-            profilePhoto: member.profilePhoto,
-            totalAmount: 0,
-            itemCount: 0,
-          })
-        }
-      }
-
-      // 4. Tüm içerik üreticilerini çek
-      const creatorsRes = await fetch('/api/content-creators')
-      if (creatorsRes.ok) {
-        const creators = await creatorsRes.json()
-        for (const creator of creators) {
-          personMap.set(`contentCreator-${creator.id}`, {
-            personId: creator.id,
-            personName: creator.name,
-            personType: 'contentCreator',
-            profilePhoto: creator.profilePhoto,
-            totalAmount: 0,
-            itemCount: 0,
-          })
-        }
-      }
-
-      // 5. Ödenmemiş yayınları hesapla
-      const streamsRes = await fetch('/api/streams')
-      if (streamsRes.ok) {
-        const streams = await streamsRes.json()
-        streams.forEach((stream: any) => {
-          // Sadece ödenmemiş ve maliyeti olan yayınlar
-          if (stream.streamerEarning > 0 && stream.paymentStatus !== 'paid') {
-            const key = `streamer-${stream.streamerId}`
-            const person = personMap.get(key)
-            if (person) {
-              person.totalAmount += stream.streamerEarning
-              person.itemCount += 1
-            }
-          }
-        })
-      }
-
-      // 6. Ödenmemiş seslendirme ve kurguları hesapla
-      const registryRes = await fetch('/api/content-registry')
-      if (registryRes.ok) {
-        const data = await registryRes.json()
-        const registries = data.registries || data || []
-        
-        registries.forEach((reg: any) => {
-          // Seslendirme
-          if (reg.voicePrice > 0 && !reg.voicePaid) {
-            const voicePerson = reg.voiceActor || reg.streamer
-            if (voicePerson) {
-              const personType = reg.voiceActorId ? 'voiceActor' : 'streamer'
-              const key = `${personType}-${voicePerson.id}`
-              const person = personMap.get(key)
-              if (person) {
-                person.totalAmount += reg.voicePrice
-                person.itemCount += 1
-              }
-            }
-          }
-          
-          // Kurgu
-          if (reg.editPrice > 0 && !reg.editPaid && reg.editor) {
-            const key = `teamMember-${reg.editor.id}`
-            const person = personMap.get(key)
-            if (person) {
-              person.totalAmount += reg.editPrice
-              person.itemCount += 1
-            }
-          }
-        })
-      }
-
-      // 7. Ödenmemiş iş gönderimlerini hesapla
-      const workRes = await fetch('/api/work-submissions?status=approved')
-      if (workRes.ok) {
-        const data = await workRes.json()
-        const submissions = data.submissions || data || []
-        
-        submissions.forEach((sub: any) => {
-          if (sub.cost > 0) {
-            const subPerson = sub.voiceActor || sub.teamMember
-            if (subPerson) {
-              const personType = sub.voiceActorId ? 'voiceActor' : 'teamMember'
-              const key = `${personType}-${subPerson.id}`
-              const person = personMap.get(key)
-              if (person) {
-                person.totalAmount += sub.cost
-                person.itemCount += 1
-              }
-            }
-          }
-        })
-      }
-
-      // Map'i array'e çevir ve sırala (borcu en çok olan üstte)
-      const personsArray = Array.from(personMap.values())
-      personsArray.sort((a, b) => b.totalAmount - a.totalAmount)
-      
-      setPersonPayments(personsArray)
     } catch (error) {
       console.error('Error fetching payments:', error)
       toast.error('Ödemeler yüklenemedi')
