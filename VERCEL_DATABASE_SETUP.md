@@ -16,6 +16,12 @@
 postgresql://postgres.kwrbcwspdjlgixjkplzq:S1e0r1t1a89c@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
 ```
 
+**AÇIKLAMA:**
+- Project Reference: kwrbcwspdjlgixjkplzq
+- Region: eu-north-1 (Europe North - Stockholm)
+- Password: S1e0r1t1a89c
+- Port: 5432 (Session Mode Pooler)
+
 **❌ YANLIŞ DEĞERLER (BUNLARI KULLANMAYIN):**
 ```
 # Direct connection - YANLIŞ!

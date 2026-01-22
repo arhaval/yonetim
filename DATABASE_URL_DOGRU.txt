@@ -1,0 +1,19 @@
+DOĞRU DATABASE_URL (Her yerde bu kullanılmalı):
+=======================================================
+
+postgresql://postgres.kwrbcwspdjlgixjkplzq:S1e0r1t1a89c@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
+
+=======================================================
+
+NEREDE KULLANILMALI:
+1. .env dosyası (local)
+2. .env.local dosyası (local)
+3. Vercel Environment Variables (production)
+
+KONTROL LİSTESİ:
+✅ Hostname: aws-1-eu-north-1.pooler.supabase.com
+✅ Port: 5432
+✅ Username: postgres.kwrbcwspdjlgixjkplzq
+✅ Password: S1e0r1t1a89c
+✅ Database: postgres
+
