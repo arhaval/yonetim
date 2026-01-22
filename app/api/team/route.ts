@@ -96,9 +96,9 @@ export async function POST(request: NextRequest) {
     const member = await prisma.teamMember.create({
       data: {
         name: data.name,
-        // avatar kolonu veritabanında yok, kaldırıldı
+        avatar: data.avatar || null,
         email: normalizedEmail,
-        password: hashedPassword, // Artık zorunlu, null olamaz
+        password: hashedPassword,
         phone: data.phone || null,
         iban: data.iban || null,
         role: data.role,
