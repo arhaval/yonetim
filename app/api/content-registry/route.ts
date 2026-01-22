@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       andConditions.push({ editorId: filterEditorId })
     }
 
-    // Type filtresi - 'voice' veya 'edit'
+    // Type filtresi - 'voice', 'edit' veya 'all'
     if (type === 'voice') {
       andConditions.push({ 
         voiceActorId: { not: null },
@@ -94,6 +94,24 @@ export async function GET(request: NextRequest) {
       andConditions.push({ 
         editorId: { not: null },
         editPrice: { not: null }
+      })
+    } else if (type === 'all') {
+      // Hem seslendirme hem video edit işlerini getir
+      andConditions.push({
+        OR: [
+          {
+            AND: [
+              { voiceActorId: { not: null } },
+              { voicePrice: { not: null } }
+            ]
+          },
+          {
+            AND: [
+              { editorId: { not: null } },
+              { editPrice: { not: null } }
+            ]
+          }
+        ]
       })
     }
 
