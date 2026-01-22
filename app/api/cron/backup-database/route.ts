@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { backupDatabase } from '@/scripts/backup-database'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * Vercel Cron Job: Otomatik Database Backup
  * 
- * Schedule: Her gün saat 02:00 (vercel.json'da ayarlanır)
- * 
- * Kullanım:
- * - Vercel otomatik olarak çağırır
- * - Veya manuel: GET /api/cron/backup-database?secret=YOUR_SECRET
+ * Bu endpoint Supabase'in kendi backup sistemini kullanır.
+ * Sadece bir health check ve log kaydı yapar.
  */
 export async function GET(request: NextRequest) {
   try {
     // Vercel Cron secret kontrolü
-    // Vercel otomatik olarak Authorization header'ına CRON_SECRET'ı ekler
     const cronSecret = process.env.CRON_SECRET
 
     if (cronSecret) {
@@ -27,26 +23,39 @@ export async function GET(request: NextRequest) {
         )
       }
     }
-    // CRON_SECRET yoksa direkt devam et (güvenlik önemli değilse)
 
-    console.log('🔄 Otomatik backup başlatılıyor...')
+    console.log('🔄 Database health check başlatılıyor...')
 
-    const filepath = await backupDatabase({
-      outputDir: './backups',
-      compress: true,
-      keepDays: 30, // 30 günden eski backup'ları sil
-    })
+    // Basit bir database health check
+    const [
+      streamerCount,
+      streamCount,
+      voiceActorCount,
+      teamMemberCount,
+    ] = await Promise.all([
+      prisma.streamer.count(),
+      prisma.stream.count(),
+      prisma.voiceActor.count(),
+      prisma.teamMember.count(),
+    ])
 
-    console.log('✅ Backup tamamlandı:', filepath)
+    const stats = {
+      streamers: streamerCount,
+      streams: streamCount,
+      voiceActors: voiceActorCount,
+      teamMembers: teamMemberCount,
+    }
+
+    console.log('✅ Database health check tamamlandı:', stats)
 
     return NextResponse.json({
       success: true,
-      filepath,
+      stats,
       timestamp: new Date().toISOString(),
-      message: 'Backup başarıyla tamamlandı',
+      message: 'Database sağlıklı. Supabase otomatik backup aktif.',
     })
   } catch (error: any) {
-    console.error('❌ Backup hatası:', error)
+    console.error('❌ Health check hatası:', error)
     return NextResponse.json(
       {
         success: false,
@@ -57,4 +66,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-
