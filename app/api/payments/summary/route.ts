@@ -21,10 +21,9 @@ export async function GET() {
     // 2. Tüm yayınları çek (ödenmemiş olanları hesapla)
     const streams = await prisma.stream.findMany({
       where: {
-        OR: [
-          { paymentStatus: 'pending' },
-          { paymentStatus: null },
-        ],
+        NOT: {
+          paymentStatus: 'paid',
+        },
         streamerEarning: { gt: 0 },
       },
       select: {
@@ -35,11 +34,17 @@ export async function GET() {
         date: true,
       },
     })
+    
+    console.log('Found streams:', streams.length, streams.map(s => ({ id: s.id, earning: s.streamerEarning, streamerId: s.streamerId })))
 
     // Yayıncıları ekle
+    console.log('Streamers found:', streamers.length, streamers.map(s => ({ id: s.id, name: s.name })))
+    
     for (const streamer of streamers) {
       const streamerStreams = streams.filter(s => s.streamerId === streamer.id)
       const totalAmount = streamerStreams.reduce((sum, s) => sum + (s.streamerEarning || 0), 0)
+      
+      console.log(`Streamer ${streamer.name}: ${streamerStreams.length} streams, total: ${totalAmount}`)
       
       result.push({
         personId: streamer.id,
