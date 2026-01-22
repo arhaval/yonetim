@@ -189,7 +189,7 @@ export async function GET(
       result.personInfo = {
         id: teamMember.id,
         name: teamMember.name,
-        profilePhoto: teamMember.avatar,
+        profilePhoto: null,
         email: teamMember.email,
         role: teamMember.role,
       }
