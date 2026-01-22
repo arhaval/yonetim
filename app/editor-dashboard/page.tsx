@@ -2,20 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mic, Plus, DollarSign, Clock, CheckCircle, Calendar, X } from 'lucide-react'
+import { Film, Plus, DollarSign, Clock, CheckCircle, Calendar, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Work {
   id: string
   title: string
-  voicePrice: number
-  voicePaid: boolean
+  editPrice: number
+  editPaid: boolean
   createdAt: string
 }
 
-export default function VoiceActorDashboardPage() {
+export default function EditorDashboardPage() {
   const router = useRouter()
-  const [voiceActor, setVoiceActor] = useState<any>(null)
+  const [editor, setEditor] = useState<any>(null)
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -28,25 +28,25 @@ export default function VoiceActorDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/voice-actor-auth/me')
+      const res = await fetch('/api/team-auth/me')
       const data = await res.json()
 
-      if (!data.voiceActor) {
-        router.push('/voice-actor-login')
+      if (!data.teamMember) {
+        router.push('/team-login')
         return
       }
 
-      setVoiceActor(data.voiceActor)
-      loadWorks(data.voiceActor.id)
+      setEditor(data.teamMember)
+      loadWorks(data.teamMember.id)
     } catch (error) {
       toast.error('Oturum bilgileri yüklenemedi')
-      router.push('/voice-actor-login')
+      router.push('/team-login')
     }
   }
 
-  const loadWorks = async (voiceActorId: string) => {
+  const loadWorks = async (editorId: string) => {
     try {
-      const res = await fetch(`/api/content-registry?type=voice&filterVoiceActorId=${voiceActorId}`)
+      const res = await fetch(`/api/content-registry?type=edit&filterEditorId=${editorId}`)
       if (res.ok) {
         const data = await res.json()
         setWorks(data)
@@ -72,10 +72,10 @@ export default function VoiceActorDashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newWorkTitle,
-          voiceActorId: voiceActor.id,
-          voicePrice: 0, // Admin sonra belirleyecek
-          voicePaid: false,
-          status: 'VOICE_READY'
+          editorId: editor.id,
+          editPrice: 0, // Admin sonra belirleyecek
+          editPaid: false,
+          status: 'EDITING'
         })
       })
 
@@ -83,7 +83,7 @@ export default function VoiceActorDashboardPage() {
         toast.success('İş başarıyla eklendi')
         setNewWorkTitle('')
         setShowAddModal(false)
-        loadWorks(voiceActor.id)
+        loadWorks(editor.id)
       } else {
         toast.error('İş eklenemedi')
       }
@@ -95,35 +95,35 @@ export default function VoiceActorDashboardPage() {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/voice-actor-auth/logout', { method: 'POST' })
-    router.push('/voice-actor-login')
+    await fetch('/api/team-auth/logout', { method: 'POST' })
+    router.push('/team-login')
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
   }
 
-  const totalEarnings = works.reduce((sum, w) => sum + (w.voicePrice || 0), 0)
-  const paidEarnings = works.filter(w => w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
-  const pendingEarnings = works.filter(w => !w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
+  const totalEarnings = works.reduce((sum, w) => sum + (w.editPrice || 0), 0)
+  const paidEarnings = works.filter(w => w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
+  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Mic className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Film className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{voiceActor?.name}</h1>
-                <p className="text-gray-500">Seslendirmen</p>
+                <h1 className="text-3xl font-bold text-gray-900">{editor?.name}</h1>
+                <p className="text-gray-500">Video Editör</p>
               </div>
             </div>
             <button
@@ -145,8 +145,8 @@ export default function VoiceActorDashboardPage() {
                 <p className="text-sm text-gray-500 font-medium">Toplam Kazanç</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">{totalEarnings.toLocaleString('tr-TR')} ₺</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function VoiceActorDashboardPage() {
         <div className="mb-6">
           <button
             onClick={() => setShowAddModal(true)}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
             <Plus className="w-5 h-5" />
             Yeni İş Ekle
@@ -195,11 +195,11 @@ export default function VoiceActorDashboardPage() {
 
           {works.length === 0 ? (
             <div className="p-12 text-center">
-              <Mic className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <Film className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">Henüz iş yok</p>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 İlk İşini Ekle
@@ -219,12 +219,12 @@ export default function VoiceActorDashboardPage() {
                         </div>
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          {work.voicePrice > 0 ? `${work.voicePrice.toLocaleString('tr-TR')} ₺` : 'Ücret belirlenmedi'}
+                          {work.editPrice > 0 ? `${work.editPrice.toLocaleString('tr-TR')} ₺` : 'Ücret belirlenmedi'}
                         </div>
                       </div>
                     </div>
                     <div>
-                      {work.voicePaid ? (
+                      {work.editPaid ? (
                         <span className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                           <CheckCircle className="w-4 h-4" />
                           Ödendi
@@ -267,8 +267,8 @@ export default function VoiceActorDashboardPage() {
                   type="text"
                   value={newWorkTitle}
                   onChange={(e) => setNewWorkTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Örn: Maç Özeti Seslendirmesi"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Örn: Maç Özeti - Fenerbahçe vs Galatasaray"
                   required
                 />
                 <p className="mt-2 text-sm text-gray-500">
@@ -287,7 +287,7 @@ export default function VoiceActorDashboardPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50"
                 >
                   {submitting ? 'Ekleniyor...' : 'Ekle'}
                 </button>
@@ -299,3 +299,4 @@ export default function VoiceActorDashboardPage() {
     </div>
   )
 }
+
