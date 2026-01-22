@@ -2,18 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Cache GET requests for 5 minutes
-export const revalidate = 300
+export const revalidate = 60 // 1 dakika cache
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
     const startTime = Date.now()
+    console.log('[Streams API] Starting fetch...')
+    
     // Tüm yayınları göster (yayıncılar yayınları girince direkt onaylanır)
     // Sadece gerekli alanları çek - performans için
     const streams = await prisma.stream.findMany({
-      where: { 
-        // Status filtresi kaldırıldı - tüm yayınlar gösterilir
-      },
       select: {
         id: true,
         date: true,
@@ -23,6 +22,7 @@ export async function GET() {
         totalRevenue: true,
         streamerEarning: true,
         paymentStatus: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
         streamer: {
@@ -33,26 +33,28 @@ export async function GET() {
           },
         },
       },
-      orderBy: { date: 'asc' }, // Eski → Yeni sıralama
-      take: 100, // İlk 100 kayıt - pagination için
+      orderBy: { date: 'desc' }, // Yeni → Eski sıralama (daha mantıklı)
+      take: 200, // Son 200 kayıt
     })
     
-    // Tarih bazlı sıralama zaten yapıldı (date: 'asc')
-    const sortedStreams = streams
-    
     const duration = Date.now() - startTime
-    console.log(`[Streams API] Fetched ${sortedStreams.length} streams in ${duration}ms`)
+    console.log(`[Streams API] Successfully fetched ${streams.length} streams in ${duration}ms`)
     
-    return NextResponse.json(sortedStreams)
+    return NextResponse.json(streams)
   } catch (error: any) {
-    console.error('Error fetching streams:', error)
-    // Eğer status alanı henüz tanınmıyorsa, boş array döndür
-    if (error.message?.includes('status') || error.message?.includes('Unknown argument')) {
-      console.warn('Status alanı henüz tanınmıyor. Boş liste döndürülüyor.')
-      return NextResponse.json([])
-    }
+    console.error('[Streams API] Error fetching streams:', error)
+    console.error('[Streams API] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+    })
+    
     return NextResponse.json(
-      { error: 'Yayınlar getirilemedi' },
+      { 
+        error: 'Yayınlar getirilemedi', 
+        details: error.message,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     )
   }

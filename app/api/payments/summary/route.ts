@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Tüm ekip üyelerinin ödeme özetini getir
-export const revalidate = 30 // 30 saniye cache
+export const revalidate = 60 // 1 dakika cache
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
+    const startTime = Date.now()
+    console.log('[Payments Summary API] Starting fetch...')
+    
     const result: any[] = []
 
     // 1. Tüm yayıncıları çek
@@ -18,13 +21,12 @@ export async function GET() {
         profilePhoto: true,
       },
     })
+    console.log(`[Payments Summary] Found ${streamers.length} streamers`)
 
     // 2. Tüm yayınları çek (ödenmemiş olanları hesapla)
     const streams = await prisma.stream.findMany({
       where: {
-        NOT: {
-          paymentStatus: 'paid',
-        },
+        paymentStatus: { not: 'paid' },
         streamerEarning: { gt: 0 },
       },
       select: {
@@ -35,17 +37,12 @@ export async function GET() {
         date: true,
       },
     })
-    
-    console.log('Found streams:', streams.length, streams.map(s => ({ id: s.id, earning: s.streamerEarning, streamerId: s.streamerId })))
+    console.log(`[Payments Summary] Found ${streams.length} unpaid streams`)
 
     // Yayıncıları ekle
-    console.log('Streamers found:', streamers.length, streamers.map(s => ({ id: s.id, name: s.name })))
-    
     for (const streamer of streamers) {
       const streamerStreams = streams.filter(s => s.streamerId === streamer.id)
       const totalAmount = streamerStreams.reduce((sum, s) => sum + (s.streamerEarning || 0), 0)
-      
-      console.log(`Streamer ${streamer.name}: ${streamerStreams.length} streams, total: ${totalAmount}`)
       
       result.push({
         personId: streamer.id,
@@ -71,9 +68,10 @@ export async function GET() {
     const voicePayments = await prisma.contentRegistry.findMany({
       where: {
         voicePrice: { gt: 0 },
-        NOT: {
-          voicePaid: true,
-        },
+        OR: [
+          { voicePaid: false },
+          { voicePaid: null },
+        ],
       },
       select: {
         id: true,
@@ -83,6 +81,7 @@ export async function GET() {
         title: true,
       },
     })
+    console.log(`[Payments Summary] Found ${voicePayments.length} unpaid voice works`)
 
     for (const va of voiceActors) {
       const vaPayments = voicePayments.filter(p => p.voiceActorId === va.id)
@@ -111,9 +110,10 @@ export async function GET() {
     const editPayments = await prisma.contentRegistry.findMany({
       where: {
         editPrice: { gt: 0 },
-        NOT: {
-          editPaid: true,
-        },
+        OR: [
+          { editPaid: false },
+          { editPaid: null },
+        ],
       },
       select: {
         id: true,
@@ -122,6 +122,7 @@ export async function GET() {
         title: true,
       },
     })
+    console.log(`[Payments Summary] Found ${editPayments.length} unpaid edit works`)
 
     for (const member of teamMembers) {
       const memberPayments = editPayments.filter(p => p.editorId === member.id)
@@ -160,6 +161,9 @@ export async function GET() {
 
     // Borcu en çok olan üstte olacak şekilde sırala
     result.sort((a, b) => b.totalAmount - a.totalAmount)
+
+    const duration = Date.now() - startTime
+    console.log(`[Payments Summary] Completed in ${duration}ms, returning ${result.length} people`)
 
     return NextResponse.json(result)
   } catch (error: any) {
