@@ -61,7 +61,7 @@ export default function PersonPaymentPage() {
         if (streamsRes.ok) {
           const streams = await streamsRes.json()
           streams
-            .filter((s: any) => s.streamerId === personId && s.paymentStatus !== 'paid')
+            .filter((s: any) => s.streamer?.id === personId && s.paymentStatus !== 'paid')
             .forEach((stream: any) => {
               if (stream.streamerEarning > 0) {
                 allItems.push({
