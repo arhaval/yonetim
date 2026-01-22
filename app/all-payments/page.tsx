@@ -34,6 +34,76 @@ export default function AllPaymentsPage() {
     try {
       const personMap = new Map<string, PersonPayment>()
 
+      // Önce tüm ekip üyelerini ekle (borcu 0 olanlar da görünsün)
+      // 1. Tüm yayıncıları ekle
+      const streamersRes = await fetch('/api/streamers')
+      if (streamersRes.ok) {
+        const streamers = await streamersRes.json()
+        streamers.forEach((streamer: any) => {
+          const key = `streamer-${streamer.id}`
+          personMap.set(key, {
+            personId: streamer.id,
+            personName: streamer.name,
+            personType: 'streamer',
+            totalAmount: 0,
+            itemCount: 0,
+            items: [],
+          })
+        })
+      }
+
+      // 2. Tüm seslendirmenleri ekle
+      const voiceActorsRes = await fetch('/api/voice-actors')
+      if (voiceActorsRes.ok) {
+        const voiceActors = await voiceActorsRes.json()
+        voiceActors.forEach((va: any) => {
+          const key = `voiceActor-${va.id}`
+          personMap.set(key, {
+            personId: va.id,
+            personName: va.name,
+            personType: 'voiceActor',
+            totalAmount: 0,
+            itemCount: 0,
+            items: [],
+          })
+        })
+      }
+
+      // 3. Tüm video editörleri ekle
+      const teamRes = await fetch('/api/team')
+      if (teamRes.ok) {
+        const team = await teamRes.json()
+        team.forEach((member: any) => {
+          const key = `teamMember-${member.id}`
+          personMap.set(key, {
+            personId: member.id,
+            personName: member.name,
+            personType: 'teamMember',
+            totalAmount: 0,
+            itemCount: 0,
+            items: [],
+          })
+        })
+      }
+
+      // 4. Tüm içerik üreticilerini ekle
+      const creatorsRes = await fetch('/api/content-creators')
+      if (creatorsRes.ok) {
+        const creators = await creatorsRes.json()
+        creators.forEach((creator: any) => {
+          const key = `contentCreator-${creator.id}`
+          personMap.set(key, {
+            personId: creator.id,
+            personName: creator.name,
+            personType: 'contentCreator',
+            totalAmount: 0,
+            itemCount: 0,
+            items: [],
+          })
+        })
+      }
+
+      // Şimdi ödenmemiş işleri ekle
       // 1. Stream ödemeleri (yayınlar)
       const streamsRes = await fetch('/api/streams?paymentStatus=pending')
       if (streamsRes.ok) {
@@ -42,27 +112,18 @@ export default function AllPaymentsPage() {
           if (!stream.streamer || !stream.streamerEarning) return
           
           const key = `streamer-${stream.streamerId}`
-          if (!personMap.has(key)) {
-            personMap.set(key, {
-              personId: stream.streamerId,
-              personName: stream.streamer.name,
-              personType: 'streamer',
-              totalAmount: 0,
-              itemCount: 0,
-              items: [],
+          const person = personMap.get(key)
+          if (person) {
+            person.totalAmount += stream.streamerEarning
+            person.itemCount += 1
+            person.items.push({
+              id: stream.id,
+              type: 'stream',
+              title: stream.matchInfo || 'Yayın',
+              amount: stream.streamerEarning,
+              date: stream.date,
             })
           }
-          
-          const person = personMap.get(key)!
-          person.totalAmount += stream.streamerEarning
-          person.itemCount += 1
-          person.items.push({
-            id: stream.id,
-            type: 'stream',
-            title: stream.matchInfo || 'Yayın',
-            amount: stream.streamerEarning,
-            date: stream.date,
-          })
         })
       }
 
@@ -79,56 +140,38 @@ export default function AllPaymentsPage() {
             if (voicePerson) {
               const personType = reg.voiceActor ? 'voiceActor' : 'streamer'
               const key = `${personType}-${voicePerson.id}`
+              const person = personMap.get(key)
               
-              if (!personMap.has(key)) {
-                personMap.set(key, {
-                  personId: voicePerson.id,
-                  personName: voicePerson.name,
-                  personType: personType as any,
-                  totalAmount: 0,
-                  itemCount: 0,
-                  items: [],
+              if (person) {
+                person.totalAmount += reg.voicePrice
+                person.itemCount += 1
+                person.items.push({
+                  id: reg.id,
+                  type: 'voice',
+                  title: reg.title,
+                  amount: reg.voicePrice,
+                  date: reg.createdAt,
                 })
               }
-              
-              const person = personMap.get(key)!
-              person.totalAmount += reg.voicePrice
-              person.itemCount += 1
-              person.items.push({
-                id: reg.id,
-                type: 'voice',
-                title: reg.title,
-                amount: reg.voicePrice,
-                date: reg.createdAt,
-              })
             }
           }
           
           // Kurgu ödemesi
           if (reg.editPrice && !reg.editPaid && reg.editor) {
             const key = `teamMember-${reg.editor.id}`
+            const person = personMap.get(key)
             
-            if (!personMap.has(key)) {
-              personMap.set(key, {
-                personId: reg.editor.id,
-                personName: reg.editor.name,
-                personType: 'teamMember',
-                totalAmount: 0,
-                itemCount: 0,
-                items: [],
+            if (person) {
+              person.totalAmount += reg.editPrice
+              person.itemCount += 1
+              person.items.push({
+                id: reg.id,
+                type: 'edit',
+                title: reg.title,
+                amount: reg.editPrice,
+                date: reg.createdAt,
               })
             }
-            
-            const person = personMap.get(key)!
-            person.totalAmount += reg.editPrice
-            person.itemCount += 1
-            person.items.push({
-              id: reg.id,
-              type: 'edit',
-              title: reg.title,
-              amount: reg.editPrice,
-              date: reg.createdAt,
-            })
           }
         })
       }
@@ -140,35 +183,26 @@ export default function AllPaymentsPage() {
         const requests = data.requests || []
         
         requests.forEach((req: any) => {
-          const person = req.contentCreator || req.voiceActor || req.streamer || req.teamMember
-          if (!person) return
+          const reqPerson = req.contentCreator || req.voiceActor || req.streamer || req.teamMember
+          if (!reqPerson) return
           
           const personType = req.contentCreatorId ? 'contentCreator' : 
                            req.voiceActorId ? 'voiceActor' : 
                            req.streamerId ? 'streamer' : 'teamMember'
-          const key = `${personType}-${person.id}`
+          const key = `${personType}-${reqPerson.id}`
+          const person = personMap.get(key)
           
-          if (!personMap.has(key)) {
-            personMap.set(key, {
-              personId: person.id,
-              personName: person.name,
-              personType: personType as any,
-              totalAmount: 0,
-              itemCount: 0,
-              items: [],
+          if (person) {
+            person.totalAmount += req.amount
+            person.itemCount += 1
+            person.items.push({
+              id: req.id,
+              type: 'extra',
+              title: req.workType,
+              amount: req.amount,
+              date: req.createdAt,
             })
           }
-          
-          const personData = personMap.get(key)!
-          personData.totalAmount += req.amount
-          personData.itemCount += 1
-          personData.items.push({
-            id: req.id,
-            type: 'extra',
-            title: req.workType,
-            amount: req.amount,
-            date: req.createdAt,
-          })
         })
       }
 
@@ -179,33 +213,24 @@ export default function AllPaymentsPage() {
         const submissions = data.submissions || []
         
         submissions.forEach((sub: any) => {
-          const person = sub.voiceActor || sub.teamMember
-          if (!person || !sub.cost) return
+          const subPerson = sub.voiceActor || sub.teamMember
+          if (!subPerson || !sub.cost) return
           
           const personType = sub.voiceActorId ? 'voiceActor' : 'teamMember'
-          const key = `${personType}-${person.id}`
+          const key = `${personType}-${subPerson.id}`
+          const person = personMap.get(key)
           
-          if (!personMap.has(key)) {
-            personMap.set(key, {
-              personId: person.id,
-              personName: person.name,
-              personType: personType as any,
-              totalAmount: 0,
-              itemCount: 0,
-              items: [],
+          if (person) {
+            person.totalAmount += sub.cost
+            person.itemCount += 1
+            person.items.push({
+              id: sub.id,
+              type: 'work',
+              title: sub.workName,
+              amount: sub.cost,
+              date: sub.createdAt,
             })
           }
-          
-          const personData = personMap.get(key)!
-          personData.totalAmount += sub.cost
-          personData.itemCount += 1
-          personData.items.push({
-            id: sub.id,
-            type: 'work',
-            title: sub.workName,
-            amount: sub.cost,
-            date: sub.createdAt,
-          })
         })
       }
 
