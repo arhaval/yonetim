@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mic, Plus, DollarSign, Clock, CheckCircle, Calendar, X } from 'lucide-react'
+import { Mic, Plus, DollarSign, Clock, CheckCircle, Calendar, X, LogOut, TrendingUp, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Work {

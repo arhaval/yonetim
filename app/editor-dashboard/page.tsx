@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Film, Plus, DollarSign, Clock, CheckCircle, Calendar, X } from 'lucide-react'
+import { Film, Plus, DollarSign, Clock, CheckCircle, Calendar, X, LogOut, TrendingUp, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Work {
@@ -13,7 +13,7 @@ interface Work {
   createdAt: string
 }
 
-export default function EditorDashboardPage() {
+export default function EditorDashboardNewPage() {
   const router = useRouter()
   const [editor, setEditor] = useState<any>(null)
   const [works, setWorks] = useState<Work[]>([])
@@ -46,10 +46,17 @@ export default function EditorDashboardPage() {
 
   const loadWorks = async (editorId: string) => {
     try {
-      const res = await fetch(`/api/content-registry?type=edit&filterEditorId=${editorId}`)
+      const res = await fetch(`/api/content-registry?type=edit`)
       if (res.ok) {
         const data = await res.json()
-        setWorks(data)
+        const myWorks = data.filter((w: any) => w.editor?.id === editorId)
+        setWorks(myWorks.map((w: any) => ({
+          id: w.id,
+          title: w.title,
+          editPrice: w.editPrice || 0,
+          editPaid: w.editPaid || false,
+          createdAt: w.createdAt
+        })))
       }
     } catch (error) {
       console.error('Error loading works:', error)
@@ -60,10 +67,7 @@ export default function EditorDashboardPage() {
 
   const handleAddWork = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newWorkTitle.trim()) {
-      toast.error('İş başlığı gerekli')
-      return
-    }
+    if (!newWorkTitle.trim()) return
 
     setSubmitting(true)
     try {
@@ -73,14 +77,14 @@ export default function EditorDashboardPage() {
         body: JSON.stringify({
           title: newWorkTitle,
           editorId: editor.id,
-          editPrice: 0, // Admin sonra belirleyecek
+          editPrice: 0,
           editPaid: false,
           status: 'EDITING'
         })
       })
 
       if (res.ok) {
-        toast.success('İş başarıyla eklendi')
+        toast.success('İş başarıyla eklendi!')
         setNewWorkTitle('')
         setShowAddModal(false)
         loadWorks(editor.id)
@@ -102,7 +106,7 @@ export default function EditorDashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
       </div>
     )
   }
@@ -113,95 +117,104 @@ export default function EditorDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)'
+        }}></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Film className="w-8 h-8 text-white" />
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border-4 border-white/30 shadow-2xl">
+                <Film className="w-12 h-12 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{editor?.name}</h1>
-                <p className="text-gray-500">Video Editör</p>
+                <h1 className="text-4xl font-bold text-white mb-2">
+                  Hoş geldin, {editor?.name}! 👋
+                </h1>
+                <p className="text-green-100 text-lg">Video Editör Paneli</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all border border-white/30"
             >
+              <LogOut className="w-5 h-5" />
               Çıkış Yap
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12">
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium">Toplam Kazanç</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{totalEarnings.toLocaleString('tr-TR')} ₺</p>
+                <p className="text-sm text-gray-600 mb-1">Toplam Kazanç</p>
+                <p className="text-3xl font-bold text-gray-900">{totalEarnings.toLocaleString('tr-TR')} ₺</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-green-600" />
+              <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-7 h-7 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-md p-6 border border-green-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-emerald-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium">Ödenen</p>
-                <p className="text-3xl font-bold text-green-700 mt-1">{paidEarnings.toLocaleString('tr-TR')} ₺</p>
+                <p className="text-sm text-gray-600 mb-1">Ödenen</p>
+                <p className="text-3xl font-bold text-emerald-600">{paidEarnings.toLocaleString('tr-TR')} ₺</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="w-14 h-14 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-7 h-7 text-emerald-600" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-md p-6 border border-orange-100">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-600 font-medium">Bekleyen</p>
-                <p className="text-3xl font-bold text-orange-700 mt-1">{pendingEarnings.toLocaleString('tr-TR')} ₺</p>
+                <p className="text-sm text-gray-600 mb-1">Bekleyen</p>
+                <p className="text-3xl font-bold text-orange-600">{pendingEarnings.toLocaleString('tr-TR')} ₺</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-orange-600" />
+              <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center">
+                <Wallet className="w-7 h-7 text-orange-600" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Add Work Button */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-end">
           <button
             onClick={() => setShowAddModal(true)}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl font-semibold hover:shadow-2xl transition-all transform hover:scale-105 text-lg"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-6 h-6" />
             Yeni İş Ekle
           </button>
         </div>
 
         {/* Works List */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h2 className="text-lg font-bold text-gray-900">İşlerim ({works.length})</h2>
+          <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 className="text-2xl font-bold text-gray-900">İşlerim ({works.length})</h2>
           </div>
 
           {works.length === 0 ? (
-            <div className="p-12 text-center">
-              <Film className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">Henüz iş yok</p>
+            <div className="p-16 text-center">
+              <Film className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Henüz iş yok</h3>
+              <p className="text-gray-500 mb-6">İlk işini ekleyerek başla!</p>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-semibold"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 İlk İşini Ekle
               </button>
             </div>
@@ -225,7 +238,7 @@ export default function EditorDashboardPage() {
                     </div>
                     <div>
                       {work.editPaid ? (
-                        <span className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
                           <CheckCircle className="w-4 h-4" />
                           Ödendi
                         </span>
@@ -247,14 +260,14 @@ export default function EditorDashboardPage() {
       {/* Add Work Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">Yeni İş Ekle</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Yeni İş Ekle</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-6 h-6 text-gray-500" />
               </button>
             </div>
 
@@ -267,7 +280,7 @@ export default function EditorDashboardPage() {
                   type="text"
                   value={newWorkTitle}
                   onChange={(e) => setNewWorkTitle(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
                   placeholder="Örn: Maç Özeti - Fenerbahçe vs Galatasaray"
                   required
                 />
@@ -280,14 +293,14 @@ export default function EditorDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all font-medium disabled:opacity-50"
+                  disabled={submitting || !newWorkTitle.trim()}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 >
                   {submitting ? 'Ekleniyor...' : 'Ekle'}
                 </button>
