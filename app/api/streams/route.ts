@@ -80,24 +80,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Eğer yayıncı maliyet girdiyse finansal kayıt oluştur
-    // Ama genelde admin onay sayfasından girilecek
-    if (data.streamerEarning > 0) {
-      await prisma.financialRecord.create({
-        data: {
-          type: 'expense',
-          amount: data.streamerEarning,
-          description: `Yayıncı ödemesi - ${data.matchInfo || 'Yayın'} (${data.duration} saat) - ${data.teamName || ''}`,
-          date: new Date(data.date),
-          category: 'stream',
-          streamerId: data.streamerId,
-          streamId: stream.id,
-        },
-      })
-    }
-
-    // Arhaval karı için otomatik gelir kaydı oluşturulmuyor
-    // Toplu ödemeler Finansal Kayıtlar sayfasından manuel olarak gelir olarak eklenebilir
+    // NOT: Finansal kayıt yayın girildiğinde OLUŞTURULMAZ
+    // Finansal kayıt sadece "Tüm Ödemeler" sayfasından ödeme yapıldığında oluşur
+    // Bu sayede çift kayıt sorunu önlenir
 
     return NextResponse.json(stream)
   } catch (error) {
