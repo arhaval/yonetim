@@ -57,20 +57,22 @@ export default function PersonPaymentPage() {
 
       // 1. Stream ödemeleri
       if (personType === 'streamer') {
-        const streamsRes = await fetch('/api/streams?paymentStatus=pending')
+        const streamsRes = await fetch('/api/streams')
         if (streamsRes.ok) {
           const streams = await streamsRes.json()
           streams
-            .filter((s: any) => s.streamerId === personId)
+            .filter((s: any) => s.streamerId === personId && s.paymentStatus !== 'paid')
             .forEach((stream: any) => {
-              allItems.push({
-                id: `stream-${stream.id}`,
-                type: 'stream',
-                title: stream.matchInfo || 'Yayın',
-                amount: stream.streamerEarning || 0,
-                date: stream.date,
-                details: `${stream.duration} saat - ${stream.teamName || ''}`,
-              })
+              if (stream.streamerEarning > 0) {
+                allItems.push({
+                  id: `stream-${stream.id}`,
+                  type: 'stream',
+                  title: stream.matchInfo || 'Yayın',
+                  amount: stream.streamerEarning || 0,
+                  date: stream.date,
+                  details: `${stream.duration} saat - ${stream.teamName || ''}`,
+                })
+              }
             })
         }
       }
