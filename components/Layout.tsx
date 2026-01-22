@@ -9,9 +9,9 @@ import { useEffect, useState, useTransition } from 'react'
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Yayınlar', href: '/streams', icon: Video },
+  { name: '🎤 Seslendirme İşleri', href: '/voice-works', icon: Mic },
+  { name: '🎬 Video Edit İşleri', href: '/edit-works', icon: Video },
   { name: 'İçerikler', href: '/content', icon: Video },
-  { name: 'İçerik Merkezi', href: '/content-registry', icon: FileText },
-  { name: '✅ Bekleyen İşler', href: '/approve-work', icon: FileText },
   { name: '💰 TÜM ÖDEMELER', href: '/all-payments', icon: Wallet },
   { name: 'Finansal', href: '/financial', icon: DollarSign },
   { name: 'Ekip', href: '/team', icon: UserCheck },

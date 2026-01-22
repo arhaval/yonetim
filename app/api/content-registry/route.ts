@@ -24,13 +24,14 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = parseInt(searchParams.get('limit') || '1000') // Yüksek limit - tüm kayıtları al
     const status = searchParams.get('status')
     const platform = searchParams.get('platform')
     const search = searchParams.get('search')
     const filterCreatorId = searchParams.get('creatorId')
     const filterVoiceActorId = searchParams.get('voiceActorId')
     const filterEditorId = searchParams.get('editorId')
+    const type = searchParams.get('type') // 'voice' veya 'edit'
 
     const skip = (page - 1) * limit
 
@@ -81,6 +82,19 @@ export async function GET(request: NextRequest) {
 
     if (filterEditorId) {
       andConditions.push({ editorId: filterEditorId })
+    }
+
+    // Type filtresi - 'voice' veya 'edit'
+    if (type === 'voice') {
+      andConditions.push({ 
+        voiceActorId: { not: null },
+        voicePrice: { not: null }
+      })
+    } else if (type === 'edit') {
+      andConditions.push({ 
+        editorId: { not: null },
+        editPrice: { not: null }
+      })
     }
 
     if (search) {
@@ -173,6 +187,12 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
+    // Eğer type parametresi varsa (voice-works veya edit-works sayfaları için), direkt array döndür
+    if (type) {
+      return NextResponse.json(registries)
+    }
+
+    // Yoksa pagination ile döndür (eski sistem için)
     return NextResponse.json({
       registries,
       pagination: {
