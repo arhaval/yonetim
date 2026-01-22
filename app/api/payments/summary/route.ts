@@ -70,10 +70,9 @@ export async function GET() {
     const voicePayments = await prisma.contentRegistry.findMany({
       where: {
         voicePrice: { gt: 0 },
-        OR: [
-          { voicePaid: false },
-          { voicePaid: null },
-        ],
+        NOT: {
+          voicePaid: true,
+        },
       },
       select: {
         id: true,
@@ -112,10 +111,9 @@ export async function GET() {
     const editPayments = await prisma.contentRegistry.findMany({
       where: {
         editPrice: { gt: 0 },
-        OR: [
-          { editPaid: false },
-          { editPaid: null },
-        ],
+        NOT: {
+          editPaid: true,
+        },
       },
       select: {
         id: true,
