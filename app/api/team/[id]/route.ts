@@ -77,7 +77,6 @@ export async function PUT(
       where: { id: resolvedParams.id },
       data: {
         name: data.name || member.name,
-        avatar: data.avatar !== undefined ? data.avatar : member.avatar,
         email: normalizedEmail,
         password: hashedPassword,
         phone: data.phone !== undefined ? data.phone : member.phone,
