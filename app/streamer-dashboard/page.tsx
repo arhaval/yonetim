@@ -83,9 +83,14 @@ export default function StreamerDashboardPage() {
 
   if (!streamer) return null
 
-  const totalEarnings = paymentInfo?.totalPaid || 0
-  const paidEarnings = paymentInfo?.totalPaid || 0
-  const pendingEarnings = paymentInfo?.totalUnpaid || 0
+  // Streams'den direkt hesapla
+  const paidEarnings = streams
+    .filter((s: any) => s.paymentStatus === 'paid')
+    .reduce((sum: number, s: any) => sum + (s.streamerEarning || 0), 0)
+  const pendingEarnings = streams
+    .filter((s: any) => s.paymentStatus !== 'paid' && s.streamerEarning > 0)
+    .reduce((sum: number, s: any) => sum + (s.streamerEarning || 0), 0)
+  const totalEarnings = paidEarnings + pendingEarnings
   const completedStreams = streams.filter((s: any) => s.paymentStatus === 'paid').length
 
   return (

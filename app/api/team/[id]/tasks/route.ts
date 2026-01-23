@@ -8,46 +8,38 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // TeamPayment kayıtlarını getir (video editör işleri)
-    const payments = await prisma.teamPayment.findMany({
-      where: { teamMemberId: params.id },
+    // ContentRegistry'den video edit işlerini getir
+    const works = await prisma.contentRegistry.findMany({
+      where: { editorId: params.id },
+      include: {
+        editor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     })
 
     // Dashboard'un beklediği formata dönüştür
-    const works = payments.map(payment => ({
-      id: payment.id,
-      title: payment.description || payment.type,
-      editPrice: payment.amount,
-      editPaid: payment.paidAt !== null,
-      status: payment.paidAt ? 'COMPLETED' : 'PENDING',
-      createdAt: payment.createdAt.toISOString(),
+    const formattedWorks = works.map(work => ({
+      id: work.id,
+      title: work.title,
+      description: work.description,
+      contentType: work.contentType,
+      editPrice: work.editPrice || 0,
+      editPaid: work.editPaid || false,
+      status: work.status,
+      createdAt: work.createdAt.toISOString(),
     }))
 
-    return NextResponse.json(works)
+    return NextResponse.json(formattedWorks)
   } catch (error) {
-    console.error('Error fetching tasks:', error)
+    console.error('Error fetching editor tasks:', error)
     return NextResponse.json(
       { error: 'Görevler getirilemedi' },
       { status: 500 }
     )
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

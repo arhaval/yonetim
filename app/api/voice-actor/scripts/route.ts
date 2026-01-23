@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
-import { getVoiceoverScriptLastActivityAt } from '@/lib/lastActivityAt'
 
 export const dynamic = 'force-dynamic'
 
-// Seslendirmenin görebileceği tüm seslendirme metinlerini getir
+// Seslendirmenin kendi işlerini getir
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
@@ -18,55 +17,41 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Tüm metinleri getir (henüz atanmamış veya bu seslendirmene atanmış)
-    const scripts = await prisma.voiceoverScript.findMany({
+    // ContentRegistry'den seslendirme işlerini getir
+    const works = await prisma.contentRegistry.findMany({
       where: {
-        OR: [
-          { voiceActorId: null }, // Henüz atanmamış
-          { voiceActorId: voiceActorId }, // Bu seslendirmene atanmış
-        ],
+        voiceActorId: voiceActorId,
       },
       include: {
-        creator: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         voiceActor: {
           select: {
             id: true,
             name: true,
+            profilePhoto: true,
           },
         },
       },
-      orderBy: { createdAt: 'asc' }, // Eski → Yeni sıralama
+      orderBy: { createdAt: 'desc' },
     })
 
-    // lastActivityAt'e göre sıralama
-    const scriptsWithLastActivity = scripts.map(script => ({
-      ...script,
-      lastActivityAt: getVoiceoverScriptLastActivityAt(script),
-    }))
-    
-    scriptsWithLastActivity.sort((a, b) => {
-      return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
-    })
-    
     // Dashboard'un beklediği formata dönüştür
-    const formattedScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => ({
-      ...script,
-      voicePrice: script.price || 0,
-      voicePaid: script.adminApproved && script.producerApproved, // Her iki onay da varsa ödendi sayılır
+    const formattedWorks = works.map(work => ({
+      id: work.id,
+      title: work.title,
+      description: work.description,
+      contentType: work.contentType,
+      voicePrice: work.voicePrice || 0,
+      voicePaid: work.voicePaid || false,
+      status: work.status,
+      createdAt: work.createdAt.toISOString(),
     }))
 
-    return NextResponse.json(formattedScripts)
+    return NextResponse.json(formattedWorks)
   } catch (error) {
-    console.error('Error fetching scripts:', error)
+    console.error('Error fetching voice actor works:', error)
     return NextResponse.json(
-      { error: 'Metinler getirilemedi' },
+      { error: 'İşler getirilemedi' },
       { status: 500 }
     )
   }
 }
-

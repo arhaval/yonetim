@@ -34,7 +34,7 @@ export async function GET(
   }
 }
 
-// Yayın güncelle (maliyet bilgileri)
+// Yayın güncelle (maliyet bilgileri ve ödeme durumu)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -42,7 +42,7 @@ export async function PUT(
   try {
     const resolvedParams = await Promise.resolve(params)
     const data = await request.json()
-    const { streamerEarning } = data
+    const { streamerEarning, paymentStatus } = data
 
     // Mevcut yayını bul
     const existingStream = await prisma.stream.findUnique({
@@ -59,37 +59,48 @@ export async function PUT(
       )
     }
 
-    // Eski finansal kayıtları sil (varsa)
-    await prisma.financialRecord.deleteMany({
-      where: { streamId: resolvedParams.id },
-    })
+    // Güncelleme verilerini hazırla
+    const updateData: any = {}
 
-    // Yayını güncelle (sadece yayıncı ödemesi güncellenir)
-    const updatedStream = await prisma.stream.update({
-      where: { id: resolvedParams.id },
-      data: {
-        streamerEarning: parseFloat(streamerEarning) || 0,
-        arhavalProfit: 0, // Artık kullanılmıyor
-      },
-    })
+    // Eğer streamerEarning gönderildiyse güncelle
+    if (streamerEarning !== undefined) {
+      updateData.streamerEarning = parseFloat(streamerEarning) || 0
+      updateData.arhavalProfit = 0 // Artık kullanılmıyor
 
-    // Sadece yayıncı ödemesini gider olarak kaydet
-    if (parseFloat(streamerEarning) > 0) {
-      await prisma.financialRecord.create({
-        data: {
-          type: 'expense',
-          amount: parseFloat(streamerEarning),
-          description: `Yayıncı ödemesi - ${existingStream.matchInfo || 'Yayın'} (${existingStream.duration} saat) - ${existingStream.teamName || ''}`,
-          date: existingStream.date,
-          category: 'stream',
-          streamerId: existingStream.streamerId,
-          streamId: resolvedParams.id,
-        },
+      // Eski finansal kayıtları sil (varsa)
+      await prisma.financialRecord.deleteMany({
+        where: { streamId: resolvedParams.id },
       })
+
+      // Sadece yayıncı ödemesini gider olarak kaydet
+      if (parseFloat(streamerEarning) > 0) {
+        await prisma.financialRecord.create({
+          data: {
+            type: 'expense',
+            amount: parseFloat(streamerEarning),
+            description: `Yayıncı ödemesi - ${existingStream.matchInfo || 'Yayın'} (${existingStream.duration} saat) - ${existingStream.teamName || ''}`,
+            date: existingStream.date,
+            category: 'stream',
+            streamerId: existingStream.streamerId,
+            streamId: resolvedParams.id,
+          },
+        })
+      }
     }
 
+    // Eğer paymentStatus gönderildiyse güncelle
+    if (paymentStatus !== undefined) {
+      updateData.paymentStatus = paymentStatus
+    }
+
+    // Yayını güncelle
+    const updatedStream = await prisma.stream.update({
+      where: { id: resolvedParams.id },
+      data: updateData,
+    })
+
     return NextResponse.json({
-      message: 'Yayın maliyet bilgileri güncellendi',
+      message: 'Yayın bilgileri güncellendi',
       stream: updatedStream,
     })
   } catch (error: any) {

@@ -51,6 +51,28 @@ export default function StreamsPage() {
     setSelectedStream(null)
   }
 
+  const handleMarkPaid = async (stream: any) => {
+    if (!confirm(`${stream.streamer?.name} için ${stream.streamerEarning?.toLocaleString('tr-TR')} ₺ ödeme yapıldı olarak işaretlensin mi?`)) return
+
+    try {
+      const res = await fetch(`/api/streams/${stream.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentStatus: 'paid' }),
+      })
+
+      if (res.ok) {
+        alert('Ödeme durumu güncellendi!')
+        fetchData()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Bir hata oluştu')
+      }
+    } catch (error) {
+      alert('Bir hata oluştu')
+    }
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -215,9 +237,12 @@ export default function StreamsPage() {
                               ✅ Ödendi
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                              ⏳ Ödenmedi
-                            </span>
+                            <button
+                              onClick={() => handleMarkPaid(stream)}
+                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 hover:bg-yellow-200 transition-colors cursor-pointer"
+                            >
+                              ⏳ Ödenmedi (Tıkla)
+                            </button>
                           )
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
