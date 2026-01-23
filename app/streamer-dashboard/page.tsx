@@ -112,9 +112,9 @@ export default function StreamerDashboardPage() {
         title={`Hoş geldiniz, ${streamer.name}`}
         description="Yayın ve kazanç bilgilerinizi buradan takip edebilirsiniz"
         rightActions={
-          <Button onClick={() => router.push('/request-extra-work')}>
+          <Button onClick={() => router.push('/submit-stream')}>
             <Plus className="w-4 h-4 mr-2" />
-            İş Talebi Oluştur
+            Yayın Gönder
           </Button>
         }
       />

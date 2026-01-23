@@ -22,6 +22,7 @@ export function middleware(request: NextRequest) {
     '/my-payment-requests',
     '/submit-work',
     '/payment-request',
+    '/submit-stream', // Yayıncılar için yayın gönderme
   ]
 
   // Check if route is public
