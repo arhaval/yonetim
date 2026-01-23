@@ -1,19 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Layout from '@/components/Layout'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function RequestExtraWorkPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [userRole, setUserRole] = useState<'admin' | 'streamer' | 'creator' | 'voiceActor' | 'team' | null>(null)
+  const [userName, setUserName] = useState<string>('')
   const [formData, setFormData] = useState({
     workType: 'VOICE',
     amount: '',
     description: '',
   })
+
+  useEffect(() => {
+    // Detect user role from cookies or API
+    detectUserRole()
+  }, [])
+
+  const detectUserRole = async () => {
+    // Try each auth endpoint to find which user is logged in
+    const endpoints = [
+      { role: 'admin' as const, endpoint: '/api/auth/me', key: 'user' },
+      { role: 'streamer' as const, endpoint: '/api/streamer-auth/me', key: 'streamer' },
+      { role: 'creator' as const, endpoint: '/api/creator-auth/me', key: 'creator' },
+      { role: 'voiceActor' as const, endpoint: '/api/voice-actor-auth/me', key: 'voiceActor' },
+      { role: 'team' as const, endpoint: '/api/team-auth/me', key: 'teamMember' },
+    ]
+
+    for (const { role, endpoint, key } of endpoints) {
+      try {
+        const res = await fetch(endpoint)
+        const data = await res.json()
+        if (data[key]) {
+          setUserRole(role)
+          setUserName(data[key].name || data[key].email || 'Kullanıcı')
+          return
+        }
+      } catch (error) {
+        continue
+      }
+    }
+
+    // If no user found, redirect to login selection
+    router.push('/giris')
+  }
 
   const workTypes = [
     { value: 'VOICE', label: '🎙️ Seslendirme', desc: 'Ses kaydı yaptım' },
@@ -59,9 +93,41 @@ export default function RequestExtraWorkPage() {
     }
   }
 
+  if (!userRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <Layout>
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-gray-900">Arhaval</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">{userName}</span>
+              <button
+                onClick={() => router.back()}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Geri Dön
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -152,7 +218,7 @@ export default function RequestExtraWorkPage() {
           </form>
         </div>
       </div>
-    </Layout>
+    </div>
   )
 }
 
