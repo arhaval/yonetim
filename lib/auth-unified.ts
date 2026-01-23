@@ -297,62 +297,84 @@ export async function handleLogin(
       )
     }
 
-    // Set cookie
-    if (result.user) {
-      await setAuthCookie(result.user.id, role)
+    if (!result.user) {
+      return NextResponse.json(
+        { error: 'Kullanıcı bilgisi alınamadı' },
+        { status: 500 }
+      )
     }
 
-    // Return user data in the format expected by existing endpoints
+    const config = ROLE_CONFIG[role]
+    let responseData: any
+
     // Format response based on role
     switch (role) {
       case 'streamer':
-        return NextResponse.json({
+        responseData = {
           streamer: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
           },
-        })
+        }
+        break
       case 'creator':
-        return NextResponse.json({
+        responseData = {
           creator: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
           },
-        })
+        }
+        break
       case 'voice-actor':
-        return NextResponse.json({
+        responseData = {
           voiceActor: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
           },
-        })
+        }
+        break
       case 'team':
         // Team member response needs role field
         const { prisma } = await import('./prisma')
         const member = await prisma.teamMember.findUnique({
-          where: { id: result.user!.id },
+          where: { id: result.user.id },
           select: { role: true },
         })
-        return NextResponse.json({
+        responseData = {
           member: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
             role: member?.role || 'team',
           },
-        })
+        }
+        break
       default:
-        return NextResponse.json({
+        responseData = {
           user: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
           },
-        })
+        }
     }
+
+    // Create response with cookie
+    const response = NextResponse.json(responseData)
+    
+    // Set cookie in response
+    response.cookies.set(config.cookieName, result.user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    })
+
+    return response
   } catch (error: any) {
     return NextResponse.json(
       { error: `Bir hata oluştu: ${error.message || 'Bilinmeyen hata'}` },
