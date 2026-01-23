@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, DollarSign, CheckCircle2, Clock, TrendingUp, Calendar, Video } from 'lucide-react'
+import { Plus, DollarSign, CheckCircle2, Clock, Video, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
-import { AppShell } from '@/components/shared/AppShell'
-import { PageHeader } from '@/components/shared/PageHeader'
-import { StatCard } from '@/components/shared/StatCard'
-import { TableSkeleton, StatCardSkeleton } from '@/components/shared/LoadingSkeleton'
-import { ErrorState } from '@/components/shared/ErrorState'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import toast from 'react-hot-toast'
 
 export default function StreamerDashboardPage() {
@@ -19,7 +12,6 @@ export default function StreamerDashboardPage() {
   const [streamer, setStreamer] = useState<any>(null)
   const [streams, setStreams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [paymentInfo, setPaymentInfo] = useState<any>(null)
 
   useEffect(() => {
@@ -28,7 +20,7 @@ export default function StreamerDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/streamer-auth/me', { cache: 'default' })
+      const res = await fetch('/api/streamer-auth/me')
       const data = await res.json()
 
       if (!data.streamer) {
@@ -40,24 +32,20 @@ export default function StreamerDashboardPage() {
       loadStreams(data.streamer.id)
       loadPaymentInfo(data.streamer.id)
     } catch (error) {
-      setError('Kullanıcı bilgileri yüklenemedi')
-      setLoading(false)
+      toast.error('Kullanıcı bilgileri yüklenemedi')
+      router.push('/streamer-login')
     }
   }
 
   const loadStreams = async (streamerId: string) => {
     try {
-      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`, { cache: 'default' })
+      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`)
       const data = await res.json()
       if (res.ok) {
         setStreams(Array.isArray(data) ? data : [])
-      } else {
-        setError('Yayınlar yüklenemedi')
-        setStreams([])
       }
     } catch (error) {
       console.error('Error loading streams:', error)
-      setError('Yayınlar yüklenemedi')
       setStreams([])
     } finally {
       setLoading(false)
@@ -66,7 +54,7 @@ export default function StreamerDashboardPage() {
 
   const loadPaymentInfo = async (streamerId: string) => {
     try {
-      const res = await fetch('/api/streamer/payments', { cache: 'default' })
+      const res = await fetch('/api/streamer/payments')
       const data = await res.json()
       if (res.ok) {
         setPaymentInfo(data)
@@ -76,180 +64,167 @@ export default function StreamerDashboardPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/streamer-auth/logout', { method: 'POST' })
+      router.push('/streamer-login')
+    } catch (error) {
+      router.push('/streamer-login')
+    }
+  }
+
   if (loading) {
     return (
-      <AppShell role="streamer" user={streamer}>
-        <div className="space-y-6">
-          <StatCardSkeleton />
-          <TableSkeleton />
-        </div>
-      </AppShell>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
     )
   }
 
-  if (error && !streamer) {
-    return (
-      <AppShell role="streamer">
-        <ErrorState
-          title="Bir hata oluştu"
-          message={error}
-          retryLabel="Tekrar Dene"
-          onRetry={() => window.location.reload()}
-        />
-      </AppShell>
-    )
-  }
+  if (!streamer) return null
 
-  const totalEarnings = paymentInfo?.totalPaid || 0 // Sadece ödenenler
+  const totalEarnings = paymentInfo?.totalPaid || 0
   const paidEarnings = paymentInfo?.totalPaid || 0
   const pendingEarnings = paymentInfo?.totalUnpaid || 0
   const completedStreams = streams.filter((s: any) => s.paymentStatus === 'paid').length
-  const pendingStreams = streams.filter((s: any) => s.paymentStatus === 'pending').length
 
   return (
-    <AppShell role="streamer" user={streamer}>
-      <PageHeader
-        title={`Hoş geldiniz, ${streamer.name}`}
-        description="Yayın ve kazanç bilgilerinizi buradan takip edebilirsiniz"
-        rightActions={
-          <Button onClick={() => router.push('/submit-stream')}>
-            <Plus className="w-4 h-4 mr-2" />
-            Yayın Gönder
-          </Button>
-        }
-      />
-
-      {/* İstatistikler */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <StatCard
-          title="Toplam Kazanç"
-          value={`₺${totalEarnings.toFixed(2)}`}
-          icon={DollarSign}
-        />
-        <StatCard
-          title="Ödenen"
-          value={`₺${paidEarnings.toFixed(2)}`}
-          icon={CheckCircle2}
-        />
-        <StatCard
-          title="Bekleyen Ödeme"
-          value={`₺${pendingEarnings.toFixed(2)}`}
-          icon={Clock}
-        />
-        <StatCard
-          title="Tamamlanan Yayın"
-          value={completedStreams.toString()}
-          icon={Video}
-        />
-      </div>
-
-      {/* Son Yayınlar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Son Yayınlarım</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {streams.length === 0 ? (
-            <div className="text-center py-12">
-              <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Henüz yayın kaydı bulunmuyor</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => router.push('/request-extra-work')}
-              >
-                İlk İş Talebini Oluştur
-              </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Hoş geldiniz, {streamer.name}</h1>
+              <p className="text-gray-600">Yayın ve kazanç bilgilerinizi buradan takip edebilirsiniz</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Tarih</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Maç Bilgisi</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Süre</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Durum</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-700">Kazanç</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {streams.slice(0, 10).map((stream: any) => (
-                    <tr key={stream.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm">
-                        {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
-                      </td>
-                      <td className="py-3 px-4 text-sm">{stream.matchInfo || '-'}</td>
-                      <td className="py-3 px-4 text-sm">{stream.duration || '-'} saat</td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push('/submit-stream')}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                <Plus className="w-4 h-4" />
+                Yayın Gönder
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
+                <LogOut className="w-4 h-4" />
+                Çıkış
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* İstatistikler */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <DollarSign className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Toplam Kazanç</p>
+                <p className="text-2xl font-bold text-gray-900">₺{totalEarnings.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Ödenen</p>
+                <p className="text-2xl font-bold text-gray-900">₺{paidEarnings.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Bekleyen Ödeme</p>
+                <p className="text-2xl font-bold text-gray-900">₺{pendingEarnings.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Video className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Tamamlanan Yayın</p>
+                <p className="text-2xl font-bold text-gray-900">{completedStreams}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Son Yayınlar */}
+        <div className="bg-white rounded-xl shadow-sm border">
+          <div className="p-6 border-b">
+            <h2 className="text-lg font-semibold text-gray-900">Son Yayınlarım</h2>
+          </div>
+          <div className="p-6">
+            {streams.length === 0 ? (
+              <div className="text-center py-12">
+                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Henüz yayın kaydı bulunmuyor</p>
+                <button
+                  onClick={() => router.push('/submit-stream')}
+                  className="mt-4 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  İlk Yayınını Gönder
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Tarih</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Maç Bilgisi</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Süre</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Durum</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-700">Kazanç</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {streams.slice(0, 10).map((stream: any) => (
+                      <tr key={stream.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm">
+                          {format(new Date(stream.date), 'dd MMM yyyy', { locale: tr })}
+                        </td>
+                        <td className="py-3 px-4 text-sm">{stream.matchInfo || '-'}</td>
+                        <td className="py-3 px-4 text-sm">{stream.duration || '-'} dk</td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             stream.paymentStatus === 'paid'
                               ? 'bg-green-100 text-green-800'
-                              : stream.paymentStatus === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {stream.paymentStatus === 'paid'
-                            ? 'Ödendi'
-                            : stream.paymentStatus === 'pending'
-                            ? 'Bekliyor'
-                            : stream.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right font-medium">
-                        {stream.streamerEarning ? `₺${stream.streamerEarning.toFixed(2)}` : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Ödeme Geçmişi */}
-      {paymentInfo?.paymentHistory && paymentInfo.paymentHistory.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Ödeme Geçmişi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Tarih</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">Açıklama</th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-700">Tutar</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-700">Durum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paymentInfo.paymentHistory.slice(0, 10).map((payment: any) => (
-                    <tr key={payment.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm">
-                        {format(new Date(payment.date), 'dd MMM yyyy', { locale: tr })}
-                      </td>
-                      <td className="py-3 px-4 text-sm">{payment.description || '-'}</td>
-                      <td className="py-3 px-4 text-sm text-right font-medium text-green-600">
-                        ₺{payment.amount.toFixed(2)}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Ödendi
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </AppShell>
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {stream.paymentStatus === 'paid' ? 'Ödendi' : 'Bekliyor'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {stream.streamerEarning ? `₺${stream.streamerEarning.toFixed(2)}` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }

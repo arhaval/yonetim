@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
-import { Film, Mic, Calendar, DollarSign, User, CheckCircle, Clock, Edit, Trash2, Save, X, Video } from 'lucide-react'
+import { Film, Mic, Calendar, DollarSign, User, CheckCircle, Clock, Edit, Trash2, Save, X, Video, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Work {
   id: string
   title: string
-  type: 'voice' | 'edit'
+  description?: string
+  contentType?: string
+  status: string
   voiceActorId?: string
   voiceActor?: {
     id: string
@@ -24,6 +26,7 @@ interface Work {
   editPrice?: number
   voicePaid?: boolean
   editPaid?: boolean
+  notes?: string
   createdAt: string
   updatedAt: string
 }
@@ -41,25 +44,25 @@ export default function ContentProductionPage() {
 
   const fetchWorks = async () => {
     try {
+      // Tüm ContentRegistry kayıtlarını çek
       const res = await fetch('/api/content-registry?type=all')
       if (res.ok) {
         const data = await res.json()
         
-        // Verileri işle ve type ekle
-        const processedWorks = data.map((item: any) => {
-          if (item.voiceActorId && item.voicePrice !== null) {
-            return {
-              ...item,
-              type: 'voice' as const,
-            }
-          } else if (item.editorId && item.editPrice !== null) {
-            return {
-              ...item,
-              type: 'edit' as const,
-            }
+        // Verileri işle - sadece seslendirme veya video edit işlerini al
+        const processedWorks = (Array.isArray(data) ? data : []).filter((item: any) => {
+          // Seslendirme işi
+          if (item.voiceActorId) return true
+          // Video edit işi
+          if (item.editorId) return true
+          return false
+        }).map((item: any) => {
+          const type = item.voiceActorId ? 'voice' : 'edit'
+          return {
+            ...item,
+            type,
           }
-          return null
-        }).filter(Boolean)
+        })
         
         setWorks(processedWorks)
       } else {
@@ -75,12 +78,14 @@ export default function ContentProductionPage() {
 
   const handleEditPrice = (work: Work) => {
     setEditingId(work.id)
-    setEditPrice(work.type === 'voice' ? (work.voicePrice || 0) : (work.editPrice || 0))
+    const isVoice = !!work.voiceActorId
+    setEditPrice(isVoice ? (work.voicePrice || 0) : (work.editPrice || 0))
   }
 
   const handleSavePrice = async (work: Work) => {
     try {
-      const updateData = work.type === 'voice' 
+      const isVoice = !!work.voiceActorId
+      const updateData = isVoice 
         ? { voicePrice: editPrice }
         : { editPrice: editPrice }
 
@@ -99,6 +104,31 @@ export default function ContentProductionPage() {
       }
     } catch (error) {
       console.error('Error updating price:', error)
+      toast.error('Bir hata oluştu')
+    }
+  }
+
+  const handleMarkPaid = async (work: Work) => {
+    try {
+      const isVoice = !!work.voiceActorId
+      const updateData = isVoice 
+        ? { voicePaid: true }
+        : { editPaid: true }
+
+      const res = await fetch(`/api/content-registry/${work.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      })
+
+      if (res.ok) {
+        toast.success('Ödeme durumu güncellendi')
+        fetchWorks()
+      } else {
+        toast.error('Ödeme durumu güncellenemedi')
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error)
       toast.error('Bir hata oluştu')
     }
   }
@@ -126,12 +156,14 @@ export default function ContentProductionPage() {
   // Filtreleme
   const filteredWorks = works.filter(work => {
     if (activeTab === 'all') return true
-    return work.type === activeTab
+    if (activeTab === 'voice') return !!work.voiceActorId
+    if (activeTab === 'edit') return !!work.editorId
+    return true
   })
 
   // İstatistikler
-  const voiceWorks = works.filter(w => w.type === 'voice')
-  const editWorks = works.filter(w => w.type === 'edit')
+  const voiceWorks = works.filter(w => !!w.voiceActorId)
+  const editWorks = works.filter(w => !!w.editorId)
   
   const totalVoiceAmount = voiceWorks.reduce((sum, w) => sum + (w.voicePrice || 0), 0)
   const paidVoiceAmount = voiceWorks.filter(w => w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
@@ -164,7 +196,7 @@ export default function ContentProductionPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Video className="w-10 h-10" />
-                <h1 className="text-4xl font-bold">İçerik Üretimi</h1>
+                <h1 className="text-4xl font-bold">İçerik Merkezi</h1>
               </div>
               <p className="text-indigo-100">Seslendirme ve video edit işlerini yönetin</p>
             </div>
@@ -274,6 +306,7 @@ export default function ContentProductionPage() {
             <div className="p-12 text-center">
               <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Henüz iş yok</p>
+              <p className="text-sm text-gray-400 mt-2">Seslendirmenler ve video editörler iş gönderdiğinde burada görünecek</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -305,7 +338,7 @@ export default function ContentProductionPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredWorks.map((work) => {
-                    const isVoice = work.type === 'voice'
+                    const isVoice = !!work.voiceActorId
                     const person = isVoice ? work.voiceActor : work.editor
                     const price = isVoice ? work.voicePrice : work.editPrice
                     const isPaid = isVoice ? work.voicePaid : work.editPaid
@@ -347,6 +380,9 @@ export default function ContentProductionPage() {
                         </td>
                         <td className="px-6 py-4">
                           <p className="text-sm text-gray-900">{work.title}</p>
+                          {work.description && (
+                            <p className="text-xs text-gray-500 mt-1">{work.description}</p>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {editingId === work.id ? (
@@ -398,10 +434,13 @@ export default function ContentProductionPage() {
                               Ödendi
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <button
+                              onClick={() => handleMarkPaid(work)}
+                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition"
+                            >
                               <Clock className="w-3 h-3" />
                               Bekliyor
-                            </span>
+                            </button>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -430,4 +469,3 @@ export default function ContentProductionPage() {
     </Layout>
   )
 }
-

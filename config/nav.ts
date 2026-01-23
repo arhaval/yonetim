@@ -40,8 +40,7 @@ export const adminNav: NavSection[] = [
   {
     items: [
       { title: 'Yayınlar', href: '/streams', icon: Video },
-      { title: 'İçerikler', href: '/content', icon: FileText },
-      { title: 'Seslendirme Metinleri', href: '/voiceover-scripts', icon: FileText },
+      { title: 'İçerik Merkezi', href: '/content-production', icon: FileText },
     ]
   },
   {

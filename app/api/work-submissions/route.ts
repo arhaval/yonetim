@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 /**
  * İş gönderme endpoint'i
  * Seslendirmen ve video editörler yaptıkları işleri buradan gönderir
- * Admin onayladığında ödeme listesine eklenir
+ * İşler ContentRegistry'ye kaydedilir ve İçerik Merkezi'nde görünür
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Kullanıcı tipine göre işlem yap
     if (voiceActorId) {
-      // Seslendirmen için VoiceoverScript oluştur (admin onayı bekliyor)
+      // Seslendirmen için ContentRegistry oluştur
       const voiceActor = await prisma.voiceActor.findUnique({
         where: { id: voiceActorId },
         select: { id: true, name: true },
@@ -47,26 +47,27 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // VoiceoverScript oluştur (metin olmadan, sadece iş kaydı olarak)
-      const script = await prisma.voiceoverScript.create({
+      // ContentRegistry'ye kaydet (İçerik Merkezi'nde görünecek)
+      const registry = await prisma.contentRegistry.create({
         data: {
           title: workName,
-          text: description || 'Seslendirme işi',
+          description: description || null,
           voiceActorId: voiceActorId,
           contentType: workType, // SHORT_VOICE, LONG_VOICE
-          status: 'WAITING_VOICE', // Admin onayı bekliyor
-          price: 0, // Admin dolduracak
-          notes: `İş gönderimi: ${workType}`,
+          status: 'DRAFT', // Admin onayı bekliyor
+          voicePrice: 0, // Admin dolduracak
+          voicePaid: false,
+          notes: `Seslendirme işi gönderildi: ${workType === 'SHORT_VOICE' ? 'Kısa Ses' : 'Uzun Ses'}`,
         },
       })
 
       return NextResponse.json({
         success: true,
         message: 'İş gönderildi! Admin onayladığında ödeme listesine eklenecek.',
-        script,
+        registry,
       })
     } else if (teamMemberId) {
-      // Video editör için TeamPayment oluştur
+      // Video editör için ContentRegistry oluştur
       const teamMember = await prisma.teamMember.findUnique({
         where: { id: teamMemberId },
         select: { id: true, name: true },
@@ -79,21 +80,24 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const payment = await prisma.teamPayment.create({
+      // ContentRegistry'ye kaydet (İçerik Merkezi'nde görünecek)
+      const registry = await prisma.contentRegistry.create({
         data: {
-          teamMemberId: teamMemberId,
-          amount: 0, // Admin dolduracak
-          type: workType, // SHORT_VIDEO, LONG_VIDEO
-          period: new Date().toISOString().slice(0, 7), // YYYY-MM
-          description: `${workName}${description ? ' - ' + description : ''}`,
-          paidAt: null, // Henüz ödenmedi
+          title: workName,
+          description: description || null,
+          editorId: teamMemberId,
+          contentType: workType, // SHORT_VIDEO, LONG_VIDEO
+          status: 'EDITING', // Admin onayı bekliyor
+          editPrice: 0, // Admin dolduracak
+          editPaid: false,
+          notes: `Video kurgu işi gönderildi: ${workType === 'SHORT_VIDEO' ? 'Kısa Video' : 'Uzun Video'}`,
         },
       })
 
       return NextResponse.json({
         success: true,
         message: 'İş gönderildi! Admin onayladığında ödeme listesine eklenecek.',
-        payment,
+        registry,
       })
     }
 
@@ -109,4 +113,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
