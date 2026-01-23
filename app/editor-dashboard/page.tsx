@@ -288,7 +288,6 @@ export default function EditorDashboardNewPage() {
           </div>
         </div>
       )}
-      </div>
     </AppShell>
   )
 }

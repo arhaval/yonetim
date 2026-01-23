@@ -635,7 +635,6 @@ export default function TeamDashboardPage() {
           </div>
         </div>
       )}
-      </div>
     </AppShell>
   )
 }
