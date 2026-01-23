@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
-import { DollarSign, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function RequestExtraWorkPage() {
@@ -26,11 +26,6 @@ export default function RequestExtraWorkPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error('Geçerli bir tutar girin')
-      return
-    }
-
     if (!formData.description.trim()) {
       toast.error('Açıklama gereklidir')
       return
@@ -44,7 +39,7 @@ export default function RequestExtraWorkPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workType: formData.workType,
-          amount: parseFloat(formData.amount),
+          amount: formData.amount ? parseFloat(formData.amount) : 0,
           description: formData.description,
         }),
       })
@@ -52,7 +47,7 @@ export default function RequestExtraWorkPage() {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success('Talep gönderildi! Admin onayladığında ödeme listesine eklenecek.')
+        toast.success('Talep gönderildi! Admin tutar belirleyip onayladığında ödeme listesine eklenecek.')
         router.back()
       } else {
         toast.error(data.error || 'Bir hata oluştu')
@@ -79,6 +74,11 @@ export default function RequestExtraWorkPage() {
           <div className="p-6 border-b">
             <h1 className="text-2xl font-bold text-gray-900">Ekstra İş Talebi</h1>
             <p className="text-gray-600 mt-1">Ana işiniz dışında yaptığınız işler için ödeme talep edin</p>
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Not:</strong> Ödeme tutarı admin tarafından belirlenecektir. Sadece yaptığınız işi açıklayın.
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -106,27 +106,6 @@ export default function RequestExtraWorkPage() {
               </div>
             </div>
 
-            {/* Tutar */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Talep Edilen Tutar (TL) *
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="0.00"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
-                  TL
-                </span>
-              </div>
-            </div>
 
             {/* Açıklama */}
             <div>

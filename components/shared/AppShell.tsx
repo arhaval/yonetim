@@ -57,6 +57,7 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
   const pathname = usePathname()
   const router = useRouter()
   const [user, setUser] = useState(initialUser)
+  const [isLoading, setIsLoading] = useState(!initialUser)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navSections = getNavByRole(role)
@@ -64,6 +65,7 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
   useEffect(() => {
     // Fetch user if not provided
     if (!user) {
+      setIsLoading(true)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
@@ -80,6 +82,7 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
             return
           }
           setUser(userData)
+          setIsLoading(false)
         })
         .catch(error => {
           clearTimeout(timeoutId)
@@ -88,6 +91,8 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
           }
           router.push(loginRoutes[role])
         })
+    } else {
+      setIsLoading(false)
     }
   }, [role, user, router])
 
@@ -110,6 +115,17 @@ export function AppShell({ children, role, user: initialUser, onLogout }: AppShe
       return pathname === '/'
     }
     return pathname.startsWith(href)
+  }
+
+  // If loading and no user yet, show minimal layout
+  if (isLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="p-8 max-w-7xl mx-auto">
+          {children}
+        </main>
+      </div>
+    )
   }
 
   return (

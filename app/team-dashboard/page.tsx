@@ -48,14 +48,14 @@ export default function TeamDashboardPage() {
       const res = await fetch('/api/team-auth/me')
       const data = await res.json()
 
-      if (!data.member) {
+      if (!data.teamMember) {
         router.push('/team-login')
         return
       }
 
-      setMember(data.member)
+      setMember(data.teamMember)
       // Cookie'deki team-member-id'yi kullan (daha güvenilir)
-      const memberId = data.member.id
+      const memberId = data.teamMember.id
       loadData(memberId)
     } catch (error) {
       router.push('/team-login')

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const memberId = cookieStore.get('team-member-id')?.value
 
     if (!memberId) {
-      return NextResponse.json({ member: null })
+      return NextResponse.json({ teamMember: null })
     }
 
     const member = await prisma.teamMember.findUnique({
@@ -28,13 +28,13 @@ export async function GET(request: NextRequest) {
     })
 
     if (!member || !member.isActive) {
-      return NextResponse.json({ member: null })
+      return NextResponse.json({ teamMember: null })
     }
 
-    return NextResponse.json({ member })
+    return NextResponse.json({ teamMember: member })
   } catch (error) {
     console.error('Error fetching team member:', error)
-    return NextResponse.json({ member: null })
+    return NextResponse.json({ teamMember: null })
   }
 }
 
