@@ -54,11 +54,12 @@ export default function VoiceActorDashboardPage() {
       const res = await fetch('/api/voice-actor/scripts')
       const data = await res.json()
       if (res.ok) {
-        setScripts(data)
+        setScripts(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error loading scripts:', error)
       toast.error('Seslendirme kayıtları yüklenemedi')
+      setScripts([])
     } finally {
       setLoading(false)
     }

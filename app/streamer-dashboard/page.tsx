@@ -50,13 +50,15 @@ export default function StreamerDashboardPage() {
       const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`, { cache: 'default' })
       const data = await res.json()
       if (res.ok) {
-        setStreams(data)
+        setStreams(Array.isArray(data) ? data : [])
       } else {
         setError('Yayınlar yüklenemedi')
+        setStreams([])
       }
     } catch (error) {
       console.error('Error loading streams:', error)
       setError('Yayınlar yüklenemedi')
+      setStreams([])
     } finally {
       setLoading(false)
     }

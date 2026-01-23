@@ -54,11 +54,12 @@ export default function EditorDashboardPage() {
       const res = await fetch(`/api/team/${editorId}/tasks`)
       const data = await res.json()
       if (res.ok) {
-        setWorks(data)
+        setWorks(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error loading works:', error)
       toast.error('İş kayıtları yüklenemedi')
+      setWorks([])
     } finally {
       setLoading(false)
     }

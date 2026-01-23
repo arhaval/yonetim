@@ -44,10 +44,11 @@ export default function CreatorDashboardPage() {
       const res = await fetch('/api/creator/content')
       const data = await res.json()
       if (res.ok) {
-        setContents(data)
+        setContents(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error loading contents:', error)
+      setContents([])
     } finally {
       setLoading(false)
     }
