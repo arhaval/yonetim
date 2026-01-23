@@ -127,31 +127,6 @@ export default function EditorDashboardNewPage() {
       />
 
       <div className="space-y-6">
-        {/* Eski header kaldırıldı */}
-        <div className="hidden">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border-4 border-white/30 shadow-2xl">
-              <Film className="w-12 h-12 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                Hoş geldin, {editor?.name}! 👋
-                </h1>
-                <p className="text-green-100 text-lg">Video Editör Paneli</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all border border-white/30"
-            >
-              <LogOut className="w-5 h-5" />
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">

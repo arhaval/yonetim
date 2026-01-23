@@ -222,7 +222,9 @@ export default function TeamDashboardPage() {
     )
   }
 
-  if (!member) return null
+  if (!member) {
+    return null
+  }
 
   return (
     <AppShell role="team" user={member}>
