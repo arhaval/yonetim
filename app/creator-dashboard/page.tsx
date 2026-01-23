@@ -7,6 +7,8 @@ import { Plus, LogOut, Video, Image, Calendar, Eye, Heart, MessageCircle, Share2
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import RichTextEditor from '@/components/RichTextEditor'
+import { AppShell } from '@/components/shared/AppShell'
+import { PageHeader } from '@/components/shared/PageHeader'
 
 export default function CreatorDashboardPage() {
   const router = useRouter()
@@ -213,12 +215,14 @@ export default function CreatorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Yükleniyor...</p>
+      <AppShell role="creator" user={creator}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Yükleniyor...</p>
+          </div>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
@@ -227,10 +231,15 @@ export default function CreatorDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+    <AppShell role="creator" user={creator}>
+      <PageHeader
+        title={`Hoş geldiniz, ${creator.name}`}
+        description="İçeriklerinizi ve metinlerinizi yönetin"
+      />
+
+      <div className="space-y-6">
+        {/* Eski header kaldırıldı - AppShell'de var */}
+        <div className="hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-2">
@@ -678,7 +687,7 @@ export default function CreatorDashboardPage() {
                         )}
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
 

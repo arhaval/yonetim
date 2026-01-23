@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mic, Plus, DollarSign, Clock, CheckCircle, Calendar, X, LogOut, TrendingUp, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { AppShell } from '@/components/shared/AppShell'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { StatCard } from '@/components/shared/StatCard'
 
 interface Work {
   id: string
@@ -101,9 +104,11 @@ export default function VoiceActorDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
+      <AppShell role="voiceActor" user={voiceActor}>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </AppShell>
     )
   }
 
@@ -112,33 +117,15 @@ export default function VoiceActorDashboardPage() {
   const pendingEarnings = works.filter(w => !w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Mic className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{voiceActor?.name}</h1>
-                <p className="text-gray-500">Seslendirmen</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-      </div>
+    <AppShell role="voiceActor" user={voiceActor}>
+      <PageHeader
+        title={`Hoş geldiniz, ${voiceActor?.name}`}
+        description="Seslendirme işlerinizi yönetin"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -177,7 +164,7 @@ export default function VoiceActorDashboardPage() {
         </div>
 
         {/* Add Work Button */}
-        <div className="mb-6">
+        <div>
           <button
             onClick={() => setShowAddModal(true)}
             className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
@@ -242,7 +229,6 @@ export default function VoiceActorDashboardPage() {
             </div>
           )}
         </div>
-      </div>
 
       {/* Add Work Modal */}
       {showAddModal && (
@@ -296,6 +282,7 @@ export default function VoiceActorDashboardPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   )
 }

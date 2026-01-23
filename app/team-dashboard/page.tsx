@@ -6,6 +6,9 @@ import { LogOut, CheckCircle2, Clock, Calendar, DollarSign, CreditCard, AlertCir
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale/tr'
 import Link from 'next/link'
+import { AppShell } from '@/components/shared/AppShell'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { StatCard } from '@/components/shared/StatCard'
 
 export default function TeamDashboardPage() {
   const router = useRouter()
@@ -187,18 +190,20 @@ export default function TeamDashboardPage() {
 
   if (loading && !member) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Yükleniyor...</p>
+      <AppShell role="team" user={member}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto"></div>
+            <p className="mt-4 text-gray-600">Yükleniyor...</p>
+          </div>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   if (error && !loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50">
+      <AppShell role="team" user={member}>
         <div className="text-center max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Veri Yüklenemedi</h2>
@@ -213,56 +218,20 @@ export default function TeamDashboardPage() {
             Tekrar Dene
           </button>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   if (!member) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-white overflow-hidden p-1.5">
-                <img 
-                  src="/arhaval-logo.png" 
-                  alt="Arhaval Logo" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    if (target.parentElement) {
-                      target.parentElement.innerHTML = '<span class="text-gray-900 font-bold text-lg">A</span>'
-                      target.parentElement.style.background = 'linear-gradient(135deg, #08d9d6 0%, #ff2e63 100%)'
-                    }
-                  }}
-                />
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">{member.name.charAt(0).toUpperCase()}</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{member.name}</h1>
-                <p className="text-sm text-gray-500">{member.role}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="btn btn-secondary"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-      </header>
+    <AppShell role="team" user={member}>
+      <PageHeader
+        title={`Hoş geldiniz, ${member.name}`}
+        description="İşlerinizi ve ödemelerinizi görüntüleyin"
+      />
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Kurgu Bekleyen İşler */}
           {pendingEdits.length > 0 && (
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl shadow-xl p-6 border border-purple-200">
@@ -572,7 +541,6 @@ export default function TeamDashboardPage() {
             )}
           </div>
         </div>
-      </main>
 
       {/* Kurgu Teslim Modal */}
       {showEditModal && selectedEdit && (
@@ -665,6 +633,7 @@ export default function TeamDashboardPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   )
 }

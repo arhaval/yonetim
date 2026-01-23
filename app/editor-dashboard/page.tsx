@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Film, Plus, DollarSign, Clock, CheckCircle, Calendar, X, LogOut, TrendingUp, Wallet } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { AppShell } from '@/components/shared/AppShell'
+import { PageHeader } from '@/components/shared/PageHeader'
 
 interface Work {
   id: string
@@ -105,9 +107,11 @@ export default function EditorDashboardNewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
-      </div>
+      <AppShell role="team" user={editor}>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
+        </div>
+      </AppShell>
     )
   }
 
@@ -116,23 +120,22 @@ export default function EditorDashboardNewPage() {
   const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)'
-        }}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border-4 border-white/30 shadow-2xl">
-                <Film className="w-12 h-12 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">
-                  Hoş geldin, {editor?.name}! 👋
+    <AppShell role="team" user={editor}>
+      <PageHeader
+        title={`Hoş geldiniz, ${editor?.name}`}
+        description="Video editörlük işlerinizi yönetin"
+      />
+
+      <div className="space-y-6">
+        {/* Eski header kaldırıldı */}
+        <div className="hidden">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center border-4 border-white/30 shadow-2xl">
+              <Film className="w-12 h-12 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">
+                Hoş geldin, {editor?.name}! 👋
                 </h1>
                 <p className="text-green-100 text-lg">Video Editör Paneli</p>
               </div>
@@ -309,7 +312,8 @@ export default function EditorDashboardNewPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   )
 }
 
