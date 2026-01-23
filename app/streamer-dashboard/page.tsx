@@ -98,7 +98,7 @@ export default function StreamerDashboardPage() {
     )
   }
 
-  const totalEarnings = paymentInfo?.totalDue || 0
+  const totalEarnings = paymentInfo?.totalPaid || 0 // Sadece ödenenler
   const paidEarnings = paymentInfo?.totalPaid || 0
   const pendingEarnings = paymentInfo?.totalUnpaid || 0
   const completedStreams = streams.filter((s: any) => s.paymentStatus === 'paid').length

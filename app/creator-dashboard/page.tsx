@@ -65,9 +65,12 @@ export default function CreatorDashboardPage() {
 
   const completedContents = contents.filter((c: any) => c.status === 'COMPLETED' || c.status === 'PUBLISHED').length
   const pendingContents = contents.filter((c: any) => c.status === 'PENDING' || c.status === 'IN_PROGRESS').length
-  const totalEarnings = contents.reduce((sum: number, c: any) => sum + (c.creatorEarning || 0), 0)
   const paidEarnings = contents
     .filter((c: any) => c.creatorPaid)
+    .reduce((sum: number, c: any) => sum + (c.creatorEarning || 0), 0)
+  const totalEarnings = paidEarnings // Sadece ödenenler
+  const pendingEarnings = contents
+    .filter((c: any) => !c.creatorPaid)
     .reduce((sum: number, c: any) => sum + (c.creatorEarning || 0), 0)
 
   return (
@@ -97,7 +100,7 @@ export default function CreatorDashboardPage() {
         />
         <StatCard
           title="Bekleyen Ödeme"
-          value={`₺${(totalEarnings - paidEarnings).toFixed(2)}`}
+          value={`₺${pendingEarnings.toFixed(2)}`}
           icon={Clock}
         />
         <StatCard

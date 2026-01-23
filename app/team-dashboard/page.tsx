@@ -27,9 +27,9 @@ export default function TeamDashboardPage() {
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
 
-  const totalEarnings = works.reduce((sum, work) => sum + (work.editPrice || 0), 0)
   const paidEarnings = works.filter(w => w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
-  const pendingEarnings = totalEarnings - paidEarnings
+  const totalEarnings = paidEarnings // Sadece ödenenler
+  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
 
   useEffect(() => {
     checkAuth()

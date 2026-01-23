@@ -27,9 +27,9 @@ export default function VoiceActorDashboardPage() {
   const [scripts, setScripts] = useState<VoiceoverScript[]>([])
   const [loading, setLoading] = useState(true)
 
-  const totalEarnings = scripts.reduce((sum, script) => sum + (script.voicePrice || 0), 0)
   const paidEarnings = scripts.filter(s => s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
-  const pendingEarnings = totalEarnings - paidEarnings
+  const totalEarnings = paidEarnings // Sadece ödenenler
+  const pendingEarnings = scripts.filter(s => !s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
 
   useEffect(() => {
     checkAuth()
