@@ -44,26 +44,31 @@ export default function ContentProductionPage() {
 
   const fetchWorks = async () => {
     try {
-      // Tüm ContentRegistry kayıtlarını çek
-      const res = await fetch('/api/content-registry?type=all', { credentials: 'include' })
+      setLoading(true)
+      
+      // API'den TÜM kayıtları çek - type parametresi olmadan
+      const res = await fetch('/api/content-registry?limit=1000', { 
+        credentials: 'include' 
+      })
+      
       if (res.ok) {
         const data = await res.json()
+        console.log('API Response:', data) // Debug için
         
-        // Verileri işle - sadece seslendirme veya video edit işlerini al
-        const processedWorks = (Array.isArray(data) ? data : []).filter((item: any) => {
-          // Seslendirme işi
-          if (item.voiceActorId) return true
-          // Video edit işi
-          if (item.editorId) return true
-          return false
-        }).map((item: any) => {
-          const type = item.voiceActorId ? 'voice' : 'edit'
-          return {
+        // Eğer pagination ile geliyorsa
+        const items = data.registries || data
+        
+        // Sadece voiceActorId veya editorId olanları filtrele
+        const processedWorks = (Array.isArray(items) ? items : [])
+          .filter((item: any) => {
+            return item.voiceActorId || item.editorId
+          })
+          .map((item: any) => ({
             ...item,
-            type,
-          }
-        })
+            type: item.voiceActorId ? 'voice' : 'edit'
+          }))
         
+        console.log('Processed Works:', processedWorks) // Debug için
         setWorks(processedWorks)
       } else {
         toast.error('İçerik üretim işleri yüklenemedi')
@@ -209,6 +214,16 @@ export default function ContentProductionPage() {
             </div>
           </div>
         </div>
+
+        {/* Debug Info - Geliştirme için */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
+              <strong>Debug:</strong> Toplam {works.length} iş yüklendi 
+              ({voiceWorks.length} seslendirme, {editWorks.length} video edit)
+            </p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 bg-white rounded-xl p-2 shadow-md border border-gray-100">
