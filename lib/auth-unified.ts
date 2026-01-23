@@ -67,7 +67,7 @@ export const ROLE_CONFIG: Record<UserRole, AuthConfig> = {
   team: {
     cookieName: 'team-member-id',
     loginPage: '/team-login',
-    dashboard: '/team-dashboard',
+    dashboard: '/editor-dashboard',
     checkActive: false,
   },
 }
