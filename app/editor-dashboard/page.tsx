@@ -105,6 +105,11 @@ export default function EditorDashboardNewPage() {
     router.push('/team-login')
   }
 
+  // Calculate earnings
+  const totalEarnings = works.reduce((sum, w) => sum + (w.editPrice || 0), 0)
+  const paidEarnings = works.filter(w => w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
+  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
+
   if (loading) {
     return (
       <AppShell role="team" user={editor}>
@@ -114,10 +119,6 @@ export default function EditorDashboardNewPage() {
       </AppShell>
     )
   }
-
-  const totalEarnings = works.reduce((sum, w) => sum + (w.editPrice || 0), 0)
-  const paidEarnings = works.filter(w => w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
-  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, w) => sum + (w.editPrice || 0), 0)
 
   return (
     <AppShell role="team" user={editor}>

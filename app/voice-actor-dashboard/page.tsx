@@ -102,6 +102,11 @@ export default function VoiceActorDashboardPage() {
     router.push('/voice-actor-login')
   }
 
+  // Calculate earnings
+  const totalEarnings = works.reduce((sum, w) => sum + (w.voicePrice || 0), 0)
+  const paidEarnings = works.filter(w => w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
+  const pendingEarnings = works.filter(w => !w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
+
   if (loading) {
     return (
       <AppShell role="voiceActor" user={voiceActor}>
@@ -111,10 +116,6 @@ export default function VoiceActorDashboardPage() {
       </AppShell>
     )
   }
-
-  const totalEarnings = works.reduce((sum, w) => sum + (w.voicePrice || 0), 0)
-  const paidEarnings = works.filter(w => w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
-  const pendingEarnings = works.filter(w => !w.voicePaid).reduce((sum, w) => sum + (w.voicePrice || 0), 0)
 
   return (
     <AppShell role="voiceActor" user={voiceActor}>
