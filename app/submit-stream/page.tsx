@@ -9,6 +9,7 @@ export default function SubmitStreamPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [streamer, setStreamer] = useState<any>(null)
   const [formData, setFormData] = useState({
     date: '',
     duration: '',
@@ -21,16 +22,25 @@ export default function SubmitStreamPage() {
   }, [])
 
   const checkUserType = async () => {
-    // Cookie'den kullanıcı tipini belirle
-    const cookies = document.cookie.split(';')
-    const hasStreamer = cookies.some(c => c.trim().startsWith('streamer-id='))
-    
-    if (!hasStreamer) {
+    try {
+      const res = await fetch('/api/streamer-auth/me')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.streamer) {
+          setStreamer(data.streamer)
+          setCheckingAuth(false)
+          return
+        }
+      }
+
+      // Yayıncı değilse giriş sayfasına yönlendir
       toast.error('Bu sayfaya erişim yetkiniz yok')
       router.push('/giris')
-      return
+    } catch (error) {
+      console.error('Auth check error:', error)
+      toast.error('Bir hata oluştu')
+      router.push('/giris')
     }
-    setCheckingAuth(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,6 +90,10 @@ export default function SubmitStreamPage() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     )
+  }
+
+  if (!streamer) {
+    return null
   }
 
   return (

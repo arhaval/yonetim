@@ -21,24 +21,39 @@ export default function SubmitWorkPage() {
   }, [])
 
   const checkUserType = async () => {
-    // Cookie'den kullanıcı tipini belirle
-    const cookies = document.cookie.split(';')
-    const hasVoiceActor = cookies.some(c => c.trim().startsWith('voice-actor-id='))
-    const hasTeamMember = cookies.some(c => c.trim().startsWith('team-member-id='))
-    
-    if (hasVoiceActor) {
-      setUserType('voiceActor')
-      setFormData(prev => ({ ...prev, workType: 'SHORT_VOICE' }))
-    } else if (hasTeamMember) {
-      setUserType('editor')
-      setFormData(prev => ({ ...prev, workType: 'SHORT_VIDEO' }))
-    } else {
-      // Yetkisiz kullanıcı
+    try {
+      // Önce voice-actor kontrolü
+      const vaRes = await fetch('/api/voice-actor-auth/me')
+      if (vaRes.ok) {
+        const vaData = await vaRes.json()
+        if (vaData.voiceActor) {
+          setUserType('voiceActor')
+          setFormData(prev => ({ ...prev, workType: 'SHORT_VOICE' }))
+          setCheckingAuth(false)
+          return
+        }
+      }
+
+      // Sonra team-member kontrolü
+      const tmRes = await fetch('/api/team-auth/me')
+      if (tmRes.ok) {
+        const tmData = await tmRes.json()
+        if (tmData.teamMember) {
+          setUserType('editor')
+          setFormData(prev => ({ ...prev, workType: 'SHORT_VIDEO' }))
+          setCheckingAuth(false)
+          return
+        }
+      }
+
+      // Hiçbiri değilse giriş sayfasına yönlendir
       toast.error('Bu sayfaya erişim yetkiniz yok')
       router.push('/giris')
-      return
+    } catch (error) {
+      console.error('Auth check error:', error)
+      toast.error('Bir hata oluştu')
+      router.push('/giris')
     }
-    setCheckingAuth(false)
   }
 
   const workTypes = userType === 'voiceActor' ? [
@@ -100,6 +115,10 @@ export default function SubmitWorkPage() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     )
+  }
+
+  if (!userType) {
+    return null
   }
 
   return (
