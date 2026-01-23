@@ -44,15 +44,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         }
         return res.json()
       })
-      .then(data => setUser(data.user))
+      .then(data => {
+        if (!data.user) {
+          // Auth failed - redirect to admin login
+          router.push('/admin-login')
+          return
+        }
+        setUser(data.user)
+      })
       .catch(error => {
         clearTimeout(timeoutId)
         if (error.name !== 'AbortError') {
-          // Silent fail for better UX
-          setUser(null)
+          // Auth error - redirect to admin login
+          router.push('/admin-login')
         }
       })
-  }, [])
+  }, [router])
 
   useEffect(() => {
     // Desktop'ta sidebar varsayılan olarak açık
