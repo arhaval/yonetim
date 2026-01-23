@@ -31,18 +31,15 @@ export async function POST(request: NextRequest) {
     // İş tipine göre ContentRegistry'e kaydet
     const isVoiceWork = !!voiceActorId
     
-    // Status belirleme
-    let status = 'EDITING' // Default editör için
-    if (isVoiceWork) {
-      status = 'VOICE_READY' // Seslendirmen için
-    }
+    // Status belirleme - ContentRegistryStatus enum'u kullan
+    const status: 'EDITING' | 'VOICE_READY' = isVoiceWork ? 'VOICE_READY' : 'EDITING'
 
     const registry = await prisma.contentRegistry.create({
       data: {
         title: workName,
         description: description || null,
         contentType: workType,
-        status: status,
+        status: status as any,
         voiceActorId: voiceActorId || null,
         editorId: teamMemberId || null,
         // Fiyatlar admin tarafından girilecek
