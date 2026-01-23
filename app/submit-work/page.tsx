@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppShell } from '@/components/shared/AppShell'
 import { ArrowLeft, Mic, Video } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function SubmitWorkPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [userRole, setUserRole] = useState<'voiceActor' | 'team' | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [userType, setUserType] = useState<'voiceActor' | 'editor' | null>(null)
   const [formData, setFormData] = useState({
     workType: '',
@@ -28,14 +27,18 @@ export default function SubmitWorkPage() {
     const hasTeamMember = cookies.some(c => c.trim().startsWith('team-member-id='))
     
     if (hasVoiceActor) {
-      setUserRole('voiceActor')
       setUserType('voiceActor')
-      setFormData({ ...formData, workType: 'SHORT_VOICE' })
+      setFormData(prev => ({ ...prev, workType: 'SHORT_VOICE' }))
     } else if (hasTeamMember) {
-      setUserRole('team')
       setUserType('editor')
-      setFormData({ ...formData, workType: 'SHORT_VIDEO' })
+      setFormData(prev => ({ ...prev, workType: 'SHORT_VIDEO' }))
+    } else {
+      // Yetkisiz kullanıcı
+      toast.error('Bu sayfaya erişim yetkiniz yok')
+      router.push('/giris')
+      return
     }
+    setCheckingAuth(false)
   }
 
   const workTypes = userType === 'voiceActor' ? [
@@ -67,7 +70,12 @@ export default function SubmitWorkPage() {
 
       if (res.ok) {
         toast.success('İş gönderildi! Admin onayladığında ödeme listesine eklenecek.')
-        router.back()
+        // Kullanıcı tipine göre doğru dashboard'a yönlendir
+        if (userType === 'voiceActor') {
+          router.push('/voice-actor-dashboard')
+        } else {
+          router.push('/editor-dashboard')
+        }
       } else {
         toast.error(data.error || 'Bir hata oluştu')
       }
@@ -78,19 +86,27 @@ export default function SubmitWorkPage() {
     }
   }
 
-  if (!userRole) {
+  const handleBack = () => {
+    if (userType === 'voiceActor') {
+      router.push('/voice-actor-dashboard')
+    } else {
+      router.push('/editor-dashboard')
+    }
+  }
+
+  if (checkingAuth) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     )
   }
 
   return (
-    <AppShell role={userRole}>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -179,7 +195,7 @@ export default function SubmitWorkPage() {
             <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={handleBack}
                 className="px-6 py-2.5 text-gray-700 hover:text-gray-900 font-medium"
               >
                 İptal
@@ -195,7 +211,6 @@ export default function SubmitWorkPage() {
           </form>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
-

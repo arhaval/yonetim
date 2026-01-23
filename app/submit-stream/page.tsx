@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppShell } from '@/components/shared/AppShell'
 import { ArrowLeft, Twitch, Calendar, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function SubmitStreamPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [userRole, setUserRole] = useState<'streamer' | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [formData, setFormData] = useState({
     date: '',
     duration: '',
@@ -26,12 +25,12 @@ export default function SubmitStreamPage() {
     const cookies = document.cookie.split(';')
     const hasStreamer = cookies.some(c => c.trim().startsWith('streamer-id='))
     
-    if (hasStreamer) {
-      setUserRole('streamer')
-    } else {
+    if (!hasStreamer) {
       toast.error('Bu sayfaya erişim yetkiniz yok')
       router.push('/giris')
+      return
     }
+    setCheckingAuth(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,19 +70,23 @@ export default function SubmitStreamPage() {
     }
   }
 
-  if (!userRole) {
+  const handleBack = () => {
+    router.push('/streamer-dashboard')
+  }
+
+  if (checkingAuth) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     )
   }
 
   return (
-    <AppShell role={userRole}>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -173,7 +176,7 @@ export default function SubmitStreamPage() {
             <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={handleBack}
                 className="px-6 py-2.5 text-gray-700 hover:text-gray-900 font-medium"
               >
                 İptal
@@ -189,7 +192,6 @@ export default function SubmitStreamPage() {
           </form>
         </div>
       </div>
-    </AppShell>
+    </div>
   )
 }
-
