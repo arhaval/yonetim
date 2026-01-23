@@ -98,11 +98,11 @@ export default function StreamerDashboardPage() {
     )
   }
 
-  const totalEarnings = paymentInfo?.totalEarnings || 0
-  const paidEarnings = paymentInfo?.paidEarnings || 0
-  const pendingEarnings = paymentInfo?.pendingEarnings || 0
-  const completedStreams = streams.filter((s: any) => s.status === 'COMPLETED').length
-  const pendingStreams = streams.filter((s: any) => s.status === 'PENDING').length
+  const totalEarnings = paymentInfo?.totalDue || 0
+  const paidEarnings = paymentInfo?.totalPaid || 0
+  const pendingEarnings = paymentInfo?.totalUnpaid || 0
+  const completedStreams = streams.filter((s: any) => s.paymentStatus === 'paid').length
+  const pendingStreams = streams.filter((s: any) => s.paymentStatus === 'pending').length
 
   return (
     <AppShell role="streamer" user={streamer}>
@@ -182,18 +182,18 @@ export default function StreamerDashboardPage() {
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            stream.status === 'COMPLETED'
+                            stream.paymentStatus === 'paid'
                               ? 'bg-green-100 text-green-800'
-                              : stream.status === 'PENDING'
+                              : stream.paymentStatus === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {stream.status === 'COMPLETED'
-                            ? 'Tamamlandı'
-                            : stream.status === 'PENDING'
-                            ? 'Beklemede'
-                            : stream.status}
+                          {stream.paymentStatus === 'paid'
+                            ? 'Ödendi'
+                            : stream.paymentStatus === 'pending'
+                            ? 'Bekliyor'
+                            : stream.paymentStatus}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
