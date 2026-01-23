@@ -27,10 +27,6 @@ export default function VoiceActorDashboardPage() {
   const [scripts, setScripts] = useState<VoiceoverScript[]>([])
   const [loading, setLoading] = useState(true)
 
-  const paidEarnings = scripts.filter(s => s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
-  const totalEarnings = paidEarnings // Sadece ödenenler
-  const pendingEarnings = scripts.filter(s => !s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
-
   useEffect(() => {
     checkAuth()
   }, [])
@@ -78,6 +74,9 @@ export default function VoiceActorDashboardPage() {
     )
   }
 
+  const paidEarnings = scripts.filter(s => s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
+  const totalEarnings = paidEarnings // Sadece ödenenler
+  const pendingEarnings = scripts.filter(s => !s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
   const completedScripts = scripts.filter((s: any) => s.status === 'COMPLETED' || s.status === 'APPROVED').length
   const pendingScripts = scripts.filter((s: any) => s.status === 'PENDING' || s.status === 'IN_PROGRESS').length
 

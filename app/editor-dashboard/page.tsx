@@ -27,10 +27,6 @@ export default function EditorDashboardPage() {
   const [works, setWorks] = useState<Work[]>([])
   const [loading, setLoading] = useState(true)
 
-  const paidEarnings = works.filter(w => w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
-  const totalEarnings = paidEarnings // Sadece ödenenler
-  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
-
   useEffect(() => {
     checkAuth()
   }, [])
@@ -78,6 +74,9 @@ export default function EditorDashboardPage() {
     )
   }
 
+  const paidEarnings = works.filter(w => w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
+  const totalEarnings = paidEarnings // Sadece ödenenler
+  const pendingEarnings = works.filter(w => !w.editPaid).reduce((sum, work) => sum + (work.editPrice || 0), 0)
   const completedWorks = works.filter((w: any) => w.status === 'COMPLETED' || w.status === 'APPROVED').length
   const pendingWorks = works.filter((w: any) => w.status === 'PENDING' || w.status === 'IN_PROGRESS').length
 
