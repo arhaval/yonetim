@@ -16,8 +16,18 @@ export function middleware(request: NextRequest) {
     '/login-selection',
   ]
 
-  // Check if route is public
-  if (publicRoutes.includes(pathname) || pathname.startsWith('/_next') || pathname.startsWith('/api/')) {
+  // Shared routes - accessible by all authenticated users
+  const sharedRoutes = [
+    '/request-extra-work',
+    '/my-payment-requests',
+    '/submit-work',
+    '/payment-request',
+  ]
+
+  // Check if route is public or shared
+  const isSharedRoute = sharedRoutes.some(route => pathname.startsWith(route))
+  
+  if (publicRoutes.includes(pathname) || pathname.startsWith('/_next') || pathname.startsWith('/api/') || isSharedRoute) {
     const response = NextResponse.next()
 
     // Cache headers for static assets
@@ -95,28 +105,6 @@ export function middleware(request: NextRequest) {
   // Team routes
   if ((pathname.startsWith('/team-dashboard') || pathname.startsWith('/editor-dashboard')) && !teamMemberId) {
     return NextResponse.redirect(new URL('/team-login', request.url))
-  }
-
-  // Cross-role protection: prevent users from accessing other roles' dashboards
-  if (pathname.startsWith('/streamer-dashboard') && (userId || creatorId || voiceActorId || teamMemberId)) {
-    return NextResponse.redirect(new URL('/giris', request.url))
-  }
-
-  if (pathname.startsWith('/creator-dashboard') && (userId || streamerId || voiceActorId || teamMemberId)) {
-    return NextResponse.redirect(new URL('/giris', request.url))
-  }
-
-  if ((pathname.startsWith('/voice-actor-dashboard') || pathname.startsWith('/my-voiceovers') || pathname.startsWith('/my-assignments')) && (userId || streamerId || creatorId || teamMemberId)) {
-    return NextResponse.redirect(new URL('/giris', request.url))
-  }
-
-  if ((pathname.startsWith('/team-dashboard') || pathname.startsWith('/editor-dashboard')) && (userId || streamerId || creatorId || voiceActorId)) {
-    return NextResponse.redirect(new URL('/giris', request.url))
-  }
-
-  if (isAdminRoute && (streamerId || creatorId || voiceActorId || teamMemberId)) {
-    // Someone with non-admin cookie trying to access admin routes
-    return NextResponse.redirect(new URL('/giris', request.url))
   }
 
   const response = NextResponse.next()
