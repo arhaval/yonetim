@@ -24,10 +24,8 @@ export function middleware(request: NextRequest) {
     '/payment-request',
   ]
 
-  // Check if route is public or shared
-  const isSharedRoute = sharedRoutes.some(route => pathname.startsWith(route))
-  
-  if (publicRoutes.includes(pathname) || pathname.startsWith('/_next') || pathname.startsWith('/api/') || isSharedRoute) {
+  // Check if route is public
+  if (publicRoutes.includes(pathname) || pathname.startsWith('/_next') || pathname.startsWith('/api/')) {
     const response = NextResponse.next()
 
     // Cache headers for static assets
@@ -58,6 +56,16 @@ export function middleware(request: NextRequest) {
   const voiceActorId = request.cookies.get('voice-actor-id')?.value
   const teamMemberId = request.cookies.get('team-member-id')?.value
 
+  // Check if it's a shared route - needs ANY authentication
+  const isSharedRoute = sharedRoutes.some(route => pathname.startsWith(route))
+  if (isSharedRoute) {
+    // Shared routes need at least one valid cookie
+    if (!userId && !streamerId && !creatorId && !voiceActorId && !teamMemberId) {
+      return NextResponse.redirect(new URL('/giris', request.url))
+    }
+    return NextResponse.next()
+  }
+
   // Admin routes (all routes using Layout component)
   const adminRoutes = [
     '/',
@@ -83,8 +91,8 @@ export function middleware(request: NextRequest) {
   )
 
   if (isAdminRoute && !userId) {
-    // Admin route but no admin cookie - redirect to admin login
-    return NextResponse.redirect(new URL('/admin-login', request.url))
+    // Admin route but no admin cookie - redirect to LOGIN SELECTION, not admin login
+    return NextResponse.redirect(new URL('/giris', request.url))
   }
 
   // Streamer routes
