@@ -23,7 +23,7 @@ export default function SubmitStreamPage() {
 
   const checkUserType = async () => {
     try {
-      const res = await fetch('/api/streamer-auth/me')
+      const res = await fetch('/api/streamer-auth/me', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         if (data.streamer) {
@@ -34,7 +34,7 @@ export default function SubmitStreamPage() {
       }
 
       // Yayıncı değilse giriş sayfasına yönlendir
-      toast.error('Bu sayfaya erişim yetkiniz yok')
+      toast.error('Bu sayfaya erişim yetkiniz yok. Lütfen giriş yapın.')
       router.push('/giris')
     } catch (error) {
       console.error('Auth check error:', error)

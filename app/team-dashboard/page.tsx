@@ -28,7 +28,7 @@ export default function TeamDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/team-auth/me')
+      const res = await fetch('/api/team-auth/me', { credentials: 'include' })
       const data = await res.json()
 
       if (!data.teamMember) {
@@ -46,7 +46,7 @@ export default function TeamDashboardPage() {
 
   const loadData = async (memberId: string) => {
     try {
-      const res = await fetch(`/api/team/${memberId}/tasks`)
+      const res = await fetch(`/api/team/${memberId}/tasks`, { credentials: 'include' })
       const data = await res.json()
       if (res.ok) {
         setWorks(Array.isArray(data) ? data : [])
@@ -62,7 +62,7 @@ export default function TeamDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/team-auth/logout', { method: 'POST' })
+      await fetch('/api/team-auth/logout', { method: 'POST', credentials: 'include' })
       router.push('/team-login')
     } catch (error) {
       router.push('/team-login')

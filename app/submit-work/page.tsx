@@ -23,31 +23,39 @@ export default function SubmitWorkPage() {
   const checkUserType = async () => {
     try {
       // Önce voice-actor kontrolü
-      const vaRes = await fetch('/api/voice-actor-auth/me')
-      if (vaRes.ok) {
-        const vaData = await vaRes.json()
-        if (vaData.voiceActor) {
-          setUserType('voiceActor')
-          setFormData(prev => ({ ...prev, workType: 'SHORT_VOICE' }))
-          setCheckingAuth(false)
-          return
+      try {
+        const vaRes = await fetch('/api/voice-actor-auth/me', { credentials: 'include' })
+        if (vaRes.ok) {
+          const vaData = await vaRes.json()
+          if (vaData.voiceActor) {
+            setUserType('voiceActor')
+            setFormData(prev => ({ ...prev, workType: 'SHORT_VOICE' }))
+            setCheckingAuth(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Voice actor check failed:', e)
       }
 
       // Sonra team-member kontrolü
-      const tmRes = await fetch('/api/team-auth/me')
-      if (tmRes.ok) {
-        const tmData = await tmRes.json()
-        if (tmData.teamMember) {
-          setUserType('editor')
-          setFormData(prev => ({ ...prev, workType: 'SHORT_VIDEO' }))
-          setCheckingAuth(false)
-          return
+      try {
+        const tmRes = await fetch('/api/team-auth/me', { credentials: 'include' })
+        if (tmRes.ok) {
+          const tmData = await tmRes.json()
+          if (tmData.teamMember) {
+            setUserType('editor')
+            setFormData(prev => ({ ...prev, workType: 'SHORT_VIDEO' }))
+            setCheckingAuth(false)
+            return
+          }
         }
+      } catch (e) {
+        console.log('Team member check failed:', e)
       }
 
       // Hiçbiri değilse giriş sayfasına yönlendir
-      toast.error('Bu sayfaya erişim yetkiniz yok')
+      toast.error('Bu sayfaya erişim yetkiniz yok. Lütfen giriş yapın.')
       router.push('/giris')
     } catch (error) {
       console.error('Auth check error:', error)

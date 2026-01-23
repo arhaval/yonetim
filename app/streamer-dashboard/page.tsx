@@ -20,7 +20,7 @@ export default function StreamerDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/streamer-auth/me')
+      const res = await fetch('/api/streamer-auth/me', { credentials: 'include' })
       const data = await res.json()
 
       if (!data.streamer) {
@@ -39,7 +39,7 @@ export default function StreamerDashboardPage() {
 
   const loadStreams = async (streamerId: string) => {
     try {
-      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`)
+      const res = await fetch(`/api/streamer/streams?streamerId=${streamerId}`, { credentials: 'include' })
       const data = await res.json()
       if (res.ok) {
         setStreams(Array.isArray(data) ? data : [])
@@ -54,7 +54,7 @@ export default function StreamerDashboardPage() {
 
   const loadPaymentInfo = async (streamerId: string) => {
     try {
-      const res = await fetch('/api/streamer/payments')
+      const res = await fetch('/api/streamer/payments', { credentials: 'include' })
       const data = await res.json()
       if (res.ok) {
         setPaymentInfo(data)
@@ -66,7 +66,7 @@ export default function StreamerDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/streamer-auth/logout', { method: 'POST' })
+      await fetch('/api/streamer-auth/logout', { method: 'POST', credentials: 'include' })
       router.push('/streamer-login')
     } catch (error) {
       router.push('/streamer-login')

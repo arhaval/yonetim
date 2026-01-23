@@ -19,7 +19,7 @@ export default function CreatorDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/creator-auth/me')
+      const res = await fetch('/api/creator-auth/me', { credentials: 'include' })
       const data = await res.json()
 
       if (!data.creator) {
@@ -36,7 +36,7 @@ export default function CreatorDashboardPage() {
 
   const loadContents = async (creatorId: string) => {
     try {
-      const res = await fetch('/api/creator/content')
+      const res = await fetch('/api/creator/content', { credentials: 'include' })
       const data = await res.json()
       if (res.ok) {
         setContents(Array.isArray(data) ? data : [])
@@ -51,7 +51,7 @@ export default function CreatorDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/creator-auth/logout', { method: 'POST' })
+      await fetch('/api/creator-auth/logout', { method: 'POST', credentials: 'include' })
       router.push('/creator-login')
     } catch (error) {
       router.push('/creator-login')

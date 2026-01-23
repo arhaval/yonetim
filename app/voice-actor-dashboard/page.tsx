@@ -28,7 +28,7 @@ export default function VoiceActorDashboardPage() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/voice-actor-auth/me')
+      const res = await fetch('/api/voice-actor-auth/me', { credentials: 'include' })
       const data = await res.json()
 
       if (!data.voiceActor) {
@@ -46,7 +46,7 @@ export default function VoiceActorDashboardPage() {
 
   const loadScripts = async (voiceActorId: string) => {
     try {
-      const res = await fetch('/api/voice-actor/scripts')
+      const res = await fetch('/api/voice-actor/scripts', { credentials: 'include' })
       const data = await res.json()
       if (res.ok) {
         setScripts(Array.isArray(data) ? data : [])
@@ -62,7 +62,7 @@ export default function VoiceActorDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/voice-actor-auth/logout', { method: 'POST' })
+      await fetch('/api/voice-actor-auth/logout', { method: 'POST', credentials: 'include' })
       router.push('/voice-actor-login')
     } catch (error) {
       router.push('/voice-actor-login')
