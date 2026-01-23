@@ -1,19 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import { User, Video, UserCircle, Mic, Shield, Users } from 'lucide-react'
-
-type UserType = 'admin' | 'streamer' | 'creator' | 'voiceActor' | 'team' | null
 
 export default function LoginPage() {
   const router = useRouter()
-  const [selectedUserType, setSelectedUserType] = useState<UserType>(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    router.replace('/giris')
+  }, [router])
+
+  return null
+}
 
   const userTypes = [
     {
