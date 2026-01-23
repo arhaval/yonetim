@@ -89,30 +89,18 @@ export async function GET(request: NextRequest) {
     // Type filtresi - 'voice', 'edit' veya 'all'
     if (type === 'voice') {
       andConditions.push({ 
-        voiceActorId: { not: null },
-        voicePrice: { not: null }
+        voiceActorId: { not: null }
       })
     } else if (type === 'edit') {
       andConditions.push({ 
-        editorId: { not: null },
-        editPrice: { not: null }
+        editorId: { not: null }
       })
     } else if (type === 'all') {
       // Hem seslendirme hem video edit işlerini getir
       andConditions.push({
         OR: [
-          {
-            AND: [
-              { voiceActorId: { not: null } },
-              { voicePrice: { not: null } }
-            ]
-          },
-          {
-            AND: [
-              { editorId: { not: null } },
-              { editPrice: { not: null } }
-            ]
-          }
+          { voiceActorId: { not: null } },
+          { editorId: { not: null } }
         ]
       })
     }

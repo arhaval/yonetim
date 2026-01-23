@@ -82,7 +82,7 @@ export default function VoiceActorDashboardPage() {
   const paidEarnings = scripts.filter(s => s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
   const totalEarnings = paidEarnings
   const pendingEarnings = scripts.filter(s => !s.voicePaid).reduce((sum, script) => sum + (script.voicePrice || 0), 0)
-  const completedScripts = scripts.filter((s: any) => s.status === 'COMPLETED' || s.status === 'APPROVED').length
+  const completedScripts = scripts.filter((s: any) => s.status === 'APPROVED' || s.status === 'PAID').length
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,13 +201,17 @@ export default function VoiceActorDashboardPage() {
                         <td className="py-3 px-4 text-sm">{script.title || '-'}</td>
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            script.status === 'COMPLETED' || script.status === 'APPROVED'
+                            script.status === 'APPROVED' || script.status === 'PAID'
                               ? 'bg-green-100 text-green-800'
+                              : script.status === 'VOICE_UPLOADED'
+                              ? 'bg-blue-100 text-blue-800'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {script.status === 'COMPLETED' ? 'Tamamlandı' :
+                            {script.status === 'PAID' ? 'Ödendi' :
                              script.status === 'APPROVED' ? 'Onaylandı' :
-                             script.status === 'PENDING' ? 'Beklemede' : script.status}
+                             script.status === 'VOICE_UPLOADED' ? 'Ses Yüklendi' :
+                             script.status === 'WAITING_VOICE' ? 'Ses Bekleniyor' :
+                             script.status === 'REJECTED' ? 'Reddedildi' : script.status}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-sm text-right font-medium">

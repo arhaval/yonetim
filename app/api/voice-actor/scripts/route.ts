@@ -53,10 +53,14 @@ export async function GET(request: NextRequest) {
       return b.lastActivityAt.getTime() - a.lastActivityAt.getTime() // DESC
     })
     
-    // lastActivityAt'i response'dan kaldır
-    const sortedScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => script)
+    // Dashboard'un beklediği formata dönüştür
+    const formattedScripts = scriptsWithLastActivity.map(({ lastActivityAt, ...script }) => ({
+      ...script,
+      voicePrice: script.price || 0,
+      voicePaid: script.adminApproved && script.producerApproved, // Her iki onay da varsa ödendi sayılır
+    }))
 
-    return NextResponse.json(sortedScripts)
+    return NextResponse.json(formattedScripts)
   } catch (error) {
     console.error('Error fetching scripts:', error)
     return NextResponse.json(
