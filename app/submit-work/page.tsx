@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Layout from '@/components/Layout'
+import { AppShell } from '@/components/shared/AppShell'
 import { ArrowLeft, Mic, Video } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function SubmitWorkPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [userRole, setUserRole] = useState<'voiceActor' | 'team' | null>(null)
   const [userType, setUserType] = useState<'voiceActor' | 'editor' | null>(null)
   const [formData, setFormData] = useState({
     workType: '',
@@ -27,9 +28,11 @@ export default function SubmitWorkPage() {
     const hasTeamMember = cookies.some(c => c.trim().startsWith('team-member-id='))
     
     if (hasVoiceActor) {
+      setUserRole('voiceActor')
       setUserType('voiceActor')
       setFormData({ ...formData, workType: 'SHORT_VOICE' })
     } else if (hasTeamMember) {
+      setUserRole('team')
       setUserType('editor')
       setFormData({ ...formData, workType: 'SHORT_VIDEO' })
     }
@@ -75,18 +78,16 @@ export default function SubmitWorkPage() {
     }
   }
 
-  if (!userType) {
+  if (!userRole) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
     )
   }
 
   return (
-    <Layout>
+    <AppShell role={userRole}>
       <div className="max-w-2xl mx-auto">
         <button
           onClick={() => router.back()}
@@ -194,7 +195,7 @@ export default function SubmitWorkPage() {
           </form>
         </div>
       </div>
-    </Layout>
+    </AppShell>
   )
 }
 
