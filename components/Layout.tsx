@@ -45,19 +45,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         return res.json()
       })
       .then(data => {
-        if (!data.user) {
-          // Auth failed - redirect to admin login
-          router.push('/admin-login')
-          return
+        if (data.user) {
+          setUser(data.user)
         }
-        setUser(data.user)
+        // Don't redirect here - let middleware handle it
       })
       .catch(error => {
         clearTimeout(timeoutId)
-        if (error.name !== 'AbortError') {
-          // Auth error - redirect to admin login
-          router.push('/admin-login')
-        }
+        // Silent fail - middleware will handle redirect
       })
   }, [router])
 
