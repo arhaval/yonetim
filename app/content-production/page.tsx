@@ -45,7 +45,7 @@ export default function ContentProductionPage() {
   const fetchWorks = async () => {
     try {
       // Tüm ContentRegistry kayıtlarını çek
-      const res = await fetch('/api/content-registry?type=all')
+      const res = await fetch('/api/content-registry?type=all', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         
@@ -92,6 +92,7 @@ export default function ContentProductionPage() {
       const res = await fetch(`/api/content-registry/${work.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updateData)
       })
 
@@ -118,6 +119,7 @@ export default function ContentProductionPage() {
       const res = await fetch(`/api/content-registry/${work.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updateData)
       })
 
@@ -138,7 +140,8 @@ export default function ContentProductionPage() {
 
     try {
       const res = await fetch(`/api/content-registry/${workId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       })
 
       if (res.ok) {

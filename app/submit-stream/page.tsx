@@ -57,6 +57,7 @@ export default function SubmitStreamPage() {
       const res = await fetch('/api/stream-submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           date: new Date(formData.date).toISOString(),
           duration: parseInt(formData.duration),
