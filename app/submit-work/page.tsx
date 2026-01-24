@@ -94,6 +94,10 @@ export default function SubmitWorkPage() {
 
       if (res.ok) {
         toast.success('İş gönderildi! Admin onayladığında ödeme listesine eklenecek.')
+        
+        // ✅ EKLEDIM: Router refresh - sayfa verilerini yenile
+        router.refresh()
+        
         // Kullanıcı tipine göre doğru dashboard'a yönlendir
         if (userType === 'voiceActor') {
           router.push('/voice-actor-dashboard')
