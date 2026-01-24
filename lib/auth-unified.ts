@@ -255,6 +255,7 @@ export async function setAuthCookie(
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
   })
 }
 
@@ -365,14 +366,32 @@ export async function handleLogin(
     // Create response with cookie
     const response = NextResponse.json(responseData)
     
-    // Set cookie in response
-    response.cookies.set(config.cookieName, result.user.id, {
+    // CRITICAL FIX: Set cookie with correct domain settings
+    const cookieOptions: any = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
-    })
+    }
+    
+    // Production'da domain belirtme (Vercel otomatik halleder)
+    if (process.env.NODE_ENV === 'production') {
+      // Domain belirtmeden bırak - Vercel otomatik set eder
+    } else {
+      // Local development için
+      cookieOptions.domain = 'localhost'
+    }
+    
+    response.cookies.set(config.cookieName, result.user.id, cookieOptions)
+    
+    // BACKUP: Server-side cookie'yi de set et
+    try {
+      const cookieStore = await cookies()
+      cookieStore.set(config.cookieName, result.user.id, cookieOptions)
+    } catch (e) {
+      console.error('Server cookie set failed:', e)
+    }
 
     return response
   } catch (error: any) {
@@ -382,4 +401,3 @@ export async function handleLogin(
     )
   }
 }
-
